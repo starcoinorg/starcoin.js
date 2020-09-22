@@ -1,5 +1,5 @@
 {
-  "name": "starcoin-sdk",
+  "name": "starcoin-typescript-sdk",
   "version": "1.0.0",
   "description": "starcoin typescript sdk",
   "main": "build/main/index.js",
