@@ -30,4 +30,16 @@ describe('starcoin api', () => {
     });
     console.log(result);
   });
+  test('chain.get_blocks_by_number', async () => {
+    let result = await starcoin.chain.get_blocks_by_number.execute(provider, 0, 1);
+        console.log(JSON.stringify(result,null, 2 ));
+  });
+  test('chain.get_events', async () => {
+    let result = await starcoin.chain.get_events.execute(provider, {
+      from_block: 0,
+      event_keys: [],
+      limit: 10,
+    });
+    console.log(JSON.stringify(result,null, 2 ));
+  });
 });
