@@ -1,76 +1,65 @@
 import { Method } from './Method';
-import { outputMoveValuesFormatter } from './utils/formatters';
 import {
-  Block,
-  ChainInfo,
-  EpochInfo, Event,
-  GlobalTimeOnChain,
-  Transaction
+  Block, BlockNumber,
+  ChainInfo, ContractCall,
+  EpochInfo, Event, EventFilter,
+  GlobalTimeOnChain, HashValue, MoveValue,
+  Transaction, U64
 } from './lib/types';
+import { outputMoveValuesFormatter } from './utils/formatters';
 
-const identity = (v: any) => v;
-
-export const dev_callContract = new Method({
-  callName: 'dev.call_contract',
-  params: 1,
-  outputFormatter: outputMoveValuesFormatter
-});
+export const dev = {
+  call_contract: new Method<[ContractCall], MoveValue[]>({
+    callName: 'dev.call_contract',
+    params: 1,
+    outputFormatter: outputMoveValuesFormatter
+  })
+};
 
 export const chain = {
-  head: new Method<ChainInfo>({
+  head: new Method<[], ChainInfo>({
     callName: 'chain.head',
     params: 0,
-    outputFormatter: identity,
   }),
-  get_block_by_hash:new Method<Block>({
+  get_block_by_hash:new Method<[HashValue], Block>({
     callName: 'chain.get_block_by_hash',
     params: 1,
-    outputFormatter: identity,
   }),
-  get_block_by_number:new Method<Block>({
+  get_block_by_number:new Method<[BlockNumber], Block>({
     callName: 'chain.get_block_by_number',
     params: 1,
-    outputFormatter: identity,
   }),
-  get_blocks_by_number:new Method<Block[]>({
+  get_blocks_by_number:new Method<[BlockNumber|undefined, U64], Block[]>({
     callName: 'chain.get_blocks_by_number',
     params: 2,
-    outputFormatter: identity,
   }),
-  get_block_by_uncle:new Method<Block| null>({
+  get_block_by_uncle:new Method<[HashValue], Block| undefined>({
     callName: 'chain.get_block_by_uncle',
     params: 1,
-    outputFormatter: identity,
   }),
-  get_transaction: new Method<Transaction>({
+  get_transaction: new Method<[HashValue], Transaction>({
     callName: 'chain.get_transaction',
     params: 1,
-    outputFormatter: identity,
   }),
-  branches: new Method<ChainInfo[]>({
+  branches: new Method<[], ChainInfo[]>({
     callName: 'chain.branches',
     params: 0,
-    outputFormatter: identity,
   }),
-  current_epoch: new Method<EpochInfo>({
-    callName: 'chain.current_epoch',
+  current_epoch: new Method<[], EpochInfo>({
+    callName: 'chain.epoch',
     params: 0,
-    outputFormatter: identity,
   }),
-  get_epoch_info_by_number: new Method<EpochInfo>({
+  get_epoch_info_by_number: new Method<[BlockNumber], EpochInfo>({
     callName: 'chain.get_epoch_info_by_number',
     params: 1,
-    outputFormatter: identity,
   }),
-  get_global_time_by_number: new Method<GlobalTimeOnChain>({
+  get_global_time_by_number: new Method<[BlockNumber], GlobalTimeOnChain>({
     callName: 'chain.get_global_time_by_number',
     params: 1,
-    outputFormatter: identity,
   }),
 
-  get_events:new Method<Event[]>({
+  get_events:new Method<[EventFilter], Event[]>({
     callName: 'chain.get_events',
     params: 1,
-    outputFormatter: identity,
   })
 };

@@ -17,7 +17,8 @@ const STC ={
 const ASSOCIATION_ADDRESS = "0000000000000000000000000A550C18";
 describe('starcoin api', () => {
   test('dev.call_contract', async () => {
-    let result = await starcoin.dev_callContract.execute(provider, {
+
+    let result = await starcoin.dev.call_contract.execute(provider, {
       module_address: '00000000000000000000000000000001',
       module_name: 'Account',
       func: 'balance',
@@ -40,6 +41,10 @@ describe('starcoin api', () => {
       event_keys: [],
       limit: 10,
     });
+    console.log(JSON.stringify(result,null, 2 ));
+  });
+  test('chain.current_epoch', async () => {
+    let result = await starcoin.chain.current_epoch.execute(provider);
     console.log(JSON.stringify(result,null, 2 ));
   });
 });

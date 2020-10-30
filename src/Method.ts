@@ -8,13 +8,13 @@ export let messageId = 0;
 /**
  * @public
  */
-export class Method<V> {
+export class Method<T extends any[] = [], V = any> {
   callName: string;
   params: number;
   inputFormatter?: ((...args: any[]) => any)[];
-  outputFormatter: (something: any) => V;
+  outputFormatter?: (something: any) => V;
 
-  constructor(options: { callName: string; params: number; inputFormatter?: any[]; outputFormatter: (val: any) => V }) {
+  constructor(options: { callName: string; params: number; inputFormatter?: any[]; outputFormatter?: (val: any) => V }) {
     this.callName = options.callName;
     this.params = options.params || 0;
     this.inputFormatter = options.inputFormatter;
@@ -37,7 +37,7 @@ export class Method<V> {
    *
    * @param args - The array of arguments
    */
-  formatInput(args: any[]) {
+  formatInput(args: T) {
     if (!this.inputFormatter) {
       return args;
     }
@@ -53,6 +53,9 @@ export class Method<V> {
    * @param result - The result to be formatted
    */
   formatOutput(result: any): V {
+    if (!this.outputFormatter) {
+      return result;
+    }
     return this.outputFormatter(result);
   }
 
@@ -61,7 +64,7 @@ export class Method<V> {
    *
    * @param args - The given input arguments
    */
-  toPayload(args: any[]): RpcRequest<string> {
+  toPayload(args: T): RpcRequest<string> {
     const params = this.formatInput(args);
 
     this.validateArgs(params);
@@ -74,7 +77,7 @@ export class Method<V> {
     };
   }
 
-  async execute(provider: HTTPProvider, ...args: any[]): Promise<V> {
+  async execute(provider: HTTPProvider, ...args: T): Promise<V> {
     const payload = this.toPayload(args);
     if (!provider) throw new Error('Missing Provider in method#exec');
     const result = await provider.makeRequest(payload);
