@@ -17,4 +17,4 @@ let block = await starcoin.chain.get_block_by_number(httpProvider, 1);
 
 ## Types
 
-See ./src/types.ts for details. 
+See [./src/types.ts](./src/types.ts) for details. 
