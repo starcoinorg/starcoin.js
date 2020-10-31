@@ -5,7 +5,7 @@ import {
   EpochInfo, Event, EventFilter,
   GlobalTimeOnChain, HashValue, MoveValue,
   Transaction, U64
-} from './lib/types';
+} from './types';
 import { outputMoveValuesFormatter } from './utils/formatters';
 
 export const dev = {

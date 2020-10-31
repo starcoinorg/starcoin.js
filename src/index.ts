@@ -1,4 +1,4 @@
-export * from './lib/types';
+export * as types from './types';
 export { Method } from './Method';
 export * as starcoin from './starcoin';
 export * from './providers/HTTPProvider';
