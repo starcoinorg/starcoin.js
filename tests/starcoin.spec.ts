@@ -1,12 +1,8 @@
-import { HTTPProvider, starcoin } from '../src';
+import { WebsocketProvider, starcoin } from '../src';
 
-test('1+1=2', () => {
-  expect(2 + 2).toBe(4);
-});
-
-const provider = new HTTPProvider({
-  url: 'http://127.0.0.1:9850'
-});
+const provider = new WebsocketProvider(
+   'http://127.0.0.1:9870'
+);
 
 const STC ={
   address: "00000000000000000000000000000001",
@@ -32,8 +28,15 @@ describe('starcoin api', () => {
     console.log(result);
   });
   test('chain.get_blocks_by_number', async () => {
-    let result = await starcoin.chain.get_blocks_by_number.execute(provider, 0, 1);
-        console.log(JSON.stringify(result,null, 2 ));
+    let result = await starcoin.chain.get_blocks_by_number.execute(provider, null, 1);
+    console.log(JSON.stringify(result,null, 2 ));
+  });
+  test('chain.get_block_by_uncle', async () => {
+    let fake_hash = "d22db56b61bd6917a6e440b05bc65756c9a8648e0491b62966ccbd3a7e0e208c";
+    const result = await starcoin.chain.get_block_by_uncle.execute(provider, fake_hash).catch(reason => {
+      console.log(reason);
+    });
+    expect(result).toBe(null);
   });
   test('chain.get_events', async () => {
     let result = await starcoin.chain.get_events.execute(provider, {

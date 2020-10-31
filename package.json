@@ -43,9 +43,9 @@
   },
   "dependencies": {
     "@ethersproject/bignumber": "^5.0",
+    "@open-rpc/client-js": "^1.6.0",
     "@types/node": "^14.11.2",
     "int64-buffer": "^0.99",
-    "jsonrpc-ts": "^0.2.1",
     "leb": "^0.3.0"
   },
   "devDependencies": {

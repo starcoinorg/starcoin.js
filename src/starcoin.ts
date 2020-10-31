@@ -29,11 +29,11 @@ export const chain = {
     callName: 'chain.get_block_by_number',
     params: 1,
   }),
-  get_blocks_by_number:new Method<[BlockNumber|undefined, U64], Block[]>({
+  get_blocks_by_number:new Method<[BlockNumber|null, U64], Block[]>({
     callName: 'chain.get_blocks_by_number',
     params: 2,
   }),
-  get_block_by_uncle:new Method<[HashValue], Block| undefined>({
+  get_block_by_uncle:new Method<[HashValue], Block| null>({
     callName: 'chain.get_block_by_uncle',
     params: 1,
   }),

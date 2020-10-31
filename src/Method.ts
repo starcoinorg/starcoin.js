@@ -1,9 +1,5 @@
-import { RpcRequest } from 'jsonrpc-ts';
-
-import { HTTPProvider } from './providers/HTTPProvider';
+import { IJSONRPCRequest, IProvider } from './IProvider';
 import * as errors from './utils/errors';
-
-export let messageId = 0;
 
 /**
  * @public
@@ -64,26 +60,21 @@ export class Method<T extends any[] = [], V = any> {
    *
    * @param args - The given input arguments
    */
-  toPayload(args: T): RpcRequest<string> {
+  toPayload(args: T): IJSONRPCRequest {
     const params = this.formatInput(args);
 
     this.validateArgs(params);
 
     return {
-      jsonrpc: '2.0',
-      id: messageId++,
       method: this.callName,
       params: params
     };
   }
 
-  async execute(provider: HTTPProvider, ...args: T): Promise<V> {
+  async execute(provider: IProvider, ...args: T): Promise<V> {
     const payload = this.toPayload(args);
     if (!provider) throw new Error('Missing Provider in method#exec');
-    const result = await provider.makeRequest(payload);
-    if (result.error) {
-      throw new Error(JSON.stringify(result.error));
-    }
-    return this.formatOutput(result.result);
+    const result = await provider.request(payload);
+    return this.formatOutput(result);
   }
 }
