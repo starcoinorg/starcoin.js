@@ -7,7 +7,7 @@ import { IJSONRPCRequest, IProvider } from '../IProvider';
  *
  * HttpProvider should be used to send rpc calls over http
  */
-export class HTTPProvider implements IProvider{
+export class HTTPProvider implements IProvider {
   client: Client;
 
   constructor(uri = 'http://127.0.0.1:9850', headers?: Record<string, string>) {

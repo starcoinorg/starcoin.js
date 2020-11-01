@@ -10,7 +10,12 @@ export class Method<T extends any[] = [], V = any> {
   inputFormatter?: ((...args: any[]) => any)[];
   outputFormatter?: (something: any) => V;
 
-  constructor(options: { callName: string; params: number; inputFormatter?: any[]; outputFormatter?: (val: any) => V }) {
+  constructor(options: {
+    callName: string;
+    params: number;
+    inputFormatter?: any[];
+    outputFormatter?: (val: any) => V;
+  }) {
     this.callName = options.callName;
     this.params = options.params || 0;
     this.inputFormatter = options.inputFormatter;
@@ -24,7 +29,11 @@ export class Method<T extends any[] = [], V = any> {
    */
   validateArgs(args: any[]) {
     if (args.length !== this.params) {
-      throw errors.InvalidNumberOfRPCParams(this.callName, args.length, this.params);
+      throw errors.InvalidNumberOfRPCParams(
+        this.callName,
+        args.length,
+        this.params
+      );
     }
   }
 
@@ -38,7 +47,7 @@ export class Method<T extends any[] = [], V = any> {
       return args;
     }
 
-    return this.inputFormatter.map(function(formatter, index) {
+    return this.inputFormatter.map(function (formatter, index) {
       return formatter ? formatter(args[index]) : args[index];
     });
   }
@@ -67,7 +76,7 @@ export class Method<T extends any[] = [], V = any> {
 
     return {
       method: this.callName,
-      params: params
+      params: params,
     };
   }
 

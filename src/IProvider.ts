@@ -1,5 +1,5 @@
 export interface IJSONRPCNotification {
-  jsonrpc: "2.0";
+  jsonrpc: '2.0';
   id?: null | undefined;
   method: string;
   params: unknown[] | unknown;
@@ -17,7 +17,7 @@ export interface IJSONRPCError {
 }
 
 export interface IJSONRPCResponse {
-  jsonrpc: "2.0";
+  jsonrpc: '2.0';
   id?: string | number; // can also be null
   result?: unknown;
   error?: IJSONRPCError;

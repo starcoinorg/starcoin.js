@@ -1,15 +1,21 @@
 export function InvalidNumberOfMoveArgs(given: number, expected: number) {
-  return new Error(`Invalid number of arguments to Move function. given: ${given}, expected: ${expected}`);
+  return new Error(
+    `Invalid number of arguments to Move function. given: ${given}, expected: ${expected}`
+  );
 }
 
-export function InvalidNumberOfRPCParams(methodName: string, given: number, expected: number) {
+export function InvalidNumberOfRPCParams(
+  methodName: string,
+  given: number,
+  expected: number
+) {
   return new Error(
     `Invalid number of input parameters to RPC method "${methodName}" given: ${given}, expected: ${expected}`
   );
 }
 
 export function InvalidConnection(host: string) {
-  return new Error('CONNECTION ERROR: Couldn\'t connect to node ' + host + '.');
+  return new Error("CONNECTION ERROR: Couldn't connect to node " + host + '.');
 }
 
 export function InvalidProvider() {

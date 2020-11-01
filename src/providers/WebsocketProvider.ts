@@ -1,6 +1,6 @@
 import Client, {
   RequestManager,
-  WebSocketTransport
+  WebSocketTransport,
 } from '@open-rpc/client-js';
 
 import { IJSONRPCRequest, IProvider } from '../IProvider';
@@ -22,5 +22,4 @@ export class WebsocketProvider implements IProvider {
   async request(arg: IJSONRPCRequest): Promise<unknown> {
     return this.client.request(arg);
   }
-
 }

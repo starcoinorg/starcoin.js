@@ -11,11 +11,17 @@ export type Ed25519PublicKey = string;
 export type Ed25519Signature = string;
 export type MultiEd25519PublicKey = string;
 export type MultiEd25519Signature = string;
-export type  EventKey = string;
+export type EventKey = string;
 
-export type TypeTag = 'Bool' | 'U8' | 'U64' | 'U128' | 'Address' | 'Signer'
-  | { 'Vector': TypeTag[] }
-  | { 'Struct': StructTag };
+export type TypeTag =
+  | 'Bool'
+  | 'U8'
+  | 'U64'
+  | 'U128'
+  | 'Address'
+  | 'Signer'
+  | { Vector: TypeTag[] }
+  | { Struct: StructTag };
 
 export interface ChainId {
   id: U8;
@@ -37,22 +43,21 @@ export interface BlockHeader {
   author: AccountAddress;
   author_auth_key?: AuthenticationKey;
   /// The transaction accumulator root hash after executing this block.
-  accumulator_root: HashValue,
+  accumulator_root: HashValue;
   /// The parent block accumulator root hash.
-  parent_block_accumulator_root: HashValue,
+  parent_block_accumulator_root: HashValue;
   /// The last transaction state_root of this block after execute.
-  state_root: HashValue,
+  state_root: HashValue;
   /// Gas used for contracts execution.
-  gas_used: U64,
+  gas_used: U64;
   /// Block difficulty
-  difficulty: U256,
+  difficulty: U256;
   /// Consensus nonce field.
-  nonce: U64,
+  nonce: U64;
   /// hash for block body
-  body_hash: HashValue,
+  body_hash: HashValue;
   /// The chain id
-  chain_id: ChainId,
-
+  chain_id: ChainId;
 }
 
 interface Script {
@@ -66,28 +71,27 @@ interface Module {
 }
 
 interface Package {
-  package_address: AccountAddress,
-  modules: Module[],
-  init_script?: Script,
+  package_address: AccountAddress;
+  modules: Module[];
+  init_script?: Script;
 }
 
-export type TransactionPayload = { 'Script': Script } | { 'Package': Package };
-
+export type TransactionPayload = { Script: Script } | { Package: Package };
 
 export interface RawUserTransaction {
   /// Sender's address.
-  sender: AccountAddress,
+  sender: AccountAddress;
   // Sequence number of this transaction corresponding to sender's account.
-  sequence_number: U64,
+  sequence_number: U64;
   // The transaction script to execute.
-  payload: TransactionPayload,
+  payload: TransactionPayload;
 
   // Maximal total gas specified by wallet to spend for this transaction.
-  max_gas_amount: U64,
+  max_gas_amount: U64;
   // Maximal price can be paid per gas.
-  gas_unit_price: U64,
+  gas_unit_price: U64;
   // The token code for pay transaction gas, Default is STC token code.
-  gas_token_code: string,
+  gas_token_code: string;
   // Expiration timestamp for this transaction. timestamp is represented
   // as u64 in seconds from Unix Epoch. If storage is queried and
   // the time returned is greater than or equal to this time and this
@@ -95,23 +99,23 @@ export interface RawUserTransaction {
   // never be included.
   // A transaction that doesn't expire is represented by a very large value like
   // u64::max_value().
-  expiration_timestamp_secs: U64,
-  chain_id: ChainId,
-
+  expiration_timestamp_secs: U64;
+  chain_id: ChainId;
 }
 
-export type TransactionAuthenticator = {
-  'Ed25519': {
-    public_key: Ed25519PublicKey,
-    signature: Ed25519Signature,
-  }
-} | {
-  'MultiEd25519': {
-    public_key: MultiEd25519PublicKey,
-    signature: MultiEd25519Signature,
-  },
-
-};
+export type TransactionAuthenticator =
+  | {
+      Ed25519: {
+        public_key: Ed25519PublicKey;
+        signature: Ed25519Signature;
+      };
+    }
+  | {
+      MultiEd25519: {
+        public_key: MultiEd25519PublicKey;
+        signature: MultiEd25519Signature;
+      };
+    };
 
 export interface SignedUserTransaction {
   /// The raw transaction
@@ -133,14 +137,13 @@ export interface BlockMetadata {
 }
 
 export type Transaction =
-  { 'UserTransaction': SignedUserTransaction }
-  | { 'BlockMetadata': BlockMetadata };
+  | { UserTransaction: SignedUserTransaction }
+  | { BlockMetadata: BlockMetadata };
 
 export interface BlockBody {
   transactions: SignedUserTransaction[];
   uncles?: BlockHeader[];
 }
-
 
 export interface StructTag {
   address: string;
@@ -150,13 +153,12 @@ export interface StructTag {
 }
 
 export type TransactionArgument =
-  { 'U8': number }
-  | { 'U64': number }
-  | { 'U128': number }
-  | { 'Address': AccountAddress }
-  | { 'U8Vector': Uint8Array }
-  | { 'Bool': boolean };
-
+  | { U8: number }
+  | { U64: number }
+  | { U128: number }
+  | { Address: AccountAddress }
+  | { U8Vector: Uint8Array }
+  | { Bool: boolean };
 
 export interface AnnotatedMoveStruct {
   is_resource: boolean;
@@ -165,23 +167,23 @@ export interface AnnotatedMoveStruct {
 }
 
 export type AnnotatedMoveValue =
-  { 'U8': number }
-  | { 'U64': number }
-  | { 'U128': number }
-  | { 'Bool': boolean }
-  | { 'Address': AccountAddress }
-  | { 'Bytes': Uint8Array }
-  | { 'Vector': AnnotatedMoveValue[] }
-  | { 'Struct': AnnotatedMoveStruct };
+  | { U8: number }
+  | { U64: number }
+  | { U128: number }
+  | { Bool: boolean }
+  | { Address: AccountAddress }
+  | { Bytes: Uint8Array }
+  | { Vector: AnnotatedMoveValue[] }
+  | { Struct: AnnotatedMoveStruct };
 
 export type MoveValue =
-  number
+  | number
   | boolean
   | AccountAddress
   | Uint8Array
   | MoveValue[]
   | MoveStruct;
-export type MoveStruct = { [key in Identifier]: MoveValue }
+export type MoveStruct = { [key in Identifier]: MoveValue };
 
 export interface ContractCall {
   module_address: AccountAddress;
@@ -190,7 +192,6 @@ export interface ContractCall {
   type_args: TypeTag[];
   args: TransactionArgument[];
 }
-
 
 export interface GlobalTimeOnChain {
   milliseconds: U64;
@@ -202,21 +203,20 @@ export interface EventHandle {
 }
 
 export interface Epoch {
-  number: U64,
+  number: U64;
   //seconds
-  start_time: U64,
-  start_block_number: U64,
-  end_block_number: U64,
+  start_time: U64;
+  start_block_number: U64;
+  end_block_number: U64;
   //seconds
-  block_time_target: U64,
-  reward_per_block: U128,
-  reward_per_uncle_percent: U64,
-  block_difficulty_window: U64,
-  max_uncles_per_block: U64,
-  block_gas_limit: U64,
-  strategy: U8,
-  new_epoch_events: EventHandle,
-
+  block_time_target: U64;
+  reward_per_block: U128;
+  reward_per_uncle_percent: U64;
+  block_difficulty_window: U64;
+  max_uncles_per_block: U64;
+  block_gas_limit: U64;
+  strategy: U8;
+  new_epoch_events: EventHandle;
 }
 
 export interface EpochData {
