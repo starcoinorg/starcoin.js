@@ -1,16 +1,11 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { Int64LE, Uint64LE } from 'int64-buffer';
-
-export type Deserializer = {
+export interface Deserializer {
   deserializeStr(): string;
-
-  deserializeToHexString(): string;
 
   deserializeBytes(): Uint8Array;
 
   deserializeBool(): boolean;
 
-  deserializeUnit(): any;
+  deserializeUnit(): null;
 
   deserializeChar(): string;
 
@@ -24,9 +19,9 @@ export type Deserializer = {
 
   deserializeU32(): number;
 
-  deserializeU64(): Uint64LE;
+  deserializeU64(): BigInt;
 
-  deserializeU128(): BigNumber;
+  deserializeU128(): BigInt;
 
   deserializeI8(): number;
 
@@ -34,9 +29,9 @@ export type Deserializer = {
 
   deserializeI32(): number;
 
-  deserializeI64(): Int64LE;
+  deserializeI64(): BigInt;
 
-  deserializeI128(): BigNumber;
+  deserializeI128(): BigInt;
 
   deserializeLen(): number;
 
@@ -47,7 +42,7 @@ export type Deserializer = {
   getBufferOffset(): number;
 
   checkThatKeySlicesAreIncreasing(
-    key1: readonly [number, number],
-    key2: readonly [number, number]
+    key1: [number, number],
+    key2: [number, number]
   ): void;
-};
+}

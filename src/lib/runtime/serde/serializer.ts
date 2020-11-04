@@ -1,16 +1,11 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { Int64LE, Uint64LE } from 'int64-buffer';
-
-export type Serializer = {
+export interface Serializer {
   serializeStr(value: string): void;
-
-  serializeHexString(hex: string): void;
 
   serializeBytes(value: Uint8Array): void;
 
   serializeBool(value: boolean): void;
 
-  serializeUnit(value: any): void;
+  serializeUnit(value: null): void;
 
   serializeChar(value: string): void;
 
@@ -24,9 +19,9 @@ export type Serializer = {
 
   serializeU32(value: number): void;
 
-  serializeU64(value: Uint64LE): void;
+  serializeU64(value: BigInt | number): void;
 
-  serializeU128(value: BigNumber): void;
+  serializeU128(value: BigInt | number): void;
 
   serializeI8(value: number): void;
 
@@ -34,9 +29,9 @@ export type Serializer = {
 
   serializeI32(value: number): void;
 
-  serializeI64(value: Int64LE): void;
+  serializeI64(value: BigInt | number): void;
 
-  serializeI128(value: BigNumber): void;
+  serializeI128(value: BigInt | number): void;
 
   serializeLen(value: number): void;
 
@@ -44,11 +39,9 @@ export type Serializer = {
 
   serializeOptionTag(value: boolean): void;
 
-  concat(value: Uint8Array): void;
-
   getBufferOffset(): number;
 
   getBytes(): Uint8Array;
 
-  sortMapEntries(offsets: readonly number[]): void;
-};
+  sortMapEntries(offsets: number[]): void;
+}

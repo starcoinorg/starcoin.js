@@ -20,7 +20,7 @@ export type TypeTag =
   | 'U128'
   | 'Address'
   | 'Signer'
-  | { Vector: TypeTag[] }
+  | { Vector: TypeTag }
   | { Struct: StructTag };
 
 export interface ChainId {
@@ -247,4 +247,30 @@ export interface EventFilter {
   to_block?: U64;
   event_keys: EventKey[];
   limit?: U64;
+}
+
+export interface TypeArgumentABI {
+  /// The name of the argument.
+  name: string;
+}
+
+export interface ArgumentABI {
+  /// The name of the argument.
+  name: string;
+  /// The expected type.
+  /// In Move scripts, this does contain generics type parameters.
+  type_tag: TypeTag;
+}
+
+export interface ScriptABI {
+  // The public name of the script.
+  name: string;
+  // Some text comment.
+  doc: string;
+  // The `code` value to set in the `Script` object.
+  code: Uint8Array;
+  // The names of the type arguments.
+  ty_args: TypeArgumentABI[];
+  // The description of regular arguments.
+  args: ArgumentABI[];
 }
