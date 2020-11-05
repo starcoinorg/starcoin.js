@@ -24,7 +24,7 @@ export abstract class BinarySerializer implements Serializer {
     if (this.offset + bytes <= this.buffer.byteLength) {
       return;
     }
-    const newBuffer = new ArrayBuffer(this.buffer.byteLength * 2);
+    const newBuffer = new ArrayBuffer(this.buffer.byteLength * 2 + bytes);
     new Uint8Array(newBuffer).set(new Uint8Array(this.buffer));
     this.buffer = newBuffer;
   }

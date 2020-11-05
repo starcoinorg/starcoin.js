@@ -10,7 +10,8 @@ export function encode_tx_payload(
   args: starcoin_types.TransactionArgument[]
 ): string {
   const script = new starcoin_types.Script(code, ty_args, args);
+  let payload = new starcoin_types.TransactionPayloadVariantScript(script);
   const se = new LcsSerializer();
-  script.serialize(se);
+  payload.serialize(se);
   return toHexString(se.getBytes());
 }
