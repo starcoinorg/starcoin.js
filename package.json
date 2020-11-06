@@ -8,6 +8,7 @@
   "license": "MIT",
   "keywords": [],
   "scripts": {
+    "preinstall": "run-p build:*",
     "build": "run-p build:*",
     "build:main": "tsc -p tsconfig.json",
     "fix": "run-s fix:*",
