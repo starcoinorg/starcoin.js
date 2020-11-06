@@ -7,7 +7,8 @@ import { fromHexString, toHexString } from './hex';
 export function address_from_json(
   addr: AccountAddress
 ): starcoin_types.AccountAddress {
-  const bytes = fromHexString(addr);
+  // AccountAddress should be 16 bytes, in hex, it's 16 * 2.
+  const bytes = fromHexString(addr, 16 * 2);
   return starcoin_types.AccountAddress.deserialize(new LcsDeserializer(bytes));
 }
 
