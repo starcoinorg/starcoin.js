@@ -162,7 +162,7 @@
         "affectsGlobalScope": false
       },
       "../src/utils/formatters.ts": {
-        "version": "d94dab041efeef98498b6b2ade3a5a908c8d08ece9a95cf2f6a9033bb41d8289",
+        "version": "c635432e4d37f051dfc52786b0a8c3095d05ee1d45cb15fe1986c51cc3a6d870",
         "signature": "cedb877422524e8514c31c7ed9bc7764efa85cd35b630901408c524cb51ad66e",
         "affectsGlobalScope": false
       },
@@ -547,8 +547,8 @@
         "affectsGlobalScope": false
       },
       "../src/utils/lcs_to_json.ts": {
-        "version": "3df1cc98cb32cad346abfd9dc730c85b59d46805dc09ee2104cd8581c52eab6d",
-        "signature": "61527d938b2400c34b2427aae2eaaf003389bc7eba3292d0bdf6d6ea6ebb6d72",
+        "version": "42fd506fc96e062cb295c7af2bf4952a55f7225737810dbb7b850e1ee997c793",
+        "signature": "790e1a72512ed398078b25d7e40f10c1467b39c7f3daba74f5373a8cd54cdc66",
         "affectsGlobalScope": false
       },
       "../src/utils/abi.ts": {
@@ -587,8 +587,8 @@
         "affectsGlobalScope": false
       },
       "../src/utils/tx.ts": {
-        "version": "5853ed3606ffc4cd9fbe84cee9c8b930bd4199eda2779033d8ece48773754c83",
-        "signature": "32c4948eb70959b8b1d80e7d6233b8ec65c2bc9fac1766c64cff24f037c8e2c5",
+        "version": "6f91e8d6f2fe127f2be99467487e3021083b93308298f854fe2b3202117a8961",
+        "signature": "5d59915a9925ef7dea572eac6b8d57f21f4e5f11d6d156183450581000e1fdd7",
         "affectsGlobalScope": false
       },
       "../src/utils/index.ts": {
@@ -1030,7 +1030,9 @@
         "../src/lib/runtime/lcs/index.ts",
         "../src/lib/runtime/serde/types.ts",
         "../src/lib/runtime/starcoin_types/index.ts",
-        "../src/utils/hex.ts"
+        "../src/types.ts",
+        "../src/utils/hex.ts",
+        "../src/utils/lcs_to_json.ts"
       ]
     },
     "exportedModulesMap": {
@@ -1383,7 +1385,7 @@
       ],
       "../src/utils/tx.ts": [
         "../src/lib/runtime/serde/types.ts",
-        "../src/lib/runtime/starcoin_types/index.ts"
+        "../src/types.ts"
       ]
     },
     "semanticDiagnosticsPerFile": [

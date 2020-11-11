@@ -6,10 +6,10 @@ export function outputMoveValuesFormatter(
   return output.map((elem) => transformMoveValue(elem));
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 function transformMoveValue(v: AnnotatedMoveValue): MoveValue {
-  if ('U8' in v) {
+  if ('Bool' in v) {
+    return v.Bool;
+  } else if ('U8' in v) {
     return v.U8;
   } else if ('U64' in v) {
     return v.U64;
@@ -27,5 +27,7 @@ function transformMoveValue(v: AnnotatedMoveValue): MoveValue {
       (o, [k, v]) => ({ ...o, [k]: transformMoveValue(v) }),
       {}
     );
+  } else {
+    throw new Error('invalid annotated move value' + JSON.stringify(v));
   }
 }
