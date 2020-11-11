@@ -1,6 +1,11 @@
 import { LcsDeserializer } from '../lib/runtime/lcs';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
-import { AccountAddress, StructTag, TypeTag } from '../types';
+import {
+  AccountAddress,
+  StructTag,
+  TransactionArgument,
+  TypeTag,
+} from '../types';
 
 import { fromHexString, toHexString } from './hex';
 
@@ -18,6 +23,42 @@ export function address_to_json(
   return toHexString(addr.value.map(([t]) => t));
 }
 
+export function typeTag_from_json(ty: TypeTag): starcoin_types.TypeTag {
+  if (ty === 'Bool') {
+    return new starcoin_types.TypeTagVariantBool();
+  } else if (ty === 'U8') {
+    return new starcoin_types.TypeTagVariantU8();
+  } else if (ty === 'U128') {
+    return new starcoin_types.TypeTagVariantU128();
+  } else if (ty === 'U64') {
+    return new starcoin_types.TypeTagVariantU64();
+  } else if (ty === 'Address') {
+    return new starcoin_types.TypeTagVariantAddress();
+  } else if (ty === 'Signer') {
+    return new starcoin_types.TypeTagVariantSigner();
+  } else if ('Vector' in ty) {
+    return new starcoin_types.TypeTagVariantVector(
+      typeTag_from_json(ty.Vector)
+    );
+  } else if ('Struct' in ty) {
+    return new starcoin_types.TypeTagVariantStruct(
+      structTag_from_json(ty.Struct)
+    );
+  } else {
+    // @ts-ignore
+    throw new Error(`invalid type tag: ${ty.toString()}`);
+  }
+}
+
+export function structTag_from_json(data: StructTag): starcoin_types.StructTag {
+  return new starcoin_types.StructTag(
+    address_from_json(data.address),
+    new starcoin_types.Identifier(data.module),
+    new starcoin_types.Identifier(data.name),
+    data.type_params.map((t) => typeTag_from_json(t))
+  );
+}
+
 export function struct_tag_to_json(
   lcs_data: starcoin_types.StructTag
 ): StructTag {
@@ -29,7 +70,6 @@ export function struct_tag_to_json(
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 export function type_tag_to_json(lcs_data: starcoin_types.TypeTag): TypeTag {
   if (lcs_data instanceof starcoin_types.TypeTagVariantAddress) {
@@ -52,5 +92,28 @@ export function type_tag_to_json(lcs_data: starcoin_types.TypeTag): TypeTag {
     return {
       Vector: type_tag_to_json(lcs_data.value),
     };
+  }
+}
+
+export function txnArgument_from_json(
+  data: TransactionArgument
+): starcoin_types.TransactionArgument {
+  if ('U8' in data) {
+    return new starcoin_types.TransactionArgumentVariantU8(data.U8);
+  } else if ('U64' in data) {
+    return new starcoin_types.TransactionArgumentVariantU64(BigInt(data.U64));
+  } else if ('U128' in data) {
+    return new starcoin_types.TransactionArgumentVariantU128(BigInt(data.U128));
+  } else if ('Address' in data) {
+    return new starcoin_types.TransactionArgumentVariantAddress(
+      address_from_json(data.Address)
+    );
+  } else if ('U8Vector' in data) {
+    return new starcoin_types.TransactionArgumentVariantU8Vector(data.U8Vector);
+  } else if ('Bool' in data) {
+    return new starcoin_types.TransactionArgumentVariantBool(data.Bool);
+  } else {
+    // @ts-ignore
+    throw new Error('invalid txn argument' + data.toString());
   }
 }
