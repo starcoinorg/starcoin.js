@@ -1,7 +1,7 @@
 import { abi } from '../src';
 import * as fs from 'fs';
 import path = require('path');
-import { encode_tx_payload } from '../src/utils/tx';
+import { encodeTxnPayload } from '../src/utils/tx';
 
 describe('abi', () => {
   test('decode', () => {
@@ -10,6 +10,6 @@ describe('abi', () => {
     );
     const script_abi = abi.decodeABI(new Uint8Array(buffer));
     console.log(JSON.stringify(script_abi));
-    let hex_str = encode_tx_payload(script_abi.code, [], []);
+    let hex_str = encodeTxnPayload(script_abi.code, [], []);
   });
 });

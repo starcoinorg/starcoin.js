@@ -3,8 +3,8 @@ export { Method } from './Method';
 export * as starcoin from './starcoin';
 export * from './providers/HTTPProvider';
 export { WebsocketProvider } from './providers/WebsocketProvider';
-export * as abi from './utils/abi';
-
+//export * as abi from './utils/abi';
+export * as utils from './utils';
 export * as bincode from './lib/runtime/bincode';
 export * as serde from './lib/runtime/serde';
 export * as lcs from './lib/runtime/lcs';

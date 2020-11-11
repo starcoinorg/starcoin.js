@@ -556,6 +556,16 @@
         "signature": "ebfce0bf21de68e328a70ad07c820ad566292bcefe7324de347b7520e7b66cfd",
         "affectsGlobalScope": false
       },
+      "../src/utils/tx.ts": {
+        "version": "5b3c56a62cd9ab7d0b86bd399eeb0ba25999cd5fd763a397322e0fad4123fa9c",
+        "signature": "3d0f5f4e7add298ba23551eaa823bbc6c04533ec76503320d164f00ceb7c5925",
+        "affectsGlobalScope": false
+      },
+      "../src/utils/index.ts": {
+        "version": "ce27fcba9acd583af4c981ac240d18d5a7eff50ee02a30b3adf47d311397cb1a",
+        "signature": "ce27fcba9acd583af4c981ac240d18d5a7eff50ee02a30b3adf47d311397cb1a",
+        "affectsGlobalScope": false
+      },
       "../src/lib/runtime/bincode/bincodeserializer.ts": {
         "version": "f8ec5eda9c66995461ac47f9d6a145938240f79170a8aeed489ffcd60d1b1d83",
         "signature": "57f7c1154fc947f90005ffbd79a64caab5fdcb5d7e3502210f21539075120034",
@@ -577,23 +587,13 @@
         "affectsGlobalScope": false
       },
       "../src/index.ts": {
-        "version": "13491d4d5d2550f87704a7cf3292de648a05a591fbe8aa1e0cf8385a2144566c",
-        "signature": "b4d71f79f3445ecd0f88385fe94e6ea116e5cebfb34053a433f4ad023e691b81",
+        "version": "1103d0a5d154c5fed69364a54a07785fa1a2d1b42eee51cc25cce2034f91a0c2",
+        "signature": "537864cb7cdc17ed2f9d3a49f9527524296a0ea693d108965412428f94d1227e",
         "affectsGlobalScope": false
       },
       "../src/providers/common.ts": {
         "version": "89d13fde0f0692a07cc75eb46c010b9f0adaf3329e8a105b25656f335a4921ec",
         "signature": "26c9041d71ffc4e3a459d6d3958f1bd86add63adab58549d1358a62bde5ce592",
-        "affectsGlobalScope": false
-      },
-      "../src/utils/tx.ts": {
-        "version": "6f91e8d6f2fe127f2be99467487e3021083b93308298f854fe2b3202117a8961",
-        "signature": "5d59915a9925ef7dea572eac6b8d57f21f4e5f11d6d156183450581000e1fdd7",
-        "affectsGlobalScope": false
-      },
-      "../src/utils/index.ts": {
-        "version": "ce27fcba9acd583af4c981ac240d18d5a7eff50ee02a30b3adf47d311397cb1a",
-        "signature": "ce27fcba9acd583af4c981ac240d18d5a7eff50ee02a30b3adf47d311397cb1a",
         "affectsGlobalScope": false
       },
       "../node_modules/jest-diff/build/cleanupsemantic.d.ts": {
@@ -947,7 +947,7 @@
         "../src/providers/websocketprovider.ts",
         "../src/starcoin.ts",
         "../src/types.ts",
-        "../src/utils/abi.ts"
+        "../src/utils/index.ts"
       ],
       "../src/lib/runtime/bincode/bincodedeserializer.ts": [
         "../src/lib/runtime/serde/binarydeserializer.ts"
@@ -1311,7 +1311,7 @@
         "../src/providers/websocketprovider.ts",
         "../src/starcoin.ts",
         "../src/types.ts",
-        "../src/utils/abi.ts"
+        "../src/utils/index.ts"
       ],
       "../src/lib/runtime/bincode/bincodedeserializer.ts": [
         "../src/lib/runtime/serde/binarydeserializer.ts"
