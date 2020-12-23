@@ -1,0 +1,84 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check {{ '/2.0/language-javascript/' | docs_url }} for more details
+#
+version: 2
+
+defaults: &defaults
+  docker:
+    - image: circleci/node:12
+
+jobs:
+  install:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "yarn.lock" }}
+      - run: yarn --frozen-lockfile
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "yarn.lock" }}
+      - persist_to_workspace:
+          root: ~/project
+          paths: .
+
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Run tests
+          command: yarn test
+
+
+  lint:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Run lint
+          command: yarn lint
+
+  deploy:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/project/.npmrc
+      - run:
+          name: Publish package
+          command: |
+            mkdir ~/.ssh/
+            echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+            git config --global user.email ""
+            git config --global user.name "caojiafeng"
+            git branch --set-upstream-to master
+            npx release-it
+
+workflows:
+  version: 2
+  test-deploy:
+    jobs:
+      - install
+      - test:
+          requires:
+            - install
+      - lint:
+          requires:
+            - install
+      - deploy:
+          requires:
+            - lint
+            - test
+          filters:
+            branches:
+              only: master
