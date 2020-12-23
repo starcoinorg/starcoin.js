@@ -1,32 +1,32 @@
-import { JsonRpcProvider } from ".";
+import { JsonrpcProvider } from '.';
 
-describe("jsonrpc-provider", () => {
-  const provider = new JsonRpcProvider(undefined, undefined);
-  test("detectNetwork", async () => {
+describe('jsonrpc-provider', () => {
+  const provider = new JsonrpcProvider(undefined, undefined);
+  test('detectNetwork', async () => {
     const net = await provider.getNetwork();
     expect(net.chainId).toBe(254);
   });
-  test("getBlockNumber", async () => {
+  test('getBlockNumber', async () => {
     const blockNumber = await provider.getBlockNumber();
     console.log(blockNumber);
     expect(provider.blockNumber).toBe(blockNumber);
   });
 
-  test("getBlock", async () => {
+  test('getBlock', async () => {
     const block = await provider.getBlock(0);
 
     console.log(
       JSON.stringify(
         block,
-        (key, value) => (typeof value === "bigint" ? value.toString() : value),
+        (key, value) => (typeof value === 'bigint' ? value.toString() : value),
         2
       )
     );
 
-    expect(block.header.author).toBe("0x1");
+    expect(block.header.author).toBe('0x1');
   });
 
-  test("getTransaction", async () => {
+  test('getTransaction', async () => {
     const block = await provider.getBlock(0);
     const txnHash = block.transactions[0].transaction_hash;
     const txn = await provider.getTransaction(txnHash);
@@ -35,9 +35,9 @@ describe("jsonrpc-provider", () => {
     console.log(txnInfo);
   });
 
-  test("getTransactionEvent", async () => {
+  test('getTransactionEvent', async () => {
     const events = await provider.getTransactionEvents({
-      event_keys: [],
+      event_keys: []
     });
     console.log(events);
   });

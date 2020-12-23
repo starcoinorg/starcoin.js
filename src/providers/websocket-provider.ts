@@ -9,8 +9,8 @@ import WebSocket from 'ws';
 
 import { version } from '../version';
 
-import { CONSTANTS, Event } from './BaseProvider';
-import { JsonRpcProvider } from './JsonRpcProvider';
+import { CONSTANTS, Event } from './base-provider';
+import { JsonrpcProvider } from './jsonrpc-provider';
 
 const logger = new Logger(version);
 
@@ -44,7 +44,7 @@ export type Subscription = {
 // For more info about the Real-time Event API see:
 //   https://geth.ethereum.org/docs/rpc/pubsub
 
-export class WebsocketProvider extends JsonRpcProvider {
+export class WebsocketProvider extends JsonrpcProvider {
   readonly _websocket: any;
   readonly _requests: { [name: string]: InflightRequest };
   readonly _detectNetwork: Promise<Network>;

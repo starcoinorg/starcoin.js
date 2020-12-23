@@ -1,4 +1,4 @@
-export * from './BaseProvider';
+export * from './base-provider';
 export * from './formatter';
-export * from './JsonRpcProvider';
-export * from './WebsocketProvider';
+export * from './jsonrpc-provider';
+export * from './websocket-provider';

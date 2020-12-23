@@ -14,7 +14,7 @@ import { version } from '../version';
 
 const logger = new Logger(version);
 
-import { BaseProvider, CONSTANTS, Event, RPC_ACTION } from './BaseProvider';
+import { BaseProvider, CONSTANTS, Event, RPC_ACTION } from './base-provider';
 
 // eslint-disable-next-line import/order
 import { ChainId } from '../types';
@@ -119,14 +119,14 @@ function getResult(payload: {
   return payload.result;
 }
 
-export class JsonRpcProvider extends BaseProvider {
+export class JsonrpcProvider extends BaseProvider {
   readonly connection: ConnectionInfo;
 
   _pendingFilter: Promise<number>;
   _nextId: number;
 
   constructor(url?: ConnectionInfo | string, network?: Networkish) {
-    logger.checkNew(new.target, JsonRpcProvider);
+    logger.checkNew(new.target, JsonrpcProvider);
 
     let networkOrReady: Networkish | Promise<Network> = network;
 
