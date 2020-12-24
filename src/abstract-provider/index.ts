@@ -1,9 +1,7 @@
-'use strict';
-
 import { BigNumberish } from '@ethersproject/bignumber';
 import { BytesLike } from '@ethersproject/bytes';
 import { Logger } from '@ethersproject/logger';
-import { defineReadOnly } from '@ethersproject/properties';
+import { Deferrable, defineReadOnly } from '@ethersproject/properties';
 import { OnceBlockable } from '@ethersproject/web';
 
 import { Network } from '../networks';
@@ -14,20 +12,20 @@ import {
   BlockNumber,
   EventKey,
   HashValue,
-  HexString,
+  HexString, Identifier, MoveStruct, MoveValue,
   SignatureType,
   TransactionAuthenticator,
   TypeTag,
   U16,
   U256,
   U64,
-  U8,
+  U8
 } from '../types';
+import { str } from '../lib/runtime/serde/types';
 
 const version = 'abstract-provider/5.0.5';
 const logger = new Logger(version);
 
-///////////////////////////////
 // Exported Types
 export interface RawUserTransactionView {
   /// Sender's address.
@@ -52,6 +50,16 @@ export interface RawUserTransactionView {
   // u64::max_value().
   expiration_timestamp_secs: U64;
   chain_id: U8;
+}
+export interface BlockMetadataView {
+  parent_hash: HashValue;
+  timestamp: U64;
+  author: AccountAddress;
+  author_auth_key?: AuthenticationKey;
+  uncles: U64;
+  number: BlockNumber;
+  chain_id: U8;
+  parent_gas_used: U64;
 }
 
 export interface TransactionSignature {
@@ -87,20 +95,18 @@ export type TransactionRequest = {
   chainId?: number;
 };
 
-export interface TransactionResponse extends SignedUserTransactionView {
-  // Only if a transaction has been mined
-  block_number?: BlockNumber;
-  block_hash?: HashValue;
-  timestamp?: number;
 
-  confirmations: number;
-
-  // This function waits until the transaction has been mined
-  wait: (confirmations?: number) => Promise<TransactionInfoView>;
+export interface CallRequest {
+  module_address: AccountAddress;
+  module_name: Identifier;
+  func: Identifier;
+  type_args?: string[];
+  args?: string[];
 }
 
+/// block hash or block number
 export type BlockTag = string | number;
-
+export type ModuleId = string | {address: AccountAddress, name: Identifier};
 export interface BlockHeaderView {
   block_hash: HashValue;
 
@@ -126,16 +132,6 @@ export interface BlockHeaderView {
   /// The chain id
   chain_id: U8;
 }
-export interface BlockMetadataView {
-  parent_hash: HashValue;
-  timestamp: U64;
-  author: AccountAddress;
-  author_auth_key?: AuthenticationKey;
-  uncles: U64;
-  number: BlockNumber;
-  chain_id: U8;
-  parent_gas_used: U64;
-}
 
 interface BlockCommon {
   header: BlockHeaderView;
@@ -152,6 +148,12 @@ export interface BlockWithTransactions extends BlockCommon {
 export interface BlockView extends BlockCommon {
   transactions: Array<HashValue | SignedUserTransactionView>;
 }
+export interface TxnBlockInfo {
+  block_hash: HashValue;
+  block_number: BlockNumber;
+  transaction_hash: HashValue;
+  transaction_index: number;
+}
 
 export interface TransactionEventView extends TxnBlockInfo {
   data: HexString;
@@ -160,15 +162,12 @@ export interface TransactionEventView extends TxnBlockInfo {
   event_seq_number: U64;
 }
 
-export interface TxnBlockInfo {
-  block_hash: HashValue;
-  block_number: BlockNumber;
-  transaction_hash: HashValue;
-  transaction_index: number;
-}
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const TransactionVMStatus_Executed = 'Executed';
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const TransactionVMStatus_OutOfGas = 'OutOfGas';
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const TransactionVMStatus_MiscellaneousError = 'MiscellaneousError';
 export type TransactionVMStatus =
   | 'Executed'
@@ -194,6 +193,18 @@ export interface TransactionInfoView extends TxnBlockInfo {
   txn_events?: Array<TransactionEventView>;
 
   confirmations: number;
+}
+
+export interface TransactionResponse extends SignedUserTransactionView {
+  // Only if a transaction has been mined
+  block_number?: BlockNumber;
+  block_hash?: HashValue;
+  timestamp?: number;
+
+  confirmations: number;
+
+  // This function waits until the transaction has been mined
+  wait: (confirmations?: number) => Promise<TransactionInfoView>;
 }
 
 export interface EventFilter {
@@ -295,7 +306,7 @@ export type EventType = string | Array<string> | EventFilter;
 
 export type Listener = (...args: any[]) => void;
 
-///////////////////////////////
+/// ////////////////////////////
 // Exported Abstracts
 
 export abstract class Provider implements OnceBlockable {
@@ -315,25 +326,29 @@ export abstract class Provider implements OnceBlockable {
   //   addressOrName: string | Promise<string>,
   //   blockTag?: BlockTag | Promise<BlockTag>
   // ): Promise<number>;
-  // abstract getCode(
-  //   addressOrName: string | Promise<string>,
-  //   blockTag?: BlockTag | Promise<BlockTag>
-  // ): Promise<string>;
-  // abstract getStorageAt(
-  //   addressOrName: string | Promise<string>,
-  //   position: BigNumberish | Promise<BigNumberish>,
-  //   blockTag?: BlockTag | Promise<BlockTag>
-  // ): Promise<string>;
+
+  // get Code of moduleId
+  abstract getCode(
+    moduleId: ModuleId | Promise<ModuleId>,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<string | undefined>;
+
+  // get resource data.
+  abstract getResource(
+    address: AccountAddress | Promise<AccountAddress>,
+    resource_sturct_tag: string | Promise<string>,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<MoveStruct | undefined>;
 
   // Execution
   abstract sendTransaction(
     signedTransaction: string | Promise<string>
   ): Promise<TransactionResponse>;
 
-  // abstract call(
-  //   transaction: Deferrable<TransactionRequest>,
-  //   blockTag?: BlockTag | Promise<BlockTag>
-  // ): Promise<string>;
+  abstract call(
+    transaction: CallRequest | Promise<CallRequest>,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<Array<MoveValue>>;
 
   // abstract estimateGas(
   //   transaction: Deferrable<TransactionRequest>
@@ -343,12 +358,14 @@ export abstract class Provider implements OnceBlockable {
   abstract getBlock(
     blockHashOrBlockTag: BlockTag | Promise<BlockTag>
   ): Promise<BlockWithTransactions>;
+
   // abstract getBlockWithTransactions(
   //   blockHashOrBlockTag: BlockTag | Promise<BlockTag>
   // ): Promise<BlockWithTransactions>;
   abstract getTransaction(
     transactionHash: HashValue
   ): Promise<TransactionResponse>;
+
   abstract getTransactionInfo(
     transactionHash: HashValue
   ): Promise<TransactionInfoView>;
@@ -360,11 +377,17 @@ export abstract class Provider implements OnceBlockable {
 
   // Event Emitter (ish)
   abstract on(eventName: EventType, listener: Listener): Provider;
+
   abstract once(eventName: EventType, listener: Listener): Provider;
+
   abstract emit(eventName: EventType, ...args: Array<any>): boolean;
+
   abstract listenerCount(eventName?: EventType): number;
+
   abstract listeners(eventName?: EventType): Array<Listener>;
+
   abstract off(eventName: EventType, listener?: Listener): Provider;
+
   abstract removeAllListeners(eventName?: EventType): Provider;
 
   // Alias for "on"
@@ -392,6 +415,7 @@ export abstract class Provider implements OnceBlockable {
   }
 
   static isProvider(value: any): value is Provider {
+    // eslint-disable-next-line no-underscore-dangle
     return !!(value && value._isProvider);
   }
 }

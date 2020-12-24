@@ -1,5 +1,3 @@
-'use strict';
-
 import { BigNumber } from '@ethersproject/bignumber';
 import {
   BytesLike,
@@ -37,6 +35,8 @@ import {
   U256,
   U64,
   U8,
+  AnnotatedMoveValue,
+  MoveValue, AnnotatedMoveStruct, MoveStruct
 } from '../types';
 import { version } from '../version';
 
@@ -62,6 +62,48 @@ export type Formats = {
   block: FormatFuncs;
   blockWithTransactions: FormatFuncs;
 };
+
+export function formatMoveStruct(v: AnnotatedMoveStruct): MoveStruct {
+  // eslint-disable-next-line unicorn/no-reduce
+  return v.value.reduce(
+    (o, [k, field]) => ({ ...o, [k]: formatMoveValue(field) }),
+    {}
+  );
+}
+
+export function formatMoveValue(v: AnnotatedMoveValue): MoveValue {
+  if ('Bool' in v) {
+    return v.Bool;
+  }
+  if ('U8' in v) {
+    return v.U8;
+  }
+  if ('U64' in v) {
+    return v.U64;
+  }
+  if ('U128' in v) {
+    return v.U128;
+  }
+  if ('Address' in v) {
+    return v.Address;
+  }
+  if ('Bytes' in v) {
+    return v.Bytes;
+  }
+  if ('Vector' in v) {
+    return v.Vector.map((elem) => formatMoveValue(elem));
+  }
+  if ('Struct' in v) {
+    const struct = v.Struct;
+    // eslint-disable-next-line unicorn/no-reduce
+    return struct.value.reduce(
+      (o, [k, field]) => ({ ...o, [k]: formatMoveValue(field) }),
+      {}
+    );
+  }
+  throw new Error(`invalid annotated move value, ${JSON.stringify(v)}`);
+
+}
 
 export class Formatter {
   readonly formats: Formats;
@@ -200,16 +242,25 @@ export class Formatter {
     );
 
     formats.eventFilter = {
-      from_block: Formatter.allowNull(blockTag, undefined),
-      to_block: Formatter.allowNull(blockTag, undefined),
+      from_block: Formatter.allowNull(blockTag),
+      to_block: Formatter.allowNull(blockTag),
       event_keys: Formatter.arrayOf(hex),
-      limit: Formatter.allowNull(number, undefined),
+      limit: Formatter.allowNull(number),
     };
+
     return formats;
   }
 
   typeTag(value: any): TypeTag {
     return value as TypeTag;
+  }
+
+  moveValue(value: AnnotatedMoveValue): MoveValue {
+    return formatMoveValue(value);
+  }
+
+  moveStruct(value: AnnotatedMoveStruct): MoveStruct {
+    return formatMoveStruct(value);
   }
 
   transactionAuthenticator(value: any): TransactionAuthenticator {
@@ -242,19 +293,19 @@ export class Formatter {
         ].includes(value)
       ) {
         return value as TransactionVMStatus;
-      } else {
-        throw new Error('invalid txn vm_status: ' + value);
       }
+
+      throw new Error(`invalid txn vm_status: ${  value}`);
     } else if (typeof value === 'object') {
-      if (value['MoveAbort']) {
+      if (value.MoveAbort) {
         return value as TransactionVMStatus;
-      } else if (value['ExecutionFailure']) {
-        return value as TransactionVMStatus;
-      } else {
-        throw new Error('invalid txn vm_status: ' + JSON.stringify(value));
       }
+      if (value.ExecutionFailure) {
+        return value as TransactionVMStatus;
+      }
+      throw new Error(`invalid txn vm_status: ${  JSON.stringify(value)}`);
     } else {
-      throw new Error('invalid txn vm_status type ' + value);
+      throw new TypeError(`invalid txn vm_status type ${  value}`);
     }
   }
 

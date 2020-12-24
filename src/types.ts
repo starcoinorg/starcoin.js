@@ -179,6 +179,7 @@ export type AnnotatedMoveValue =
   | { Vector: AnnotatedMoveValue[] }
   | { Struct: AnnotatedMoveStruct };
 
+export type MoveStruct = { [key in Identifier]: MoveValue };
 export type MoveValue =
   | number
   | boolean
@@ -186,7 +187,6 @@ export type MoveValue =
   | Uint8Array
   | MoveValue[]
   | MoveStruct;
-export type MoveStruct = { [key in Identifier]: MoveValue };
 
 export interface ContractCall {
   module_address: AccountAddress;

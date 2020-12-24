@@ -2,34 +2,30 @@
 
 import { Base58 } from '@ethersproject/basex';
 import { BigNumber } from '@ethersproject/bignumber';
-import {
-  concat,
-  hexDataLength,
-  hexDataSlice,
-  hexZeroPad,
-  isHexString,
-} from '@ethersproject/bytes';
+import { concat, hexDataLength, hexDataSlice, hexlify, hexZeroPad, isHexString } from '@ethersproject/bytes';
 import { Logger } from '@ethersproject/logger';
 import { defineReadOnly, resolveProperties } from '@ethersproject/properties';
 import { sha256 } from '@ethersproject/sha2';
 import { poll } from '@ethersproject/web';
 import {
+  BlockTag,
   BlockView,
   BlockWithTransactions,
+  CallRequest,
   EventType,
   Filter,
-  Listener,
+  Listener, ModuleId,
   Provider,
   TransactionEventView,
   TransactionInfoView,
-  TransactionResponse,
+  TransactionResponse
 } from '../abstract-provider';
 import { getNetwork, Network, Networkish } from '../networks';
 import { SignedUserTransactionView } from '../transaction';
 import { version } from '../version';
 
 import { Formatter } from './formatter';
-import { BlockNumber } from '../types';
+import { AccountAddress, BlockNumber, MoveStruct, MoveValue } from '../types';
 
 const logger = new Logger(version);
 
@@ -108,14 +104,14 @@ export const CONSTANTS = {
   network: 'network',
   poll: 'poll',
   filter: 'filter',
-  tx: 'tx',
+  tx: 'tx'
 };
 
 const PollableEvents = [
   CONSTANTS.pending,
   CONSTANTS.block,
   CONSTANTS.network,
-  CONSTANTS.poll,
+  CONSTANTS.poll
 ];
 
 export class Event {
@@ -194,6 +190,8 @@ export const RPC_ACTION = {
   getTransactionInfo: 'getTransactionInfo',
   getEvents: 'getEvents',
   call: 'call',
+  getCode: 'getCode',
+  getResource: 'getResource'
 };
 
 let defaultFormatter: Formatter;
@@ -274,11 +272,13 @@ export abstract class BaseProvider extends Provider {
 
       // Squash any "unhandled promise" errors; that do not need to be handled
       // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
-      network.catch((error) => {});
+      network.catch((error) => {
+      });
 
       // Trigger initial network setting (async)
       // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
-      this._ready().catch((error) => {});
+      this._ready().catch((error) => {
+      });
     } else {
       const knownNetwork = getNetwork(network);
       if (knownNetwork) {
@@ -305,7 +305,8 @@ export abstract class BaseProvider extends Provider {
         try {
           network = await this._networkPromise;
           // eslint-disable-next-line no-empty
-        } catch (error) {}
+        } catch (error) {
+        }
       }
 
       // Try the Provider's network detection (this MUST throw if it cannot)
@@ -393,7 +394,7 @@ export abstract class BaseProvider extends Provider {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (network) => null,
         (error) => error
-      ),
+      )
     }).then(({ blockNumber, networkError }) => {
       if (networkError) {
         // Unremember this bad internal block number
@@ -455,7 +456,7 @@ export abstract class BaseProvider extends Provider {
           {
             blockNumber: blockNumber,
             event: 'blockSkew',
-            previousBlockNumber: this._emitted.block,
+            previousBlockNumber: this._emitted.block
           }
         )
       );
@@ -604,7 +605,7 @@ export abstract class BaseProvider extends Provider {
         {
           event: 'changed',
           network: network,
-          detectedNetwork: currentNetwork,
+          detectedNetwork: currentNetwork
         }
       );
 
@@ -766,7 +767,7 @@ export abstract class BaseProvider extends Provider {
           this.removeListener(transactionHash, handler);
           reject(
             logger.makeError('timeout exceeded', Logger.errors.TIMEOUT, {
-              timeout: timeout,
+              timeout: timeout
             })
           );
         }, timeout);
@@ -812,31 +813,41 @@ export abstract class BaseProvider extends Provider {
   //   ).toNumber();
   // }
 
-  // async getCode(
-  //   addressOrName: string | Promise<string>,
-  //   blockTag?: BlockTag | Promise<BlockTag>
-  // ): Promise<string> {
-  //   await this.getNetwork();
-  //   const params = await resolveProperties({
-  //     address: this._getAddress(addressOrName),
-  //     blockTag: this._getBlockTag(blockTag),
-  //   });
-  //   return hexlify(await this.perform('getCode', params));
-  // }
+  // eslint-disable-next-line consistent-return
+  async getCode(
+    moduleId: ModuleId | Promise<ModuleId>,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<string | undefined> {
+    await this.getNetwork();
+    const params = await resolveProperties({
+      moduleId: BaseProvider.getModuleId(await moduleId),
+      blockTag
+    });
+    const code = await this.perform(RPC_ACTION.getCode, params);
+    if (code) {
+      return hexlify(code);
+    }
+  }
 
-  // async getStorageAt(
-  //   addressOrName: string | Promise<string>,
-  //   position: BigNumberish | Promise<BigNumberish>,
-  //   blockTag?: BlockTag | Promise<BlockTag>
-  // ): Promise<string> {
-  //   await this.getNetwork();
-  //   const params = await resolveProperties({
-  //     address: this._getAddress(addressOrName),
-  //     blockTag: this._getBlockTag(blockTag),
-  //     position: Promise.resolve(position).then((p) => hexValue(p)),
-  //   });
-  //   return hexlify(await this.perform('getStorageAt', params));
-  // }
+  // get resource data.
+  // eslint-disable-next-line consistent-return
+  async getResource(
+    address: AccountAddress | Promise<AccountAddress>,
+    resource_sturct_tag: string | Promise<string>,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<MoveStruct | undefined> {
+    await this.getNetwork();
+    const params = await resolveProperties({
+      address,
+      structTag: resource_sturct_tag,
+      blockTag
+    });
+    const value = await this.perform(RPC_ACTION.getResource, params);
+
+    if (value) {
+      return this.formatter.moveStruct(value);
+    }
+  }
 
   // This should be called by any subclass wrapping a TransactionResponse
   private _wrapTransaction(
@@ -886,7 +897,7 @@ export abstract class BaseProvider extends Provider {
         logger.throwError('transaction failed', Logger.errors.CALL_EXCEPTION, {
           transactionHash: tx.transaction_hash,
           transaction: tx,
-          receipt: receipt,
+          receipt: receipt
         });
       }
       return receipt;
@@ -904,7 +915,7 @@ export abstract class BaseProvider extends Provider {
     try {
       // FIXME: check rpc call
       await this.perform(RPC_ACTION.sendTransaction, {
-        signedTransaction: hexTx,
+        signedTransaction: hexTx
       });
       return this._wrapTransaction(tx);
     } catch (error) {
@@ -951,6 +962,14 @@ export abstract class BaseProvider extends Provider {
   //   return this.formatter.transactionRequest(await resolveProperties(tx));
   // }
 
+  private static getModuleId(moduleId: ModuleId): string {
+    if (typeof moduleId === 'string') {
+      return moduleId;
+    }
+
+    return `${moduleId.address}::${moduleId.name}`;
+  }
+
   private async _getFilter(filter: Filter | Promise<Filter>): Promise<Filter> {
     const result = await filter;
 
@@ -973,17 +992,19 @@ export abstract class BaseProvider extends Provider {
     return this.formatter.filter(await resolveProperties(result));
   }
 
-  // async call(
-  //   transaction: Deferrable<TransactionRequest>,
-  //   blockTag?: BlockTag | Promise<BlockTag>
-  // ): Promise<string> {
-  //   await this.getNetwork();
-  //   const params = await resolveProperties({
-  //     transaction: this._getTransactionRequest(transaction),
-  //     blockTag: this._getBlockTag(blockTag),
-  //   });
-  //   return hexlify(await this.perform(RPC_ACTION.call, params));
-  // }
+  async call(
+    request: CallRequest | Promise<CallRequest>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<Array<MoveValue>> {
+    await this.getNetwork();
+    const params = await resolveProperties({
+      request
+    });
+    // eslint-disable-next-line no-return-await
+    const rets = await this.perform(RPC_ACTION.call, params);
+    return rets.map(v => this.formatter.moveValue(v));
+  }
 
   // async estimateGas(
   //   transaction: Deferrable<TransactionRequest>
@@ -1007,7 +1028,7 @@ export abstract class BaseProvider extends Provider {
     let blockNumber = -128;
 
     const params: { [key: string]: any } = {
-      includeTransactions: !!includeTransactions,
+      includeTransactions: !!includeTransactions
     };
 
     if (isHexString(blockHashOrBlockNumber, 32)) {
@@ -1096,7 +1117,7 @@ export abstract class BaseProvider extends Provider {
     transactionHash = await transactionHash;
 
     const params = {
-      transactionHash: this.formatter.hash(transactionHash, true),
+      transactionHash: this.formatter.hash(transactionHash, true)
     };
 
     return poll(
@@ -1144,7 +1165,7 @@ export abstract class BaseProvider extends Provider {
     transactionHash = await transactionHash;
 
     const params = {
-      transactionHash: this.formatter.hash(transactionHash, true),
+      transactionHash: this.formatter.hash(transactionHash, true)
     };
 
     return poll(

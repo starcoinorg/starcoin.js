@@ -41,4 +41,28 @@ describe('jsonrpc-provider', () => {
     });
     console.log(events);
   });
+
+  test('call contract', async () => {
+    const values = await provider.call( {
+      module_address: '0x1',
+      module_name: 'Account',
+      func: 'balance',
+      type_args: ['0x1::STC::STC'],
+      args: ['0x1'],
+    });
+    console.log(values);
+  });
+
+  test('get code', async () => {
+    let code = await provider.getCode("0x1::Account");
+    console.log(code);
+    code = await provider.getCode("0x1::Accouny");
+    expect(code).toBeUndefined();
+  });
+  test('get resource', async () => {
+    let resource = await provider.getResource("0x1", "0x1::Account::Account");
+    console.log(JSON.stringify(resource, undefined, 2));
+    resource = await provider.getResource("0x2", "0x1::Account::Account");
+    expect(resource).toBeUndefined();
+  });
 });

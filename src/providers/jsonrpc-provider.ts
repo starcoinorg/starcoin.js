@@ -5,7 +5,7 @@ import {
   deepCopy,
   defineReadOnly,
   getStatic,
-  shallowCopy,
+  shallowCopy
 } from '@ethersproject/properties';
 import { ConnectionInfo, fetchJson } from '@ethersproject/web';
 
@@ -47,7 +47,7 @@ function checkError(method: string, error: any, params: any): never {
       {
         error,
         method,
-        transaction,
+        transaction
       }
     );
   }
@@ -60,7 +60,7 @@ function checkError(method: string, error: any, params: any): never {
       {
         error,
         method,
-        transaction,
+        transaction
       }
     );
   }
@@ -73,7 +73,7 @@ function checkError(method: string, error: any, params: any): never {
       {
         error,
         method,
-        transaction,
+        transaction
       }
     );
   }
@@ -90,7 +90,7 @@ function checkError(method: string, error: any, params: any): never {
       {
         error,
         method,
-        transaction,
+        transaction
       }
     );
   }
@@ -99,7 +99,7 @@ function checkError(method: string, error: any, params: any): never {
 }
 
 function timer(timeout: number): Promise<any> {
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
     setTimeout(resolve, timeout);
   });
 }
@@ -158,7 +158,7 @@ export class JsonrpcProvider extends BaseProvider {
         this,
         'connection',
         Object.freeze({
-          url: url,
+          url: url
         })
       );
     } else {
@@ -184,7 +184,8 @@ export class JsonrpcProvider extends BaseProvider {
         const chainInfo = await this.perform(RPC_ACTION.getChainInfo, null);
         chainId = chainInfo.chain_id;
         // eslint-disable-next-line no-empty
-      } catch (error) {}
+      } catch (error) {
+      }
     }
 
     if (chainId != null) {
@@ -197,7 +198,7 @@ export class JsonrpcProvider extends BaseProvider {
           {
             chainId: chainId,
             event: 'invalidNetwork',
-            serverError: error,
+            serverError: error
           }
         );
       }
@@ -207,7 +208,7 @@ export class JsonrpcProvider extends BaseProvider {
       'could not detect network',
       Logger.errors.NETWORK_ERROR,
       {
-        event: 'noNetwork',
+        event: 'noNetwork'
       }
     );
   }
@@ -217,13 +218,13 @@ export class JsonrpcProvider extends BaseProvider {
       method: method,
       params: params,
       id: this._nextId++,
-      jsonrpc: '2.0',
+      jsonrpc: '2.0'
     };
 
     this.emit('debug', {
       action: 'request',
       request: deepCopy(request),
-      provider: this,
+      provider: this
     });
 
     return fetchJson(this.connection, JSON.stringify(request), getResult).then(
@@ -232,7 +233,7 @@ export class JsonrpcProvider extends BaseProvider {
           action: 'response',
           request: request,
           response: result,
-          provider: this,
+          provider: this
         });
 
         return result;
@@ -242,7 +243,7 @@ export class JsonrpcProvider extends BaseProvider {
           action: 'response',
           error: error,
           request: request,
-          provider: this,
+          provider: this
         });
 
         throw error;
@@ -250,6 +251,7 @@ export class JsonrpcProvider extends BaseProvider {
     );
   }
 
+  // eslint-disable-next-line consistent-return
   prepareRequest(method: string, params: any): [string, Array<any>] {
     switch (method) {
       case RPC_ACTION.getChainInfo:
@@ -278,34 +280,31 @@ export class JsonrpcProvider extends BaseProvider {
       case RPC_ACTION.sendTransaction:
         return ['txpool.submit_hex_transaction', [params.signedTransaction]];
       case RPC_ACTION.getBlock:
-        if (params.blockNumber != undefined) {
+        if (params.blockNumber !== undefined) {
           return ['chain.get_block_by_number', [params.blockNumber]];
-        } else if (params.blockHash != undefined) {
+        }
+        if (params.blockHash !== undefined) {
           return ['chain.get_block_by_hash', [params.blockHash]];
         }
-        return null;
+        break;
       case RPC_ACTION.getTransactionByHash:
         return ['chain.get_transaction', [params.transactionHash]];
 
       case RPC_ACTION.getTransactionInfo:
         return ['chain.get_transaction_info', [params.transactionHash]];
 
-      // case 'call': {
-      //   const hexlifyTransaction = getStatic<
-      //     (
-      //       t: TransactionRequest,
-      //       a?: { [key: string]: boolean }
-      //     ) => { [key: string]: string }
-      //   >(this.constructor, 'hexlifyTransaction');
-      //   return [
-      //     'eth_call',
-      //     [
-      //       hexlifyTransaction(params.transaction, { from: true }),
-      //       params.blockTag,
-      //     ],
-      //   ];
-      // }
-      //
+      case RPC_ACTION.getCode:
+        return ['contract.get_code', [params.moduleId]];
+      case RPC_ACTION.getResource:
+        return ['contract.get_resource', [params.address, params.structTag]];
+      case RPC_ACTION.call:
+        return [
+          'dev.call_contract',
+          [
+            params.request
+          ]
+        ];
+
       // case 'estimateGas': {
       //   const hexlifyTransaction = getStatic<
       //     (
@@ -321,7 +320,7 @@ export class JsonrpcProvider extends BaseProvider {
       case RPC_ACTION.getEvents:
         return ['chain.get_events', [params.filter]];
       default:
-        return null;
+        break;
       // if (params instanceof Array) {
       //   return [method, params];
       // } else {
@@ -333,9 +332,9 @@ export class JsonrpcProvider extends BaseProvider {
   async perform(method: string, params: any): Promise<any> {
     const args = this.prepareRequest(method, params);
 
-    if (args == null) {
+    if (args === undefined) {
       logger.throwError(
-        method + ' not implemented',
+        `${method} not implemented`,
         Logger.errors.NOT_IMPLEMENTED,
         { operation: method }
       );
