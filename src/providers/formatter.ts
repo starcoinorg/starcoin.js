@@ -4,7 +4,7 @@ import {
   hexDataLength,
   hexStripZeros,
   hexValue,
-  isHexString,
+  isHexString
 } from '@ethersproject/bytes';
 import { Logger } from '@ethersproject/logger';
 import { shallowCopy } from '@ethersproject/properties';
@@ -88,7 +88,7 @@ export function formatMoveValue(v: AnnotatedMoveValue): MoveValue {
     return v.Address;
   }
   if ('Bytes' in v) {
-    return v.Bytes;
+    return hexValue(v.Bytes);
   }
   if ('Vector' in v) {
     return v.Vector.map((elem) => formatMoveValue(elem));

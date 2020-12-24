@@ -179,14 +179,16 @@ export type AnnotatedMoveValue =
   | { Vector: AnnotatedMoveValue[] }
   | { Struct: AnnotatedMoveStruct };
 
+// eslint-disable-next-line no-use-before-define
 export type MoveStruct = { [key in Identifier]: MoveValue };
 export type MoveValue =
   | number
   | boolean
   | AccountAddress
-  | Uint8Array
+  | HexString
   | MoveValue[]
   | MoveStruct;
+
 
 export interface ContractCall {
   module_address: AccountAddress;
