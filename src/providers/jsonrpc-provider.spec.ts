@@ -65,4 +65,22 @@ describe('jsonrpc-provider', () => {
     resource = await provider.getResource("0x2", "0x1::Account::Account");
     expect(resource).toBeUndefined();
   });
+
+
+  test('txn sign and submit', async () => {
+    const signer = await provider.getSigner();
+    await signer.unlock("");
+    const txn = await signer.sendTransaction({
+      script: {
+        code: 'peer_to_peer',
+        type_args: ['0x1::STC::STC'],
+        args: ['0xc13b50bdb12e3fdd03c4e3b05e34926a', 'x"29b6012aee31a216af67c3d05e21a092c13b50bdb12e3fdd03c4e3b05e34926a"', '100000u128'],
+      }
+    });
+    console.log(`txn hash ${  txn.transaction_hash}`);
+    const txnInfo = await txn.wait(1);
+    console.log(txnInfo);
+    const balance = await provider.getBalance('0xc13b50bdb12e3fdd03c4e3b05e34926a');
+    expect(balance).toBe(100000);
+  });
 });

@@ -850,7 +850,7 @@ export abstract class BaseProvider extends Provider {
   }
 
   // This should be called by any subclass wrapping a TransactionResponse
-  private _wrapTransaction(
+  protected _wrapTransaction(
     tx: SignedUserTransactionView,
     hash?: string
   ): TransactionResponse {

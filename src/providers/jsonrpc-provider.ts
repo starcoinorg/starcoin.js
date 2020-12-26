@@ -1,25 +1,27 @@
-'use strict';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Logger } from '@ethersproject/logger';
 import {
-  deepCopy,
+  deepCopy, Deferrable,
   defineReadOnly,
-  getStatic,
+  getStatic, resolveProperties,
   shallowCopy
 } from '@ethersproject/properties';
-import { ConnectionInfo, fetchJson } from '@ethersproject/web';
+import { ConnectionInfo, fetchJson, poll } from '@ethersproject/web';
 
 import { getNetwork, Network, Networkish } from '../networks';
 import { version } from '../version';
 
-const logger = new Logger(version);
-
 import { BaseProvider, CONSTANTS, Event, RPC_ACTION } from './base-provider';
 
 // eslint-disable-next-line import/order
-import { ChainId } from '../types';
+import { AccountAddress, ChainId } from '../types';
+import { Signer } from '../abstract-signer';
+import { Provider, TransactionRequest, TransactionResponse } from '../abstract-provider';
+import { Bytes, hexlify } from '@ethersproject/bytes';
 
-const errorGas = ['call', 'estimateGas'];
+const logger = new Logger(version);
+
+const errorGas = new Set(['call', 'estimateGas']);
 
 // FIXME: recheck the error.
 function checkError(method: string, error: any, params: any): never {
@@ -79,7 +81,7 @@ function checkError(method: string, error: any, params: any): never {
   }
 
   if (
-    errorGas.indexOf(method) >= 0 &&
+    errorGas.has(method) &&
     message.match(
       /gas required exceeds allowance|always failing transaction|execution reverted/
     )
@@ -118,6 +120,130 @@ function getResult(payload: {
 
   return payload.result;
 }
+const _constructorGuard = {};
+
+export class JsonRpcSigner extends Signer {
+  // eslint-disable-next-line no-use-before-define
+  readonly provider: JsonrpcProvider;
+  _index?: number;
+  _address?: string;
+
+  // eslint-disable-next-line no-use-before-define
+  constructor(constructorGuard: any, provider: JsonrpcProvider, addressOrIndex?: string | number) {
+    logger.checkNew(new.target, JsonRpcSigner);
+
+    super();
+
+    if (constructorGuard !== _constructorGuard) {
+      throw new Error("do not call the JsonRpcSigner constructor directly; use provider.getSigner");
+    }
+
+    defineReadOnly(this, "provider", provider);
+
+    // eslint-disable-next-line no-param-reassign
+    if (addressOrIndex === undefined) { addressOrIndex = 0; }
+
+    if (typeof(addressOrIndex) === "string") {
+      defineReadOnly(this, "_address", this.provider.formatter.address(addressOrIndex));
+    } else if (typeof(addressOrIndex) === "number") {
+      defineReadOnly(this, "_index", addressOrIndex);
+    } else {
+      logger.throwArgumentError("invalid address or index", "addressOrIndex", addressOrIndex);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars,class-methods-use-this
+  connect(provider: Provider): JsonRpcSigner {
+    return logger.throwError("cannot alter JSON-RPC Signer connection", Logger.errors.UNSUPPORTED_OPERATION, {
+      operation: "connect"
+    });
+  }
+
+  // connectUnchecked(): JsonRpcSigner {
+  //   return new UncheckedJsonRpcSigner(_constructorGuard, this.provider, this._address || this._index);
+  // }
+
+  async getAddress(): Promise<string> {
+    // eslint-disable-next-line no-underscore-dangle
+    if (this._address) {
+      // eslint-disable-next-line no-underscore-dangle
+      return Promise.resolve(this._address);
+    }
+
+
+    return this.provider.listAccounts().then((accounts) => {
+      // eslint-disable-next-line no-underscore-dangle
+      if (accounts.length <= this._index) {
+        // eslint-disable-next-line no-underscore-dangle
+        logger.throwError(`unknown account #${  this._index}`, Logger.errors.UNSUPPORTED_OPERATION, {
+          operation: "getAddress"
+        });
+      }
+      // eslint-disable-next-line no-underscore-dangle
+      return accounts[this._index];
+    });
+  }
+
+  async signTransaction(transaction: Deferrable<TransactionRequest>): Promise<string> {
+    // eslint-disable-next-line no-param-reassign
+    const request = await resolveProperties(transaction);
+    const sender = await this.getAddress();
+    if (request.sender !== undefined) {
+      if (request.sender !== sender) {
+        logger.throwArgumentError("from address mismatch", "transaction", transaction);
+      }
+    } else {
+      request.sender = sender;
+    }
+
+    return this.provider.send("account.sign_txn_request", [request]).then((hexTxnData) => {
+      return hexTxnData;
+      },
+      (error) => {
+        return checkError("signTransaction", error, request);
+      });
+  }
+
+  // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
+  async signMessage(message: Bytes | string): Promise<string> {
+    return logger.throwError("signing message is unsupported", Logger.errors.UNSUPPORTED_OPERATION, {
+      operation: "signMessage"
+    });
+    // const data = ((typeof(message) === "string") ? toUtf8Bytes(message): message);
+    // const address = await this.getAddress();
+    //
+    // // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign
+    // return this.provider.send("eth_sign", [ address.toLowerCase(), hexlify(data) ]);
+  }
+
+  async unlock(password: string): Promise<void> {
+    const {provider} = this;
+
+    const address = await this.getAddress();
+
+    return provider.send("account.unlock", [ address.toLowerCase(), password, undefined ]);
+  }
+}
+
+// class UncheckedJsonRpcSigner extends JsonRpcSigner {
+//   sendTransaction(transaction: Deferrable<TransactionRequest>): Promise<TransactionResponse> {
+//     return this.sendUncheckedTransaction(transaction).then((hash) => {
+//       return <TransactionResponse>{
+//         hash: hash,
+//         nonce: null,
+//         gasLimit: null,
+//         gasPrice: null,
+//         data: null,
+//         value: null,
+//         chainId: null,
+//         confirmations: 0,
+//         from: null,
+//         wait: (confirmations?: number) => { return this.provider.waitForTransaction(hash, confirmations); }
+//       };
+//     });
+//   }
+// }
+
 
 export class JsonrpcProvider extends BaseProvider {
   readonly connection: ConnectionInfo;
@@ -211,6 +337,21 @@ export class JsonrpcProvider extends BaseProvider {
         event: 'noNetwork'
       }
     );
+  }
+
+  getSigner(addressOrIndex?: string | number): JsonRpcSigner {
+    return new JsonRpcSigner(_constructorGuard, this, addressOrIndex);
+  }
+
+  // getUncheckedSigner(addressOrIndex?: string | number): UncheckedJsonRpcSigner {
+  //   return this.getSigner(addressOrIndex).connectUnchecked();
+  // }
+
+  listAccounts(): Promise<Array<string>> {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    return this.send("account.list", []).then((accounts: Array<{ address: AccountAddress }>) => {
+      return accounts.map(({ address }) => this.formatter.address(address));
+    });
   }
 
   send(method: string, params: Array<any>): Promise<any> {

@@ -15,7 +15,7 @@ import {
   HexString, Identifier, MoveStruct, MoveValue,
   SignatureType,
   TransactionAuthenticator,
-  TypeTag,
+  TypeTag, U128,
   U16,
   U256,
   U64,
@@ -83,16 +83,20 @@ export interface TransactionView {
 }
 
 export type TransactionRequest = {
-  to?: string;
-  from?: string;
-  nonce?: BigNumberish;
+  sender?: AccountAddress;
+  sequence_number?: U64;
 
-  gasLimit?: BigNumberish;
-  gasPrice?: BigNumberish;
+  script?: {
+    code: string,
+    type_args?: Array<string>,
+    args?: Array<string>,
+  };
+  modules?: Array<HexString>,
 
-  data?: BytesLike;
-  value?: BigNumberish;
-  chainId?: number;
+  max_gas_amount?: U64;
+  gas_unit_price?: U64;
+  gas_token_code?: string;
+  chain_id?: U8;
 };
 
 
@@ -318,14 +322,34 @@ export abstract class Provider implements OnceBlockable {
   // abstract getGasPrice(): Promise<BigNumber>;
 
   // Account
-  // abstract getBalance(
-  //   addressOrName: string | Promise<string>,
-  //   blockTag?: BlockTag | Promise<BlockTag>
-  // ): Promise<BigNumber>;
-  // abstract getTransactionCount(
-  //   addressOrName: string | Promise<string>,
-  //   blockTag?: BlockTag | Promise<BlockTag>
-  // ): Promise<number>;
+
+  // eslint-disable-next-line consistent-return
+  async getBalance(
+    address: AccountAddress | Promise<AccountAddress>,
+    // token name, default to 0x1::STC::STC
+    token?: string,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<U128 | undefined> {
+    if (token === undefined) {
+      // eslint-disable-next-line no-param-reassign
+      token = '0x1::STC::STC';
+    }
+    const resource = await this.getResource(address, `0x1::Account::Balance<${token}>`, blockTag);
+    if (resource !== undefined) {
+      return ((resource as MoveStruct).token as MoveStruct).value as U128;
+    }
+  }
+
+  // eslint-disable-next-line consistent-return
+  async getSequenceNumber(
+    address: AccountAddress | Promise<AccountAddress>,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<U64 | undefined> {
+    const resource = await this.getResource(address, '0x1::Account::Account', blockTag);
+    if (resource !== undefined) {
+      return (resource as MoveStruct).sequence_number as U64;
+    }
+  }
 
   // get Code of moduleId
   abstract getCode(
