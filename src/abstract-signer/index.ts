@@ -1,17 +1,16 @@
 // eslint-disable-next-line max-classes-per-file
-import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
-import { Bytes, BytesLike } from '@ethersproject/bytes';
+import { Bytes } from '@ethersproject/bytes';
 import { deepCopy, Deferrable, defineReadOnly, resolveProperties, shallowCopy } from '@ethersproject/properties';
-
 import { Logger } from '@ethersproject/logger';
-import { BlockTag, Provider, TransactionRequest, TransactionResponse } from '../abstract-provider';
+import { Provider } from '../abstract-provider';
 import { version } from '../version';
-import { U128, U64 } from '../types';
+import { U128, U64, BlockTag, TransactionRequest, TransactionResponse } from '../types';
 
 const logger = new Logger(version);
 
 const allowedTransactionKeys = new Set([
   'sender',
+  'sender_public_key',
   'sequence_number',
   'script',
   'modules',
@@ -67,7 +66,7 @@ export abstract class Signer {
 
   async getBalance(token: string, blockTag?: BlockTag): Promise<U128> {
     this.checkProvider('getBalance');
-    return this.provider.getBalance(this.getAddress(),  token, blockTag);
+    return this.provider.getBalance(this.getAddress(), token, blockTag);
   }
 
   // FIXME: check pending txn in txpool
@@ -80,10 +79,12 @@ export abstract class Signer {
   async estimateGas(transaction: Deferrable<TransactionRequest>): Promise<U64> {
     this.checkProvider('estimateGas');
 
-    // const tx = await resolveProperties(this.checkTransaction(transaction));
-    // return this.provider.estimateGas(tx);
-    // FIXME(not implemented)
-    return 1000000;
+    const tx = await resolveProperties(this.checkTransaction(transaction));
+    const txnOutput = await this.provider.dryRun(tx);
+    if (typeof txnOutput.gas_used === 'number') {
+      return 10 * txnOutput.gas_used;
+    }
+    return 10n * txnOutput.gas_used.valueOf();
   }
 
   // calls with the transaction
@@ -112,8 +113,7 @@ export abstract class Signer {
 
   async getGasPrice(): Promise<U64> {
     this.checkProvider('getGasPrice');
-    return 1;
-    // return this.provider.getGasPrice();
+    return this.provider.getGasPrice();
   }
 
   // Checks a transaction does not contain invalid keys and if
@@ -129,11 +129,11 @@ export abstract class Signer {
     // eslint-disable-next-line no-restricted-syntax
     for (const key of Object.keys(transaction)) {
       if (!allowedTransactionKeys.has(key)) {
-        logger.throwArgumentError(`invalid transaction key: ${  key}`, 'transaction', transaction);
+        logger.throwArgumentError(`invalid transaction key: ${key}`, 'transaction', transaction);
       }
     }
 
-    const tx = deepCopy(transaction);
+    const tx = shallowCopy(transaction);
 
     if (tx.sender === undefined) {
       tx.sender = this.getAddress();
@@ -160,29 +160,12 @@ export abstract class Signer {
   async populateTransaction(transaction: Deferrable<TransactionRequest>): Promise<TransactionRequest> {
 
     const tx: Deferrable<TransactionRequest> = await resolveProperties(this.checkTransaction(transaction));
-
-    // if (tx.to !== undefined) {
-    //   tx.to = Promise.resolve(tx.to).then((to) => this.resolveName(to));
-    // }
     if (tx.gas_unit_price === undefined) {
       tx.gas_unit_price = this.getGasPrice();
     }
     if (tx.sequence_number === undefined) {
       tx.sequence_number = this.getSequenceNumber('pending');
     }
-
-    if (tx.max_gas_amount === undefined) {
-      tx.max_gas_amount = this.estimateGas(tx).catch((error) => {
-        if (forwardErrors.has(error.code)) {
-          throw error;
-        }
-        return logger.throwError('cannot estimate gas; transaction may fail or may require manual gas limit', Logger.errors.UNPREDICTABLE_GAS_LIMIT, {
-          error,
-          tx
-        });
-      });
-    }
-
     if (tx.chain_id === undefined) {
       tx.chain_id = this.getChainId();
     } else {
@@ -194,6 +177,19 @@ export abstract class Signer {
           logger.throwArgumentError('chainId address mismatch', 'transaction', transaction);
         }
         return results[0];
+      });
+    }
+
+    if (tx.max_gas_amount === undefined) {
+      tx.max_gas_amount = this.estimateGas(tx).catch((error) => {
+        if (forwardErrors.has(error.code)) {
+          throw error;
+        }
+        console.log(`err: ${error}`);
+        return logger.throwError('cannot estimate gas; transaction may fail or may require manual gas limit', Logger.errors.UNPREDICTABLE_GAS_LIMIT, {
+          error,
+          tx
+        });
       });
     }
 

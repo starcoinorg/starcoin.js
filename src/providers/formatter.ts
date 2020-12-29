@@ -10,25 +10,15 @@ import { Logger } from '@ethersproject/logger';
 import { shallowCopy } from '@ethersproject/properties';
 
 import {
-  BlockMetadataView,
-  BlockView,
-  BlockWithTransactions,
-  BlockWithTxnHashes,
-  Filter,
-  TransactionEventView,
-  TransactionInfoView,
-  TransactionResponse,
-  TransactionVMStatus_Executed,
-  TransactionVMStatus_MiscellaneousError,
-  TransactionVMStatus_OutOfGas,
-} from '../abstract-provider';
-import {
   parseUserTransaction,
   RawUserTransactionView,
-  SignedUserTransactionView,
+  SignedUserTransactionView
 } from '../transaction';
 import {
   TransactionAuthenticator,
+  TransactionVMStatus_Executed,
+  TransactionVMStatus_MiscellaneousError,
+  TransactionVMStatus_OutOfGas,
   TransactionVMStatus,
   TypeTag,
   U128,
@@ -36,7 +26,16 @@ import {
   U64,
   U8,
   AnnotatedMoveValue,
-  MoveValue, AnnotatedMoveStruct, MoveStruct
+  MoveValue, AnnotatedMoveStruct, MoveStruct,
+  BlockMetadataView,
+  BlockView,
+  BlockWithTransactions,
+  BlockWithTxnHashes,
+  Filter,
+  TransactionEventView,
+  TransactionInfoView, TransactionOutput,
+  TransactionResponse, TransactionWriteAction
+
 } from '../types';
 import { version } from '../version';
 
@@ -56,6 +55,7 @@ export type Formats = {
   transactionInfo: FormatFuncs;
   transactionEvent: FormatFuncs;
   eventFilter: FormatFuncs;
+  transactionOutput: FormatFuncs;
 
   blockHeader: FormatFuncs;
   blockBody: FormatFuncs;
@@ -124,6 +124,8 @@ export class Formatter {
     const hex = this.hex.bind(this);
     const number = this.number.bind(this);
     const u64 = this.u64.bind(this);
+    // eslint-disable-next-line no-underscore-dangle
+    const i64 = this._bigint.bind(this);
     const u8 = this.u8.bind(this);
     const u256 = this.u256.bind(this);
 
@@ -139,13 +141,13 @@ export class Formatter {
       gas_unit_price: u64,
       gas_token_code: (v) => v,
       expiration_timestamp_secs: u64,
-      chain_id: u8,
+      chain_id: u8
     };
 
     formats.signedUserTransaction = {
       transaction_hash: hash,
       raw_txn: this.rawUserTransaction.bind(this),
-      authenticator: this.transactionAuthenticator.bind(this),
+      authenticator: this.transactionAuthenticator.bind(this)
     };
 
     formats.blockMetadata = {
@@ -156,14 +158,14 @@ export class Formatter {
       uncles: u64,
       number: u64,
       chain_id: u8,
-      parent_gas_used: u64,
+      parent_gas_used: u64
     };
 
     const txnBlockInfo = {
-      block_hash: hash,
-      block_number: u64,
-      transaction_hash: Formatter.allowNull(hash, null),
-      transaction_index: Formatter.allowNull(number, null),
+      block_hash: Formatter.allowNull(hash),
+      block_number: Formatter.allowNull(u64),
+      transaction_hash: Formatter.allowNull(hash, ),
+      transaction_index: Formatter.allowNull(number)
     };
 
     formats.transaction = {
@@ -172,13 +174,13 @@ export class Formatter {
         this.signedUserTransaction.bind(this),
         null
       ),
-      ...txnBlockInfo,
+      ...txnBlockInfo
     };
     formats.blockBody = {
       Full: Formatter.allowNull(
         Formatter.arrayOf(this.signedUserTransaction.bind(this))
       ),
-      Hashes: Formatter.allowNull(Formatter.arrayOf(hash)),
+      Hashes: Formatter.allowNull(Formatter.arrayOf(hash))
     };
     formats.blockHeader = {
       block_hash: hash,
@@ -203,17 +205,17 @@ export class Formatter {
       /// hash for block body
       body_hash: hash,
       /// The chain id
-      chain_id: u8,
+      chain_id: u8
     };
 
     formats.blockWithTransactions = {
       header: (value) => Formatter.check(formats.blockHeader, value),
-      body: (value) => value,
+      body: (value) => value
     };
     formats.block = {
       header: (value) => Formatter.check(formats.blockHeader, value),
       body: (value) => Formatter.check(formats.blockBody, value),
-      confirmations: number,
+      confirmations: number
     };
 
     formats.transactionInfo = {
@@ -225,7 +227,7 @@ export class Formatter {
         Formatter.arrayOf(this.transactionEvent.bind(this)),
         null
       ),
-      ...txnBlockInfo,
+      ...txnBlockInfo
     };
 
     formats.transactionEvent = {
@@ -233,7 +235,15 @@ export class Formatter {
       type_tags: this.typeTag.bind(this),
       event_key: hex,
       event_seq_number: u64,
-      ...txnBlockInfo,
+      ...txnBlockInfo
+    };
+
+    formats.transactionOutput = {
+      gas_used: u64,
+      delta_size: i64,
+      status: this.transactionVmStatus.bind(this),
+      events: Formatter.allowNull(Formatter.arrayOf(this.transactionEvent.bind(this))),
+      write_set: Formatter.allowNull(Formatter.arrayOf(this.transactionWriteAction.bind(this)))
     };
 
     formats.blockWithTransactions = shallowCopy(formats.block);
@@ -245,7 +255,7 @@ export class Formatter {
       from_block: Formatter.allowNull(blockTag),
       to_block: Formatter.allowNull(blockTag),
       event_keys: Formatter.arrayOf(hex),
-      limit: Formatter.allowNull(number),
+      limit: Formatter.allowNull(number)
     };
 
     return formats;
@@ -279,6 +289,14 @@ export class Formatter {
     return Formatter.check(this.formats.blockMetadata, value);
   }
 
+  transactionOutput(value: any): TransactionOutput {
+    return Formatter.check(this.formats.transactionOutput, value);
+  }
+
+  transactionWriteAction(value: any): TransactionWriteAction {
+    return value as TransactionWriteAction;
+  }
+
   transactionEvent(value: any): TransactionEventView {
     return Formatter.check(this.formats.transactionEvent, value);
   }
@@ -289,23 +307,35 @@ export class Formatter {
         [
           TransactionVMStatus_Executed,
           TransactionVMStatus_OutOfGas,
-          TransactionVMStatus_MiscellaneousError,
+          TransactionVMStatus_MiscellaneousError
         ].includes(value)
       ) {
         return value as TransactionVMStatus;
       }
 
-      throw new Error(`invalid txn vm_status: ${  value}`);
+      throw new Error(`invalid txn vm_status: ${value}`);
     } else if (typeof value === 'object') {
       if (value.MoveAbort) {
-        return value as TransactionVMStatus;
+        return {
+          MoveAbort: {
+            location: value.MoveAbort.location,
+            abort_code: this.u64(value.MoveAbort.abort_code)
+          }
+        };
       }
       if (value.ExecutionFailure) {
         return value as TransactionVMStatus;
       }
-      throw new Error(`invalid txn vm_status: ${  JSON.stringify(value)}`);
+      if (value.Discard) {
+        return {
+          Discard: {
+            status_code: this.u64(value.Discard.status_code)
+          }
+        };
+      }
+      throw new Error(`invalid txn vm_status: ${JSON.stringify(value)}`);
     } else {
-      throw new TypeError(`invalid txn vm_status type ${  value}`);
+      throw new TypeError(`invalid txn vm_status type ${value}`);
     }
   }
 
@@ -324,14 +354,17 @@ export class Formatter {
     } else if (typeof value === 'number') {
       return value;
     }
-    throw new Error('invalid u8: ' + value);
+    throw new Error(`invalid u8: ${value}`);
   }
+
   u64(number: any): U64 {
     return this._bigint(number);
   }
+
   u128(number: any): U128 {
     return this._bigint(number);
   }
+
   u256(number: any): U256 {
     if (typeof number == 'string') {
       return number;
@@ -392,7 +425,7 @@ export class Formatter {
   data(value: any, strict?: boolean): string {
     const result = this.hex(value, strict);
     if (result.length % 2 !== 0) {
-      throw new Error('invalid data; odd-length - ' + value);
+      throw new Error(`invalid data; odd-length - ${  value}`);
     }
     return result;
   }
@@ -470,7 +503,7 @@ export class Formatter {
     return {
       header: block.header,
       transactions,
-      confirmations: block.confirmations,
+      confirmations: block.confirmations
     };
   }
 
@@ -481,7 +514,7 @@ export class Formatter {
       transactions: (transactions as SignedUserTransactionView[]).map(
         (t) => t.transaction_hash
       ),
-      confirmations,
+      confirmations
     };
   }
 
@@ -490,7 +523,7 @@ export class Formatter {
     return {
       header,
       transactions: transactions as Array<SignedUserTransactionView>,
-      confirmations,
+      confirmations
     };
   }
 
@@ -637,7 +670,7 @@ export class Formatter {
 
   // if value is null-ish, nullValue is returned
   static allowNull(format: FormatFunc, nullValue?: any): FormatFunc {
-    return function (value: any) {
+    return function(value: any) {
       if (value == null) {
         return nullValue;
       }
@@ -647,7 +680,7 @@ export class Formatter {
 
   // If value is false-ish, replaceValue is returned
   static allowFalsish(format: FormatFunc, replaceValue: any): FormatFunc {
-    return function (value: any) {
+    return function(value: any) {
       if (!value) {
         return replaceValue;
       }
@@ -657,20 +690,22 @@ export class Formatter {
 
   // Requires an Array satisfying check
   static arrayOf(format: FormatFunc): FormatFunc {
-    return function (array: any): Array<any> {
+    return function(array: any): Array<any> {
       if (!Array.isArray(array)) {
         throw new Error('not an array');
       }
 
       const result: any = [];
 
-      array.forEach(function (value) {
+      array.forEach(function(value) {
         result.push(format(value));
       });
 
       return result;
     };
   }
+
+
 }
 
 //

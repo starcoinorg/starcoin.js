@@ -1,13 +1,38 @@
+import { arrayify, BytesLike } from '@ethersproject/bytes';
 import { LcsDeserializer } from '../lib/runtime/lcs';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import {
   AccountAddress,
   StructTag,
   TransactionArgument,
-  TypeTag,
+  TypeTag
 } from '../types';
-
 import { fromHexString, toHexString } from './hex';
+
+// export function parseTxnPayload(payload: BytesLike): TransactionPayload {
+//   const bytes = arrayify(payload);
+//   const de = new LcsDeserializer(bytes);
+//   const lcsTxnPayload = starcoin_types.TransactionPayload.deserialize(de);
+//   if (lcsTxnPayload instanceof starcoin_types.TransactionPayloadVariantScript) {
+//     const script = lcsTxnPayload.value;
+//     return {
+//       Script: {
+//         code: script.code,
+//         ty_args: script.ty_args.map(t => type_tag_to_json(t)),
+//         args: [],
+//       }
+//     };
+//   } else if (lcsTxnPayload instanceof starcoin_types.TransactionPayloadVariantPackage) {
+//     const packagePayload = lcsTxnPayload.value;
+//     return {
+//       Package: {
+//         package_address: packagePayload.package_address,
+//         modules: packagePayload.modules,
+//         init_script: packagePayload.init_script,
+//       }
+//     };
+//   }
+// }
 
 export function address_from_json(
   addr: AccountAddress
@@ -17,7 +42,7 @@ export function address_from_json(
   return starcoin_types.AccountAddress.deserialize(new LcsDeserializer(bytes));
 }
 
-export function address_to_json(
+export function decodeAddress(
   addr: starcoin_types.AccountAddress
 ): AccountAddress {
   return toHexString(addr.value.map(([t]) => t));
@@ -66,7 +91,7 @@ export function struct_tag_to_json(
     module: lcs_data.module.value,
     name: lcs_data.name.value,
     type_params: lcs_data.type_params.map((t) => type_tag_to_json(t)),
-    address: address_to_json(lcs_data.address),
+    address: decodeAddress(lcs_data.address),
   };
 }
 

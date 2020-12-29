@@ -1,5 +1,3 @@
-'use strict';
-
 // import { setInterval } from 'timers';
 
 import { Logger } from '@ethersproject/logger';

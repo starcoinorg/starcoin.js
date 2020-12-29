@@ -15,7 +15,7 @@ import {
   U64,
   U8,
 } from "../types";
-import { address_to_json } from "../utils/lcs-to-json";
+import { decodeAddress } from "../utils/lcs-to-json";
 
 export function createUserTransactionHasher(): CryptoHash {
   return createHash("SignedUserTransaction");
@@ -80,7 +80,7 @@ export function parseUserTransaction(
   return {
     transaction_hash: createUserTransactionHasher().crypto_hash(bytes),
     raw_txn: {
-      sender: address_to_json(rawTxn.sender),
+      sender: decodeAddress(rawTxn.sender),
       sequence_number: rawTxn.sequence_number,
       payload: payload,
       max_gas_amount: rawTxn.max_gas_amount,

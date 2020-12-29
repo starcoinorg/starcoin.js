@@ -1,0 +1,414 @@
+export type Identifier = string;
+export type AccountAddress = string;
+export type HashValue = string;
+export type U8 = number;
+export type U16 = number;
+export type U64 = number | bigint;
+export type U128 = number | bigint;
+export type U256 = string;
+export type I64 = number | bigint;
+export type BlockNumber = number;
+export type AuthenticationKey = string;
+export type Ed25519PublicKey = string;
+export type Ed25519Signature = string;
+export type MultiEd25519PublicKey = string;
+export type MultiEd25519Signature = string;
+export type EventKey = string;
+export type HexString = string;
+
+export interface StructTag {
+  address: string;
+  module: string;
+  name: string;
+  // eslint-disable-next-line no-use-before-define
+  type_params?: TypeTag[];
+}
+
+export type TypeTag =
+  | 'Bool'
+  | 'U8'
+  | 'U64'
+  | 'U128'
+  | 'Address'
+  | 'Signer'
+  | { Vector: TypeTag }
+  | { Struct: StructTag };
+
+export interface ChainId {
+  id: U8;
+}
+
+interface Script {
+  code: Uint8Array;
+  ty_args: TypeTag[];
+  // eslint-disable-next-line no-use-before-define
+  args: TransactionArgument[];
+}
+
+interface Module {
+  code: Uint8Array;
+}
+
+interface Package {
+  package_address: AccountAddress;
+  modules: Module[];
+  init_script?: Script;
+}
+
+export type TransactionPayload = { Script: Script } | { Package: Package };
+
+export type SignatureType = 'Ed25519' | 'MultiEd25519';
+
+export type TransactionAuthenticator =
+  | {
+  Ed25519: {
+    public_key: Ed25519PublicKey;
+    signature: Ed25519Signature;
+  };
+}
+  | {
+  MultiEd25519: {
+    public_key: MultiEd25519PublicKey;
+    signature: MultiEd25519Signature;
+  };
+};
+
+
+export type TransactionArgument =
+  | { U8: number }
+  | { U64: number }
+  | { U128: number }
+  | { Address: AccountAddress }
+  | { U8Vector: Uint8Array }
+  | { Bool: boolean };
+
+export interface AnnotatedMoveStruct {
+  is_resource: boolean;
+  type_: StructTag;
+  // eslint-disable-next-line no-use-before-define
+  value: [Identifier, AnnotatedMoveValue][];
+}
+
+export type AnnotatedMoveValue =
+  | { U8: number }
+  | { U64: number }
+  | { U128: number }
+  | { Bool: boolean }
+  | { Address: AccountAddress }
+  | { Bytes: Uint8Array }
+  | { Vector: AnnotatedMoveValue[] }
+  | { Struct: AnnotatedMoveStruct };
+
+// eslint-disable-next-line no-use-before-define
+export type MoveStruct = { [key in Identifier]: MoveValue };
+export type MoveValue =
+  | number
+  | boolean
+  | AccountAddress
+  | HexString
+  | MoveValue[]
+  | MoveStruct;
+
+
+export interface EventHandle {
+  count: U64;
+  key: EventKey;
+}
+
+export interface Epoch {
+  number: U64;
+  // seconds
+  start_time: U64;
+  start_block_number: U64;
+  end_block_number: U64;
+  // seconds
+  block_time_target: U64;
+  reward_per_block: U128;
+  reward_per_uncle_percent: U64;
+  block_difficulty_window: U64;
+  max_uncles_per_block: U64;
+  block_gas_limit: U64;
+  strategy: U8;
+  new_epoch_events: EventHandle;
+}
+
+export interface EpochData {
+  uncles: U64;
+  total_reward: U128;
+  total_gas: U128;
+}
+
+export interface EpochInfo {
+  epoch: Epoch;
+  epoch_data: EpochData;
+}
+
+export interface Event {
+  block_hash?: HashValue;
+  block_number?: BlockNumber;
+  transaction_hash?: HashValue;
+  // txn index in block
+  transaction_index?: U64;
+  data: Uint8Array;
+  type_tags: TypeTag;
+  event_key: EventKey;
+  event_seq_number: U64;
+}
+
+export interface TypeArgumentABI {
+  /// The name of the argument.
+  name: string;
+}
+
+export interface ArgumentABI {
+  /// The name of the argument.
+  name: string;
+  /// The expected type.
+  /// In Move scripts, this does contain generics type parameters.
+  type_tag: TypeTag;
+}
+
+export interface ScriptABI {
+  // The public name of the script.
+  name: string;
+  // Some text comment.
+  doc: string;
+  // The `code` value to set in the `Script` object.
+  code: Uint8Array;
+  // The names of the type arguments.
+  ty_args: TypeArgumentABI[];
+  // The description of regular arguments.
+  args: ArgumentABI[];
+}
+
+export type AbortLocation = 'Script' | {
+  Module: {
+    address: AccountAddress;
+    name: Identifier;
+  }
+};
+
+export interface ExecutionFailure {
+  location: AbortLocation;
+  function: U16;
+  code_offset: U16;
+}
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const TransactionVMStatus_Executed = 'Executed';
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const TransactionVMStatus_OutOfGas = 'OutOfGas';
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const TransactionVMStatus_MiscellaneousError = 'MiscellaneousError';
+export type TransactionVMStatus =
+  | 'Executed'
+  | 'OutOfGas'
+  | 'MiscellaneousError'
+  | {
+  MoveAbort: { location: AbortLocation; abort_code: U64 };
+}
+  | {
+  ExecutionFailure: {
+    location: AbortLocation;
+    function: U16;
+    code_offset: U16;
+  };
+} | { Discard: { status_code: U64 } };
+
+// Exported Types
+export interface RawUserTransactionView {
+  /// Sender's address.
+  sender: AccountAddress;
+  // Sequence number of this transaction corresponding to sender's account.
+  sequence_number: U64;
+  // The transaction script to execute.
+  payload: HexString;
+
+  // Maximal total gas specified by wallet to spend for this transaction.
+  max_gas_amount: U64;
+  // Maximal price can be paid per gas.
+  gas_unit_price: U64;
+  // The token code for pay transaction gas, Default is STC token code.
+  gas_token_code: string;
+  // Expiration timestamp for this transaction. timestamp is represented
+  // as u64 in seconds from Unix Epoch. If storage is queried and
+  // the time returned is greater than or equal to this time and this
+  // transaction has not been included, you can be certain that it will
+  // never be included.
+  // A transaction that doesn't expire is represented by a very large value like
+  // u64::max_value().
+  expiration_timestamp_secs: U64;
+  chain_id: U8;
+}
+
+export interface BlockMetadataView {
+  parent_hash: HashValue;
+  timestamp: U64;
+  author: AccountAddress;
+  author_auth_key?: AuthenticationKey;
+  uncles: U64;
+  number: BlockNumber;
+  chain_id: U8;
+  parent_gas_used: U64;
+}
+
+export interface TransactionSignature {
+  signature_type: SignatureType;
+  public_key: string;
+  signature: string;
+}
+
+export interface SignedUserTransactionView {
+  transaction_hash: HashValue;
+  raw_txn: RawUserTransactionView;
+  authenticator: TransactionAuthenticator;
+}
+
+export interface TransactionView {
+  block_hash: HashValue;
+  block_number: BlockNumber;
+  transaction_hash: HashValue;
+  transaction_index: number;
+  block_metadata?: BlockMetadataView;
+  user_transaction?: SignedUserTransactionView;
+}
+
+export interface TransactionRequest {
+  sender?: AccountAddress;
+  sender_public_key?: HexString;
+  sequence_number?: U64;
+
+  script?: {
+    code: string,
+    type_args?: Array<string>,
+    args?: Array<string>,
+  };
+  modules?: Array<HexString>,
+
+  max_gas_amount?: U64;
+  gas_unit_price?: U64;
+  gas_token_code?: string;
+  chain_id?: U8;
+}
+
+export interface CallRequest {
+  module_address: AccountAddress;
+  module_name: Identifier;
+  func: Identifier;
+  type_args?: string[];
+  args?: string[];
+}
+
+/// block hash or block number
+export type BlockTag = string | number;
+export type ModuleId = string | { address: AccountAddress, name: Identifier };
+
+export interface BlockHeaderView {
+  block_hash: HashValue;
+
+  parent_hash: HashValue;
+  timestamp: U64;
+  number: BlockNumber;
+  author: AccountAddress;
+  author_auth_key?: AuthenticationKey;
+  /// The transaction accumulator root hash after executing this block.
+  accumulator_root: HashValue;
+  /// The parent block accumulator root hash.
+  parent_block_accumulator_root: HashValue;
+  /// The last transaction state_root of this block after execute.
+  state_root: HashValue;
+  /// Gas used for contracts execution.
+  gas_used: U64;
+  /// Block difficulty
+  difficulty: U256;
+  /// Consensus nonce field.
+  nonce: U64;
+  /// hash for block body
+  body_hash: HashValue;
+  /// The chain id
+  chain_id: U8;
+}
+
+interface BlockCommon {
+  header: BlockHeaderView;
+  confirmations?: number;
+}
+
+export interface BlockWithTxnHashes extends BlockCommon {
+  transactions: HashValue[];
+}
+
+export interface BlockWithTransactions extends BlockCommon {
+  transactions: Array<SignedUserTransactionView>;
+}
+
+export interface BlockView extends BlockCommon {
+  transactions: Array<HashValue | SignedUserTransactionView>;
+}
+
+export interface TxnBlockInfo {
+  block_hash: HashValue;
+  block_number: BlockNumber;
+  transaction_hash: HashValue;
+  transaction_index: number;
+}
+
+export interface TransactionEventView extends TxnBlockInfo {
+  data: HexString;
+  type_tags: TypeTag;
+  event_key: EventKey;
+  event_seq_number: U64;
+}
+
+
+export interface AccessPath {
+  address: AccountAddress;
+  path: HexString;
+}
+
+export type WriteOp = 'Deletion' | { Value: HexString };
+
+export interface TransactionWriteAction extends AccessPath {
+  action: WriteOp;
+}
+
+export interface TransactionOutput {
+  gas_used: U64;
+  delta_size: I64;
+  status: TransactionVMStatus;
+  events: TransactionEventView[];
+  write_set: TransactionWriteAction[];
+}
+
+export interface TransactionInfoView extends TxnBlockInfo {
+  state_root_hash: HashValue;
+  event_root_hash: HashValue;
+  gas_used: U64;
+  status: TransactionVMStatus;
+
+  txn_events?: Array<TransactionEventView>;
+
+  confirmations: number;
+}
+
+export interface TransactionResponse extends SignedUserTransactionView {
+  // Only if a transaction has been mined
+  block_number?: BlockNumber;
+  block_hash?: HashValue;
+  timestamp?: number;
+
+  confirmations: number;
+
+  // This function waits until the transaction has been mined
+  wait: (confirmations?: number) => Promise<TransactionInfoView>;
+}
+
+export interface EventFilter {
+  event_keys?: EventKey[];
+  limit?: number;
+}
+
+export interface Filter extends EventFilter {
+  from_block?: BlockNumber;
+  to_block?: BlockNumber;
+}

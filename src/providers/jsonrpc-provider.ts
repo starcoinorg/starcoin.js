@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import { BigNumber } from '@ethersproject/bignumber';
 import { Logger } from '@ethersproject/logger';
 import {
@@ -6,18 +7,15 @@ import {
   getStatic, resolveProperties,
   shallowCopy
 } from '@ethersproject/properties';
-import { ConnectionInfo, fetchJson, poll } from '@ethersproject/web';
-
+import { ConnectionInfo, fetchJson } from '@ethersproject/web';
+import { Bytes } from '@ethersproject/bytes';
 import { getNetwork, Network, Networkish } from '../networks';
 import { version } from '../version';
-
 import { BaseProvider, CONSTANTS, Event, RPC_ACTION } from './base-provider';
-
 // eslint-disable-next-line import/order
-import { AccountAddress, ChainId } from '../types';
+import { AccountAddress, ChainId, TransactionRequest } from '../types';
 import { Signer } from '../abstract-signer';
-import { Provider, TransactionRequest, TransactionResponse } from '../abstract-provider';
-import { Bytes, hexlify } from '@ethersproject/bytes';
+import { Provider } from '../abstract-provider';
 
 const logger = new Logger(version);
 
@@ -25,7 +23,7 @@ const errorGas = new Set(['call', 'estimateGas']);
 
 // FIXME: recheck the error.
 function checkError(method: string, error: any, params: any): never {
-  let message = error.message;
+  let {message} = error;
   if (
     error.code === Logger.errors.SERVER_ERROR &&
     error.error &&
@@ -120,6 +118,7 @@ function getResult(payload: {
 
   return payload.result;
 }
+
 const _constructorGuard = {};
 
 export class JsonRpcSigner extends Signer {
@@ -135,27 +134,29 @@ export class JsonRpcSigner extends Signer {
     super();
 
     if (constructorGuard !== _constructorGuard) {
-      throw new Error("do not call the JsonRpcSigner constructor directly; use provider.getSigner");
+      throw new Error('do not call the JsonRpcSigner constructor directly; use provider.getSigner');
     }
 
-    defineReadOnly(this, "provider", provider);
+    defineReadOnly(this, 'provider', provider);
 
     // eslint-disable-next-line no-param-reassign
-    if (addressOrIndex === undefined) { addressOrIndex = 0; }
+    if (addressOrIndex === undefined) {
+      addressOrIndex = 0;
+    }
 
-    if (typeof(addressOrIndex) === "string") {
-      defineReadOnly(this, "_address", this.provider.formatter.address(addressOrIndex));
-    } else if (typeof(addressOrIndex) === "number") {
-      defineReadOnly(this, "_index", addressOrIndex);
+    if (typeof (addressOrIndex) === 'string') {
+      defineReadOnly(this, '_address', this.provider.formatter.address(addressOrIndex));
+    } else if (typeof (addressOrIndex) === 'number') {
+      defineReadOnly(this, '_index', addressOrIndex);
     } else {
-      logger.throwArgumentError("invalid address or index", "addressOrIndex", addressOrIndex);
+      logger.throwArgumentError('invalid address or index', 'addressOrIndex', addressOrIndex);
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,class-methods-use-this
   connect(provider: Provider): JsonRpcSigner {
-    return logger.throwError("cannot alter JSON-RPC Signer connection", Logger.errors.UNSUPPORTED_OPERATION, {
-      operation: "connect"
+    return logger.throwError('cannot alter JSON-RPC Signer connection', Logger.errors.UNSUPPORTED_OPERATION, {
+      operation: 'connect'
     });
   }
 
@@ -175,8 +176,8 @@ export class JsonRpcSigner extends Signer {
       // eslint-disable-next-line no-underscore-dangle
       if (accounts.length <= this._index) {
         // eslint-disable-next-line no-underscore-dangle
-        logger.throwError(`unknown account #${  this._index}`, Logger.errors.UNSUPPORTED_OPERATION, {
-          operation: "getAddress"
+        logger.throwError(`unknown account #${this._index}`, Logger.errors.UNSUPPORTED_OPERATION, {
+          operation: 'getAddress'
         });
       }
       // eslint-disable-next-line no-underscore-dangle
@@ -190,24 +191,24 @@ export class JsonRpcSigner extends Signer {
     const sender = await this.getAddress();
     if (request.sender !== undefined) {
       if (request.sender !== sender) {
-        logger.throwArgumentError("from address mismatch", "transaction", transaction);
+        logger.throwArgumentError('from address mismatch', 'transaction', transaction);
       }
     } else {
       request.sender = sender;
     }
 
-    return this.provider.send("account.sign_txn_request", [request]).then((hexTxnData) => {
-      return hexTxnData;
+    return this.provider.send('account.sign_txn_request', [request]).then((hexTxnData) => {
+        return hexTxnData;
       },
       (error) => {
-        return checkError("signTransaction", error, request);
+        return checkError('signTransaction', error, request);
       });
   }
 
   // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
   async signMessage(message: Bytes | string): Promise<string> {
-    return logger.throwError("signing message is unsupported", Logger.errors.UNSUPPORTED_OPERATION, {
-      operation: "signMessage"
+    return logger.throwError('signing message is unsupported', Logger.errors.UNSUPPORTED_OPERATION, {
+      operation: 'signMessage'
     });
     // const data = ((typeof(message) === "string") ? toUtf8Bytes(message): message);
     // const address = await this.getAddress();
@@ -217,11 +218,11 @@ export class JsonRpcSigner extends Signer {
   }
 
   async unlock(password: string): Promise<void> {
-    const {provider} = this;
+    const { provider } = this;
 
     const address = await this.getAddress();
 
-    return provider.send("account.unlock", [ address.toLowerCase(), password, undefined ]);
+    return provider.send('account.unlock', [address.toLowerCase(), password, undefined]);
   }
 }
 
@@ -349,7 +350,7 @@ export class JsonrpcProvider extends BaseProvider {
 
   listAccounts(): Promise<Array<string>> {
     // eslint-disable-next-line @typescript-eslint/ban-types
-    return this.send("account.list", []).then((accounts: Array<{ address: AccountAddress }>) => {
+    return this.send('account.list', []).then((accounts: Array<{ address: AccountAddress }>) => {
       return accounts.map(({ address }) => this.formatter.address(address));
     });
   }
@@ -397,8 +398,10 @@ export class JsonrpcProvider extends BaseProvider {
     switch (method) {
       case RPC_ACTION.getChainInfo:
         return ['chain.info', []];
-      // case 'getGasPrice':
-      //   return ['eth_gasPrice', []];
+      case RPC_ACTION.getGasPrice:
+        return ['txpool.gas_price', []];
+      case RPC_ACTION.dryRun:
+        return ['contract.dry_run', [params.transaction]];
       // case 'getBalance':
       //   return [
       //     'eth_getBalance',

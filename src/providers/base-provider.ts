@@ -1,31 +1,40 @@
 // import { clearInterval, clearTimeout, setInterval, setTimeout } from 'timers';
 
+// eslint-disable-next-line max-classes-per-file
 import { Base58 } from '@ethersproject/basex';
 import { BigNumber } from '@ethersproject/bignumber';
 import { concat, hexDataLength, hexDataSlice, hexlify, hexZeroPad, isHexString } from '@ethersproject/bytes';
 import { Logger } from '@ethersproject/logger';
-import { defineReadOnly, resolveProperties } from '@ethersproject/properties';
+import { Deferrable, defineReadOnly, resolveProperties } from '@ethersproject/properties';
 import { sha256 } from '@ethersproject/sha2';
 import { poll } from '@ethersproject/web';
 import {
-  BlockTag,
-  BlockView,
-  BlockWithTransactions,
-  CallRequest,
   EventType,
-  Filter,
-  Listener, ModuleId,
-  Provider,
-  TransactionEventView,
-  TransactionInfoView,
-  TransactionResponse
+  Listener,
+  Provider
 } from '../abstract-provider';
 import { getNetwork, Network, Networkish } from '../networks';
 import { SignedUserTransactionView } from '../transaction';
 import { version } from '../version';
 
 import { Formatter } from './formatter';
-import { AccountAddress, BlockNumber, MoveStruct, MoveValue } from '../types';
+import {
+  ModuleId,
+  AccountAddress,
+  BlockNumber,
+  MoveStruct,
+  MoveValue,
+  TransactionEventView,
+  BlockTag,
+  BlockView,
+  BlockWithTransactions,
+  CallRequest,
+  Filter,
+  TransactionInfoView,
+  TransactionOutput,
+  TransactionRequest,
+  TransactionResponse, U64
+} from '../types';
 
 const logger = new Logger(version);
 
@@ -191,7 +200,9 @@ export const RPC_ACTION = {
   getEvents: 'getEvents',
   call: 'call',
   getCode: 'getCode',
-  getResource: 'getResource'
+  getResource: 'getResource',
+  getGasPrice: 'getGasPrice',
+  dryRun: 'dryRun'
 };
 
 let defaultFormatter: Formatter;
@@ -725,7 +736,7 @@ export abstract class BaseProvider extends Provider {
     }
 
     const transactionInfo = await this.getTransactionInfo(transactionHash);
-
+    console.log("txn info " + JSON.stringify(transactionInfo));
     // Receipt is already good
     if (
       (transactionInfo ? transactionInfo.confirmations : 0) >= confirmations
@@ -782,10 +793,11 @@ export abstract class BaseProvider extends Provider {
     return this._getInternalBlockNumber(0);
   }
 
-  // async getGasPrice(): Promise<BigNumber> {
-  //   await this.getNetwork();
-  //   return BigNumber.from(await this.perform('getGasPrice', {}));
-  // }
+  async getGasPrice(): Promise<U64> {
+    await this.getNetwork();
+    const result = await this.perform(RPC_ACTION.getGasPrice, {});
+    return this.formatter.u64(result);
+  }
 
   // async getBalance(
   //   addressOrName: string | Promise<string>,
@@ -843,7 +855,6 @@ export abstract class BaseProvider extends Provider {
       blockTag
     });
     const value = await this.perform(RPC_ACTION.getResource, params);
-
     if (value) {
       return this.formatter.moveStruct(value);
     }
@@ -1006,15 +1017,16 @@ export abstract class BaseProvider extends Provider {
     return rets.map(v => this.formatter.moveValue(v));
   }
 
-  // async estimateGas(
-  //   transaction: Deferrable<TransactionRequest>
-  // ): Promise<BigNumber> {
-  //   await this.getNetwork();
-  //   const params = await resolveProperties({
-  //     transaction: this._getTransactionRequest(transaction),
-  //   });
-  //   return BigNumber.from(await this.perform('estimateGas', params));
-  // }
+  async dryRun(
+    transaction: Deferrable<TransactionRequest>
+  ): Promise<TransactionOutput> {
+    await this.getNetwork();
+    const params = await resolveProperties({
+      transaction
+    });
+    const resp = await this.perform(RPC_ACTION.dryRun, params);
+    return this.formatter.transactionOutput(resp);
+  }
 
   private async _getBlock(
     blockHashOrBlockNumber: number | string | Promise<number | string>,
@@ -1174,7 +1186,7 @@ export abstract class BaseProvider extends Provider {
           RPC_ACTION.getTransactionInfo,
           params
         );
-
+        console.log("raw txn info" + JSON.stringify(result));
         if (result == null) {
           if (this._emitted['t:' + transactionHash] == null) {
             return null;
