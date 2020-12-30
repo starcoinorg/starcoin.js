@@ -10,11 +10,6 @@ import { Logger } from '@ethersproject/logger';
 import { shallowCopy } from '@ethersproject/properties';
 
 import {
-  parseUserTransaction,
-  RawUserTransactionView,
-  SignedUserTransactionView
-} from '../transaction';
-import {
   TransactionAuthenticator,
   TransactionVMStatus_Executed,
   TransactionVMStatus_MiscellaneousError,
@@ -34,10 +29,12 @@ import {
   Filter,
   TransactionEventView,
   TransactionInfoView, TransactionOutput,
-  TransactionResponse, TransactionWriteAction
+  TransactionResponse, TransactionWriteAction,
+  RawUserTransactionView,SignedUserTransactionView
 
 } from '../types';
 import { version } from '../version';
+import { decodeSignedUserTransaction } from '../encoding';
 
 const logger = new Logger(version);
 
@@ -350,8 +347,8 @@ export class Formatter {
 
   u8(value: any): U8 {
     if (typeof value === 'string') {
-      return Number.parseInt(value);
-    } else if (typeof value === 'number') {
+      return Number.parseInt(value, 10);
+    } if (typeof value === 'number') {
       return value;
     }
     throw new Error(`invalid u8: ${value}`);
@@ -366,26 +363,29 @@ export class Formatter {
   }
 
   u256(number: any): U256 {
-    if (typeof number == 'string') {
+    if (typeof number === 'string') {
       return number;
-    } else if (typeof number == 'number') {
+    }
+    if (typeof number === 'number') {
       return number.toString();
     }
-    throw new Error('invalid bigint: ' + number);
+    throw new Error(`invalid bigint: ${  number}`);
   }
 
-  private _bigint(number: any): number | BigInt {
-    if (typeof number == 'string') {
+  private _bigint(number: any): number | bigint {
+    if (typeof number === 'string') {
       const bn = BigInt(number);
       if (bn > Number.MAX_SAFE_INTEGER) {
         return bn;
-      } else {
-        return Number.parseInt(number);
       }
-    } else if (typeof number == 'number') {
+        // eslint-disable-next-line radix
+        return Number.parseInt(number);
+
+    }
+    if (typeof number === 'number') {
       return number;
     }
-    throw new Error('invalid bigint: ' + number);
+    throw new TypeError(`invalid bigint: ${  number}`);
   }
 
   // Strict! Used on input.
@@ -407,13 +407,13 @@ export class Formatter {
         return false;
       }
     }
-    throw new Error('invalid boolean - ' + value);
+    throw new Error(`invalid boolean - ${  value}`);
   }
 
   hex(value: any, strict?: boolean): string {
     if (typeof value === 'string') {
-      if (!strict && value.substring(0, 2) !== '0x') {
-        value = '0x' + value;
+      if (!strict && value.slice(0, 2) !== '0x') {
+        value = `0x${  value}`;
       }
       if (isHexString(value)) {
         return value.toLowerCase();
@@ -630,7 +630,7 @@ export class Formatter {
   // }
 
   userTransactionData(value: BytesLike): SignedUserTransactionView {
-    return parseUserTransaction(value);
+    return decodeSignedUserTransaction(value);
   }
 
   transactionInfo(value: any): TransactionInfoView {
@@ -640,7 +640,7 @@ export class Formatter {
   topics(value: any): any {
     if (Array.isArray(value)) {
       return value.map((v) => this.topics(v));
-    } else if (value != null) {
+    } if (value != undefined) {
       return this.hash(value, true);
     }
 
@@ -671,7 +671,7 @@ export class Formatter {
   // if value is null-ish, nullValue is returned
   static allowNull(format: FormatFunc, nullValue?: any): FormatFunc {
     return function(value: any) {
-      if (value == null) {
+      if (value == undefined) {
         return nullValue;
       }
       return format(value);
@@ -692,7 +692,7 @@ export class Formatter {
   static arrayOf(format: FormatFunc): FormatFunc {
     return function(array: any): Array<any> {
       if (!Array.isArray(array)) {
-        throw new Error('not an array');
+        throw new TypeError('not an array');
       }
 
       const result: any = [];

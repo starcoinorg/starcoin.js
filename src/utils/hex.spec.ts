@@ -1,5 +1,5 @@
 import { fromHexString, toHexString } from "./hex";
-import { address_from_json } from "./lcs-to-json";
+import { addressToSCS } from "../encoding";
 
 test("hex encode", () => {
   expect(toHexString([1, 2, 3])).toBe("0x010203");
@@ -8,6 +8,6 @@ test("hex encode", () => {
 test("hex decode", () => {
   expect(fromHexString("0x1")).toStrictEqual(new Uint8Array([1]));
   expect(fromHexString("0x01")).toStrictEqual(new Uint8Array([1]));
-  expect(address_from_json("0x1").value.length).toBe(16);
-  expect(address_from_json("0x01").value.length).toBe(16);
+  expect(addressToSCS("0x1").value.length).toBe(16);
+  expect(addressToSCS("0x01").value.length).toBe(16);
 });

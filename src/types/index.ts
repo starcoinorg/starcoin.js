@@ -1,12 +1,14 @@
+import exp from 'constants';
+
 export type Identifier = string;
 export type AccountAddress = string;
 export type HashValue = string;
 export type U8 = number;
 export type U16 = number;
-export type U64 = number | bigint;
-export type U128 = number | bigint;
+export type U64 = number | BigInt;
+export type U128 = number | BigInt;
 export type U256 = string;
-export type I64 = number | bigint;
+export type I64 = number | BigInt;
 export type BlockNumber = number;
 export type AuthenticationKey = string;
 export type Ed25519PublicKey = string;
@@ -15,6 +17,9 @@ export type MultiEd25519PublicKey = string;
 export type MultiEd25519Signature = string;
 export type EventKey = string;
 export type HexString = string;
+
+export const ACCOUNT_ADDRESS_LENGTH = 16;
+export const EVENT_KEY_LENGTH = ACCOUNT_ADDRESS_LENGTH + 8;
 
 export interface StructTag {
   address: string;
@@ -39,14 +44,14 @@ export interface ChainId {
 }
 
 interface Script {
-  code: Uint8Array;
+  code: HexString;
   ty_args: TypeTag[];
   // eslint-disable-next-line no-use-before-define
   args: TransactionArgument[];
 }
 
 interface Module {
-  code: Uint8Array;
+  code: HexString;
 }
 
 interface Package {
@@ -76,8 +81,8 @@ export type TransactionAuthenticator =
 
 export type TransactionArgument =
   | { U8: number }
-  | { U64: number }
-  | { U128: number }
+  | { U64: BigInt }
+  | { U128: BigInt }
   | { Address: AccountAddress }
   | { U8Vector: Uint8Array }
   | { Bool: boolean };
@@ -91,8 +96,8 @@ export interface AnnotatedMoveStruct {
 
 export type AnnotatedMoveValue =
   | { U8: number }
-  | { U64: number }
-  | { U128: number }
+  | { U64: bigint }
+  | { U128: bigint }
   | { Bool: boolean }
   | { Address: AccountAddress }
   | { Bytes: Uint8Array }
@@ -102,7 +107,7 @@ export type AnnotatedMoveValue =
 // eslint-disable-next-line no-use-before-define
 export type MoveStruct = { [key in Identifier]: MoveValue };
 export type MoveValue =
-  | number
+  | number | bigint
   | boolean
   | AccountAddress
   | HexString
@@ -188,12 +193,6 @@ export type AbortLocation = 'Script' | {
   }
 };
 
-export interface ExecutionFailure {
-  location: AbortLocation;
-  function: U16;
-  code_offset: U16;
-}
-
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const TransactionVMStatus_Executed = 'Executed';
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -252,25 +251,10 @@ export interface BlockMetadataView {
   parent_gas_used: U64;
 }
 
-export interface TransactionSignature {
-  signature_type: SignatureType;
-  public_key: string;
-  signature: string;
-}
-
 export interface SignedUserTransactionView {
   transaction_hash: HashValue;
   raw_txn: RawUserTransactionView;
   authenticator: TransactionAuthenticator;
-}
-
-export interface TransactionView {
-  block_hash: HashValue;
-  block_number: BlockNumber;
-  transaction_hash: HashValue;
-  transaction_index: number;
-  block_metadata?: BlockMetadataView;
-  user_transaction?: SignedUserTransactionView;
 }
 
 export interface TransactionRequest {
@@ -395,7 +379,6 @@ export interface TransactionResponse extends SignedUserTransactionView {
   // Only if a transaction has been mined
   block_number?: BlockNumber;
   block_hash?: HashValue;
-  timestamp?: number;
 
   confirmations: number;
 

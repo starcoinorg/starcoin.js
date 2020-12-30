@@ -70,7 +70,7 @@ describe('jsonrpc-provider', () => {
   test('txn sign and submit', async () => {
     const signer = await provider.getSigner();
     await signer.unlock("");
-    let txnRequest = {
+    const txnRequest = {
       script: {
         code: 'peer_to_peer',
         type_args: ['0x1::STC::STC'],

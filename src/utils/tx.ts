@@ -5,10 +5,10 @@ import { TransactionArgument, TypeTag } from "../types";
 
 import { toHexString } from "./hex";
 import {
-  address_from_json,
-  txnArgument_from_json,
-  typeTag_from_json,
-} from "./lcs-to-json";
+  addressToSCS,
+  txnArgToSCS,
+  typeTagToSCS,
+} from "../encoding";
 
 export function encodeTxnPayload(
   code: bytes,
@@ -17,8 +17,8 @@ export function encodeTxnPayload(
 ): string {
   const script = new starcoin_types.Script(
     code,
-    ty_args.map((t) => typeTag_from_json(t)),
-    args.map((t) => txnArgument_from_json(t))
+    ty_args.map((t) => typeTagToSCS(t)),
+    args.map((t) => txnArgToSCS(t))
   );
   const payload = new starcoin_types.TransactionPayloadVariantScript(script);
   const se = new LcsSerializer();
@@ -36,12 +36,12 @@ export function encodeDeployModulesPayload(
   if (initTxn) {
     script = new starcoin_types.Script(
       initTxn.code,
-      initTxn.ty_args.map((t) => typeTag_from_json(t)),
-      initTxn.args.map((t) => txnArgument_from_json(t))
+      initTxn.ty_args.map((t) => typeTagToSCS(t)),
+      initTxn.args.map((t) => txnArgToSCS(t))
     );
   }
   const packageData = new starcoin_types.Package(
-    address_from_json(moduleAddress),
+    addressToSCS(moduleAddress),
     modules,
     script
   );

@@ -1,12 +1,10 @@
 // import { setInterval } from 'timers';
 
 import { Logger } from '@ethersproject/logger';
-import { Network, Networkish } from '@ethersproject/networks';
 import { defineReadOnly } from '@ethersproject/properties';
 import WebSocket from 'ws';
-
+import { Network, Networkish } from '../networks';
 import { version } from '../version';
-
 import { CONSTANTS, Event } from './base-provider';
 import { JsonrpcProvider } from './jsonrpc-provider';
 
@@ -117,7 +115,7 @@ export class WebsocketProvider extends JsonrpcProvider {
 
           this.emit('debug', {
             action: 'response',
-            error: error,
+            error,
             request: JSON.parse(request.payload),
             provider: this,
           });
@@ -126,7 +124,6 @@ export class WebsocketProvider extends JsonrpcProvider {
         // Subscription...
         const sub = this._subs[result.params.subscription];
         if (sub) {
-          //this.emit.apply(this,                  );
           sub.processFunc(result.params.result);
         }
       } else {

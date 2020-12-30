@@ -12,8 +12,8 @@
     "type": "git",
     "url": "git+https://github.com/starcoinorg/starcoin.js"
   },
-  "keywords": [],
-  "source": "index.ts",
+  "keywords": ["starcoin", "defi", "dapp", "sdk", "blockchain", "client"],
+  "source": "src/index.ts",
   "main": "dist/starcoin.js",
   "module": "dist/starcoin.module.js",
   "files": [
@@ -28,15 +28,10 @@
     "@ethersproject/hash": "^5.0.6",
     "@ethersproject/keccak256": "^5.0.5",
     "@ethersproject/logger": "^5.0.6",
-    "@ethersproject/networks": "^5.0.4",
     "@ethersproject/properties": "^5.0.4",
     "@ethersproject/sha2": "^5.0.4",
-    "@ethersproject/transactions": "^5.0.6",
     "@ethersproject/web": "^5.0.9",
-    "@open-rpc/client-js": "^1.6.0",
-    "@types/node": "^14.11.2",
-    "int64-buffer": "^0.99",
-    "leb": "^0.3.0"
+    "ws": "7.2.3"
   },
   "devDependencies": {
     "cz-conventional-changelog": "^3.3.0",

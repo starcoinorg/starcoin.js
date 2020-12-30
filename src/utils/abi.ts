@@ -1,7 +1,7 @@
 import { LcsDeserializer } from "../lib/runtime/lcs";
 import * as starcoin_types from "../lib/runtime/starcoin_types";
 import { ScriptABI } from "../types";
-import * as lcs_to_json from "./lcs-to-json";
+import * as lcs_to_json from "../encoding";
 
 export function decodeABI(bytes: Uint8Array): ScriptABI {
   const de = new LcsDeserializer(bytes);
@@ -9,7 +9,7 @@ export function decodeABI(bytes: Uint8Array): ScriptABI {
   return {
     args: abi.args.map((a) => ({
       name: a.name,
-      type_tag: lcs_to_json.type_tag_to_json(a.type_tag),
+      type_tag: lcs_to_json.typeTagFromSCS(a.type_tag),
     })),
     code: abi.code,
     doc: abi.doc,

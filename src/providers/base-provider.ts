@@ -14,7 +14,6 @@ import {
   Provider
 } from '../abstract-provider';
 import { getNetwork, Network, Networkish } from '../networks';
-import { SignedUserTransactionView } from '../transaction';
 import { version } from '../version';
 
 import { Formatter } from './formatter';
@@ -33,7 +32,8 @@ import {
   TransactionInfoView,
   TransactionOutput,
   TransactionRequest,
-  TransactionResponse, U64
+  TransactionResponse, U64,
+  SignedUserTransactionView
 } from '../types';
 
 const logger = new Logger(version);

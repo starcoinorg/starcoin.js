@@ -31,3 +31,8 @@ export interface CryptoHash {
 export function createHash(typename: string): CryptoHash {
   return new DefaultHasher(typename);
 }
+
+
+export function createUserTransactionHasher(): CryptoHash {
+  return createHash("SignedUserTransaction");
+}
