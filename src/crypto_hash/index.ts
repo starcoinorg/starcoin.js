@@ -1,14 +1,14 @@
 import { arrayify, BytesLike } from '@ethersproject/bytes';
 import sha3 from 'js-sha3';
 
-const LIBRA_HASH_PREFIX = 'LIBRA::';
+const STARCOIN_HASH_PREFIX = 'STARCOIN::';
 
 class DefaultHasher {
   readonly salt?: Uint8Array;
 
   constructor(typename?: string) {
     if (typename) {
-      const data = new Uint8Array(new Buffer(LIBRA_HASH_PREFIX + typename));
+      const data = new Uint8Array(new Buffer(STARCOIN_HASH_PREFIX + typename));
       const hasher = sha3.sha3_256.create();
       hasher.update(data);
       this.salt = new Uint8Array(hasher.arrayBuffer());
