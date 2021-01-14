@@ -1,6 +1,6 @@
-import { LcsSerializer } from "../lib/runtime/lcs";
-import { bytes } from "../lib/runtime/serde/types";
-import * as starcoin_types from "../lib/runtime/starcoin_types";
+import { BcsSerializer } from '../lib/runtime/bcs';
+import { bytes } from '../lib/runtime/serde';
+import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { TransactionArgument, TypeTag } from "../types";
 
 import { toHexString } from "./hex";
@@ -21,7 +21,7 @@ export function encodeTxnPayload(
     args.map((t) => txnArgToSCS(t))
   );
   const payload = new starcoin_types.TransactionPayloadVariantScript(script);
-  const se = new LcsSerializer();
+  const se = new BcsSerializer();
   payload.serialize(se);
   return toHexString(se.getBytes());
 }
@@ -48,7 +48,7 @@ export function encodeDeployModulesPayload(
   const payload = new starcoin_types.TransactionPayloadVariantPackage(
     packageData
   );
-  const se = new LcsSerializer();
+  const se = new BcsSerializer();
   payload.serialize(se);
   return toHexString(se.getBytes());
 }

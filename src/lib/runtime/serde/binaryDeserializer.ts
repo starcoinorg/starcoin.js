@@ -3,7 +3,7 @@ import { Deserializer } from './deserializer';
 export abstract class BinaryDeserializer implements Deserializer {
   private static readonly BIG_32 = BigInt(32);
   private static readonly BIG_64 = BigInt(64);
-  private static readonly textDecoder: TextDecoder = new TextDecoder();
+  private static readonly textDecoder = new TextDecoder();
   public buffer: ArrayBuffer;
   public offset: number;
 
@@ -26,8 +26,8 @@ export abstract class BinaryDeserializer implements Deserializer {
   abstract deserializeVariantIndex(): number;
 
   abstract checkThatKeySlicesAreIncreasing(
-    key1: [number, number],
-    key2: [number, number]
+      key1: [number, number],
+      key2: [number, number]
   ): void;
 
   public deserializeStr(): string {
