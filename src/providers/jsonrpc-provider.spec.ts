@@ -80,11 +80,20 @@ describe('jsonrpc-provider', () => {
     const txnOutput = await provider.dryRun(txnRequest);
     console.log(JSON.stringify(txnOutput, undefined, 2));
 
+    const balanceBefore = await provider.getBalance('0xc13b50bdb12e3fdd03c4e3b05e34926a');
+
     const txn = await signer.sendTransaction(txnRequest);
     console.log(`txn hash ${  txn.transaction_hash}`);
     const txnInfo = await txn.wait(1);
     console.log(txnInfo);
     const balance = await provider.getBalance('0xc13b50bdb12e3fdd03c4e3b05e34926a');
-    expect(balance).toBe(100000);
+    if (balanceBefore !== undefined) {
+      // @ts-ignore
+      const diff = balance - balanceBefore;
+      expect(diff).toBe(100000);
+    } else {
+      expect(balance).toBe(100000);
+    }
+
   }, 10000);
 });
