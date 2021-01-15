@@ -13,7 +13,7 @@
     "url": "git+https://github.com/starcoinorg/starcoin.js"
   },
   "keywords": ["starcoin", "defi", "dapp", "sdk", "blockchain", "client"],
-  "source": "src/index.ts",
+  "source": "index.ts",
   "main": "dist/starcoin.js",
   "module": "dist/starcoin.module.js",
   "files": [
