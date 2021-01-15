@@ -76,10 +76,10 @@ export function formatMoveValue(v: AnnotatedMoveValue): MoveValue {
     return v.U8;
   }
   if ('U64' in v) {
-    return v.U64;
+    return Formatter.bigint(v.U64);
   }
   if ('U128' in v) {
-    return v.U128;
+    return Formatter.bigint(v.U128);
   }
   if ('Address' in v) {
     return v.Address;
@@ -122,7 +122,7 @@ export class Formatter {
     const number = this.number.bind(this);
     const u64 = this.u64.bind(this);
     // eslint-disable-next-line no-underscore-dangle
-    const i64 = this._bigint.bind(this);
+    const i64 = Formatter.bigint.bind(this);
     const u8 = this.u8.bind(this);
     const u256 = this.u256.bind(this);
 
@@ -355,11 +355,11 @@ export class Formatter {
   }
 
   u64(number: any): U64 {
-    return this._bigint(number);
+    return Formatter.bigint(number);
   }
 
   u128(number: any): U128 {
-    return this._bigint(number);
+    return Formatter.bigint(number);
   }
 
   u256(number: any): U256 {
@@ -372,7 +372,7 @@ export class Formatter {
     throw new Error(`invalid bigint: ${  number}`);
   }
 
-  private _bigint(number: any): number | bigint {
+  static bigint(number: any): number | bigint {
     if (typeof number === 'string') {
       const bn = BigInt(number);
       if (bn > Number.MAX_SAFE_INTEGER) {

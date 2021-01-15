@@ -89,18 +89,18 @@ export type TransactionArgument =
 
 export interface AnnotatedMoveStruct {
   is_resource: boolean;
-  type_: StructTag;
+  type_: string;
   // eslint-disable-next-line no-use-before-define
   value: [Identifier, AnnotatedMoveValue][];
 }
 
 export type AnnotatedMoveValue =
   | { U8: number }
-  | { U64: bigint }
-  | { U128: bigint }
+  | { U64: string }
+  | { U128: string }
   | { Bool: boolean }
   | { Address: AccountAddress }
-  | { Bytes: Uint8Array }
+  | { Bytes: HexString }
   | { Vector: AnnotatedMoveValue[] }
   | { Struct: AnnotatedMoveStruct };
 
