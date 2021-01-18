@@ -1,5 +1,3 @@
-import exp from 'constants';
-
 export type Identifier = string;
 export type AccountAddress = string;
 export type HashValue = string;
@@ -38,6 +36,41 @@ export type TypeTag =
   | 'Signer'
   | { Vector: TypeTag }
   | { Struct: StructTag };
+
+export function formatStructTag(structTag: StructTag): string {
+  let s = `${structTag.address}::${structTag.module}::${structTag.name}`;
+
+  if (structTag.type_params && structTag.type_params.length>0) {
+    s = s.concat("<");
+    s = s.concat(formatTypeTag(structTag.type_params[0]));
+    for (let t of structTag.type_params.slice(1)) {
+      s = s.concat(",").concat(formatTypeTag(t));
+    }
+    s = s.concat(">");
+  }
+  return s;
+}
+
+export function formatTypeTag(typeTag: TypeTag): string {
+  if (typeof typeTag === 'string') {
+    return typeTag.toLowerCase();
+  }
+  if (typeof typeTag === 'object') {
+    // @ts-ignore
+    if (typeTag.Vector !== undefined) {
+      // @ts-ignore
+      let subTypeTag: TypeTag = typeTag.Vector;
+      return `vector<${formatTypeTag(subTypeTag)}>`;
+    }
+
+    // @ts-ignore
+    if (typeTag.Struct !== undefined) {
+      // @ts-ignore
+      let subTypeTag: StructTag = typeTag.Struct;
+      return formatStructTag(subTypeTag);
+    }
+  }
+}
 
 export interface ChainId {
   id: U8;

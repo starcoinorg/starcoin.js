@@ -12,7 +12,14 @@
     "type": "git",
     "url": "git+https://github.com/starcoinorg/starcoin.js"
   },
-  "keywords": ["starcoin", "defi", "dapp", "sdk", "blockchain", "client"],
+  "keywords": [
+    "starcoin",
+    "defi",
+    "dapp",
+    "sdk",
+    "blockchain",
+    "client"
+  ],
   "source": "index.ts",
   "types": "dist/index.d.ts",
   "main": "dist/starcoin.js",
@@ -32,13 +39,19 @@
     "@ethersproject/properties": "^5.0.4",
     "@ethersproject/sha2": "^5.0.4",
     "@ethersproject/web": "^5.0.9",
+    "is-alphabetical": "^1.0.4",
+    "is-alphanumerical": "^1.0.4",
+    "is-hexadecimal": "^1.0.4",
+    "is-whitespace-character": "^1.0.4",
+    "is-word-character": "^1.0.4",
+    "is-decimal": "^1.0.4",
     "ws": "7.2.3"
   },
   "devDependencies": {
-    "cz-conventional-changelog": "^3.3.0",
     "@types/jest": "^26.0.14",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
     "@typescript-eslint/parser": "^4.1.1",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^7.9.0",
     "eslint-config-airbnb-typescript": "^10.0.0",
     "eslint-config-prettier": "^6.10.1",
