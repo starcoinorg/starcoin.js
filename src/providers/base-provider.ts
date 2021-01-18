@@ -33,7 +33,7 @@ import {
   TransactionOutput,
   TransactionRequest,
   TransactionResponse, U64,
-  SignedUserTransactionView
+  SignedUserTransactionView, AnnotatedMoveStruct
 } from '../types';
 
 const logger = new Logger(version);
@@ -201,6 +201,7 @@ export const RPC_ACTION = {
   call: 'call',
   getCode: 'getCode',
   getResource: 'getResource',
+  getAccountState: 'getAccountState',
   getGasPrice: 'getGasPrice',
   dryRun: 'dryRun'
 };
@@ -736,7 +737,6 @@ export abstract class BaseProvider extends Provider {
     }
 
     const transactionInfo = await this.getTransactionInfo(transactionHash);
-    console.log("txn info " + JSON.stringify(transactionInfo));
     // Receipt is already good
     if (
       (transactionInfo ? transactionInfo.confirmations : 0) >= confirmations
@@ -845,13 +845,13 @@ export abstract class BaseProvider extends Provider {
   // eslint-disable-next-line consistent-return
   async getResource(
     address: AccountAddress | Promise<AccountAddress>,
-    resource_sturct_tag: string | Promise<string>,
+    resource_struct_tag: string | Promise<string>,
     blockTag?: BlockTag | Promise<BlockTag>
   ): Promise<MoveStruct | undefined> {
     await this.getNetwork();
     const params = await resolveProperties({
       address,
-      structTag: resource_sturct_tag,
+      structTag: resource_struct_tag,
       blockTag
     });
     const value = await this.perform(RPC_ACTION.getResource, params);
@@ -859,6 +859,24 @@ export abstract class BaseProvider extends Provider {
       return this.formatter.moveStruct(value);
     }
   }
+
+  async getResources(
+    address: AccountAddress | Promise<AccountAddress>,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<{ [k: string]: MoveStruct } | undefined> {
+    await this.getNetwork();
+    const params = await resolveProperties({
+      address,
+      blockTag
+    });
+    const value = await this.perform(RPC_ACTION.getAccountState, params);
+    if (value) {
+      // @ts-ignore
+      return Object.entries(value.resources)
+        .reduce((o, [k, v])=>({...o, [k]: this.formatter.moveStruct(v as AnnotatedMoveStruct)}), {});
+    }
+  }
+
 
   // This should be called by any subclass wrapping a TransactionResponse
   protected _wrapTransaction(
@@ -1186,7 +1204,7 @@ export abstract class BaseProvider extends Provider {
           RPC_ACTION.getTransactionInfo,
           params
         );
-        console.log("raw txn info" + JSON.stringify(result));
+
         if (result == null) {
           if (this._emitted['t:' + transactionHash] == null) {
             return null;

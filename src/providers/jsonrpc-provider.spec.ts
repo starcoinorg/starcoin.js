@@ -1,6 +1,8 @@
 import { JsonrpcProvider } from '.';
 
 describe('jsonrpc-provider', () => {
+  // let provider = new JsonrpcProvider("http://39.102.41.156:9850", undefined);
+
   const provider = new JsonrpcProvider(undefined, undefined);
   test('detectNetwork', async () => {
     const net = await provider.getNetwork();
@@ -66,6 +68,16 @@ describe('jsonrpc-provider', () => {
     expect(resource).toBeUndefined();
   });
 
+
+  test('get resources', async () => {
+    let resources = await provider.getResources("0x1");
+    console.log(JSON.stringify(resources, (key, value) => (typeof value === 'bigint' ? value.toString() : value), 2));
+  });
+
+  test('get balances', async () => {
+    let balances = await provider.getBalances("0x1");
+    console.log(JSON.stringify(balances, (key, value) => (typeof value === 'bigint' ? value.toString() : value), 2));
+  });
 
   test('txn sign and submit', async () => {
     const signer = await provider.getSigner();

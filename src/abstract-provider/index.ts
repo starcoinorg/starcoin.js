@@ -9,11 +9,11 @@ import {
   BlockWithTransactions,
   CallRequest,
   EventFilter,
-  Filter,
+  Filter, formatStructTag,
   HashValue,
   ModuleId,
   MoveStruct,
-  MoveValue,
+  MoveValue, StructTag,
   TransactionEventView,
   TransactionInfoView,
   TransactionOutput,
@@ -22,6 +22,7 @@ import {
   U128,
   U64
 } from '../types';
+import { parseTypeTag } from '../utils/parser';
 
 const version = 'abstract-provider/5.0.5';
 const logger = new Logger(version);
@@ -64,6 +65,35 @@ export abstract class Provider implements OnceBlockable {
     }
   }
 
+  // get all token balances of `address`.
+  async getBalances(
+    address: AccountAddress | Promise<AccountAddress>,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<{[k: string]: U128} | undefined> {
+    const resources = await this.getResources(address, blockTag);
+    if (resources === undefined) {
+      return;
+    }
+    let tokenBalances = {};
+    // @ts-ignore
+    for (let k in resources ) {
+      let typeTag = parseTypeTag(k);
+
+      // filter out balance resources.
+      // @ts-ignore
+      if (typeof typeTag === 'object' && typeTag.Struct !== undefined) {
+        // @ts-ignore
+        let structTag: StructTag = typeTag.Struct;
+        if (structTag.module === 'Account' && structTag.name === 'Balance') {
+          // @ts-ignore
+          let tokenStruct = formatStructTag(structTag.type_params[0].Struct as StructTag);
+          tokenBalances[tokenStruct] = (resources[k].token as MoveStruct).value as U128;
+        }
+      }
+    }
+    return tokenBalances;
+  }
+
   // eslint-disable-next-line consistent-return
   async getSequenceNumber(
     address: AccountAddress | Promise<AccountAddress>,
@@ -84,9 +114,15 @@ export abstract class Provider implements OnceBlockable {
   // get resource data.
   abstract getResource(
     address: AccountAddress | Promise<AccountAddress>,
-    resource_sturct_tag: string | Promise<string>,
+    resource_struct_tag: string | Promise<string>,
     blockTag?: BlockTag | Promise<BlockTag>
   ): Promise<MoveStruct | undefined>;
+
+  // get all resources under `address`.
+  abstract getResources(
+    address: AccountAddress | Promise<AccountAddress>,
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<{ [k: string]: MoveStruct }>;
 
   // Execution
   abstract sendTransaction(
