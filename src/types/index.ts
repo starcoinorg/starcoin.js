@@ -40,13 +40,13 @@ export type TypeTag =
 export function formatStructTag(structTag: StructTag): string {
   let s = `${structTag.address}::${structTag.module}::${structTag.name}`;
 
-  if (structTag.type_params && structTag.type_params.length>0) {
-    s = s.concat("<");
+  if (structTag.type_params && structTag.type_params.length > 0) {
+    s = s.concat('<');
     s = s.concat(formatTypeTag(structTag.type_params[0]));
     for (let t of structTag.type_params.slice(1)) {
-      s = s.concat(",").concat(formatTypeTag(t));
+      s = s.concat(',').concat(formatTypeTag(t));
     }
-    s = s.concat(">");
+    s = s.concat('>');
   }
   return s;
 }
@@ -82,12 +82,14 @@ interface Script {
   // eslint-disable-next-line no-use-before-define
   args: TransactionArgument[];
 }
+
 interface ScriptFunction {
   func: FunctionId;
   ty_args: TypeTag[];
   // eslint-disable-next-line no-use-before-define
   args: TransactionArgument[];
 }
+
 interface Module {
   code: HexString;
 }
@@ -98,7 +100,7 @@ interface Package {
   init_script?: ScriptFunction;
 }
 
-export type TransactionPayload = { Script: Script } | { Package: Package } | {ScriptFunction: ScriptFunction};
+export type TransactionPayload = { Script: Script } | { Package: Package } | { ScriptFunction: ScriptFunction };
 
 export type SignatureType = 'Ed25519' | 'MultiEd25519';
 
@@ -322,7 +324,31 @@ export interface CallRequest {
 /// block hash or block number
 export type BlockTag = string | number;
 export type ModuleId = string | { address: AccountAddress, name: Identifier };
-export type FunctionId = string | { address: AccountAddress, module: Identifier, function: Identifier };
+export type FunctionId = string | { address: AccountAddress, module: Identifier, function_name: Identifier };
+
+export function formatFunctionId(function_id: FunctionId): string {
+  if (typeof function_id != 'string') {
+    return `${function_id.address}::${function_id.module}::${function_id.function_name}`;
+  } else {
+    return function_id;
+  }
+}
+
+export function parseFunctionId(function_id: FunctionId): { address: AccountAddress, module: Identifier, function_name: Identifier } {
+  if (typeof function_id != 'string') {
+    return function_id;
+  } else {
+    let parts = function_id.split('::', 3);
+    if (parts.length != 3) {
+      throw new Error(`cannot parse ${function_id} into FunctionId`);
+    }
+    return {
+      address: parts[0],
+      module: parts[1],
+      function_name: parts[2]
+    };
+  }
+}
 
 export interface BlockHeaderView {
   block_hash: HashValue;
@@ -333,9 +359,9 @@ export interface BlockHeaderView {
   author: AccountAddress;
   author_auth_key?: AuthenticationKey;
   /// The transaction accumulator root hash after executing this block.
-  accumulator_root: HashValue;
+  txn_accumulator_root: HashValue;
   /// The parent block accumulator root hash.
-  parent_block_accumulator_root: HashValue;
+  block_accumulator_root: HashValue;
   /// The last transaction state_root of this block after execute.
   state_root: HashValue;
   /// Gas used for contracts execution.

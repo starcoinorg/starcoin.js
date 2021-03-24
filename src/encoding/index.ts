@@ -1,6 +1,7 @@
 import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
 import { BcsDeserializer, BcsSerializer } from '../lib/runtime/bcs';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
+import * as serde from '../lib/runtime/serde';
 import {
   ACCOUNT_ADDRESS_LENGTH,
   AccountAddress, EVENT_KEY_LENGTH, SignedUserTransactionView,
@@ -10,6 +11,17 @@ import {
 } from '../types';
 import { fromHexString, toHexString } from '../utils/hex';
 import { createUserTransactionHasher} from '../crypto_hash';
+
+
+export interface SerdeSerializable {
+  serialize(serializer: serde.Serializer): void;
+}
+
+export function serializeBCSData(data: SerdeSerializable): string {
+  const se = new BcsSerializer();
+  data.serialize(se);
+  return toHexString(se.getBytes());
+}
 
 export function decodeSignedUserTransaction(
   data: BytesLike
@@ -77,7 +89,11 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
         package_address: addressFromSCS(packagePayload.package_address),
         modules: packagePayload.modules.map(m => ({ code: toHexString(m.code) })),
         init_script: packagePayload.init_script === null ? undefined : {
-          func: packagePayload.init_script.code,
+          func: {
+            address: addressFromSCS(packagePayload.init_script.module.address),
+            module: packagePayload.init_script.module.name.value,
+            function_name: packagePayload.init_script.func.value,
+          },
           args: packagePayload.init_script.args.map(arg => txnArgFromSCS(arg)),
           ty_args: packagePayload.init_script.ty_args.map(ty => typeTagFromSCS(ty))
         }
