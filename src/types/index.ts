@@ -128,7 +128,6 @@ export type TransactionArgument =
   | { Bool: boolean };
 
 export interface AnnotatedMoveStruct {
-  is_resource: boolean;
   type_: string;
   // eslint-disable-next-line no-use-before-define
   value: [Identifier, AnnotatedMoveValue][];
