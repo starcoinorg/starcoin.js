@@ -17,7 +17,7 @@ let signer = provider.getSigner();
 // starcoin node should enable account jsonrpc api.
 const txnRequest = {
     script: {
-      code: 'peer_to_peer',
+      code: '0x1::TransferScripts::peer_to_peer',
       type_args: ['0x1::STC::STC'],
       args: ['0xc13b50bdb12e3fdd03c4e3b05e34926a', 'x"29b6012aee31a216af67c3d05e21a092c13b50bdb12e3fdd03c4e3b05e34926a"', '100000u128'],
     }    
