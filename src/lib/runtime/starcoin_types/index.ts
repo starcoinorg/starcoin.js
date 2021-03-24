@@ -418,6 +418,23 @@ static deserialize(deserializer: Deserializer): Module {
 }
 
 }
+export class ModuleId {
+
+constructor (public address: AccountAddress, public name: Identifier) {
+}
+
+public serialize(serializer: Serializer): void {
+  this.address.serialize(serializer);
+  this.name.serialize(serializer);
+}
+
+static deserialize(deserializer: Deserializer): ModuleId {
+  const address = AccountAddress.deserialize(deserializer);
+  const name = Identifier.deserialize(deserializer);
+  return new ModuleId(address,name);
+}
+
+}
 export class MultiEd25519PrivateKey {
 
 constructor (public value: bytes) {
@@ -465,19 +482,19 @@ static deserialize(deserializer: Deserializer): MultiEd25519Signature {
 }
 export class Package {
 
-constructor (public package_address: AccountAddress, public modules: Seq<Module>, public init_script: Optional<Script>) {
+constructor (public package_address: AccountAddress, public modules: Seq<Module>, public init_script: Optional<ScriptFunction>) {
 }
 
 public serialize(serializer: Serializer): void {
   this.package_address.serialize(serializer);
   Helpers.serializeVectorModule(this.modules, serializer);
-  Helpers.serializeOptionScript(this.init_script, serializer);
+  Helpers.serializeOptionScriptFunction(this.init_script, serializer);
 }
 
 static deserialize(deserializer: Deserializer): Package {
   const package_address = AccountAddress.deserialize(deserializer);
   const modules = Helpers.deserializeVectorModule(deserializer);
-  const init_script = Helpers.deserializeOptionScript(deserializer);
+  const init_script = Helpers.deserializeOptionScriptFunction(deserializer);
   return new Package(package_address,modules,init_script);
 }
 
@@ -530,26 +547,96 @@ static deserialize(deserializer: Deserializer): Script {
 }
 
 }
-export class ScriptABI {
+export abstract class ScriptABI {
+abstract serialize(serializer: Serializer): void;
 
-constructor (public name: str, public doc: str, public code: bytes, public ty_args: Seq<TypeArgumentABI>, public args: Seq<ArgumentABI>) {
+static deserialize(deserializer: Deserializer): ScriptABI {
+  const index = deserializer.deserializeVariantIndex();
+  switch (index) {
+    case 0: return ScriptABIVariantTransactionScript.load(deserializer);
+    case 1: return ScriptABIVariantScriptFunction.load(deserializer);
+    default: throw new Error("Unknown variant index for ScriptABI: " + index);
+  }
+}
+}
+
+
+export class ScriptABIVariantTransactionScript extends ScriptABI {
+
+constructor (public value: TransactionScriptABI) {
+  super();
+}
+
+public serialize(serializer: Serializer): void {
+  serializer.serializeVariantIndex(0);
+  this.value.serialize(serializer);
+}
+
+static load(deserializer: Deserializer): ScriptABIVariantTransactionScript {
+  const value = TransactionScriptABI.deserialize(deserializer);
+  return new ScriptABIVariantTransactionScript(value);
+}
+
+}
+
+export class ScriptABIVariantScriptFunction extends ScriptABI {
+
+constructor (public value: ScriptFunctionABI) {
+  super();
+}
+
+public serialize(serializer: Serializer): void {
+  serializer.serializeVariantIndex(1);
+  this.value.serialize(serializer);
+}
+
+static load(deserializer: Deserializer): ScriptABIVariantScriptFunction {
+  const value = ScriptFunctionABI.deserialize(deserializer);
+  return new ScriptABIVariantScriptFunction(value);
+}
+
+}
+export class ScriptFunction {
+// need to rename `function` to `func` as `function` is a keyword in JS.
+constructor (public module: ModuleId, public func: Identifier, public ty_args: Seq<TypeTag>, public args: Seq<TransactionArgument>) {
+}
+
+public serialize(serializer: Serializer): void {
+  this.module.serialize(serializer);
+  this.func.serialize(serializer);
+  Helpers.serializeVectorTypeTag(this.ty_args, serializer);
+  Helpers.serializeVectorTransactionArgument(this.args, serializer);
+}
+
+static deserialize(deserializer: Deserializer): ScriptFunction {
+  const module = ModuleId.deserialize(deserializer);
+  const func = Identifier.deserialize(deserializer);
+  const ty_args = Helpers.deserializeVectorTypeTag(deserializer);
+  const args = Helpers.deserializeVectorTransactionArgument(deserializer);
+  return new ScriptFunction(module,func,ty_args,args);
+}
+
+}
+export class ScriptFunctionABI {
+
+constructor (public name: str, public module_name: ModuleId, public doc: str, public ty_args: Seq<TypeArgumentABI>, public args: Seq<ArgumentABI>) {
 }
 
 public serialize(serializer: Serializer): void {
   serializer.serializeStr(this.name);
+  this.module_name.serialize(serializer);
   serializer.serializeStr(this.doc);
-  serializer.serializeBytes(this.code);
   Helpers.serializeVectorTypeArgumentAbi(this.ty_args, serializer);
   Helpers.serializeVectorArgumentAbi(this.args, serializer);
 }
 
-static deserialize(deserializer: Deserializer): ScriptABI {
+static deserialize(deserializer: Deserializer): ScriptFunctionABI {
   const name = deserializer.deserializeStr();
+  const module_name = ModuleId.deserialize(deserializer);
   const doc = deserializer.deserializeStr();
-  const code = deserializer.deserializeBytes();
   const ty_args = Helpers.deserializeVectorTypeArgumentAbi(deserializer);
   const args = Helpers.deserializeVectorArgumentAbi(deserializer);
-  return new ScriptABI(name,doc,code,ty_args,args);
+  return new ScriptFunctionABI(name,module_name,doc,ty_args,args);
 }
 
 }
@@ -826,6 +913,7 @@ static deserialize(deserializer: Deserializer): TransactionPayload {
   switch (index) {
     case 0: return TransactionPayloadVariantScript.load(deserializer);
     case 1: return TransactionPayloadVariantPackage.load(deserializer);
+    case 2: return TransactionPayloadVariantScriptFunction.load(deserializer);
     default: throw new Error("Unknown variant index for TransactionPayload: " + index);
   }
 }
@@ -864,6 +952,47 @@ public serialize(serializer: Serializer): void {
 static load(deserializer: Deserializer): TransactionPayloadVariantPackage {
   const value = Package.deserialize(deserializer);
   return new TransactionPayloadVariantPackage(value);
+}
+
+}
+
+export class TransactionPayloadVariantScriptFunction extends TransactionPayload {
+
+constructor (public value: ScriptFunction) {
+  super();
+}
+
+public serialize(serializer: Serializer): void {
+  serializer.serializeVariantIndex(2);
+  this.value.serialize(serializer);
+}
+
+static load(deserializer: Deserializer): TransactionPayloadVariantScriptFunction {
+  const value = ScriptFunction.deserialize(deserializer);
+  return new TransactionPayloadVariantScriptFunction(value);
+}
+
+}
+export class TransactionScriptABI {
+
+constructor (public name: str, public doc: str, public code: bytes, public ty_args: Seq<TypeArgumentABI>, public args: Seq<ArgumentABI>) {
+}
+
+public serialize(serializer: Serializer): void {
+  serializer.serializeStr(this.name);
+  serializer.serializeStr(this.doc);
+  serializer.serializeBytes(this.code);
+  Helpers.serializeVectorTypeArgumentAbi(this.ty_args, serializer);
+  Helpers.serializeVectorArgumentAbi(this.args, serializer);
+}
+
+static deserialize(deserializer: Deserializer): TransactionScriptABI {
+  const name = deserializer.deserializeStr();
+  const doc = deserializer.deserializeStr();
+  const code = deserializer.deserializeBytes();
+  const ty_args = Helpers.deserializeVectorTypeArgumentAbi(deserializer);
+  const args = Helpers.deserializeVectorArgumentAbi(deserializer);
+  return new TransactionScriptABI(name,doc,code,ty_args,args);
 }
 
 }
@@ -1169,7 +1298,7 @@ export class Helpers {
     }
   }
 
-  static serializeOptionScript(value: Optional<Script>, serializer: Serializer): void {
+  static serializeOptionScriptFunction(value: Optional<ScriptFunction>, serializer: Serializer): void {
     if (value) {
         serializer.serializeOptionTag(true);
         value.serialize(serializer);
@@ -1178,12 +1307,12 @@ export class Helpers {
     }
   }
 
-  static deserializeOptionScript(deserializer: Deserializer): Optional<Script> {
+  static deserializeOptionScriptFunction(deserializer: Deserializer): Optional<ScriptFunction> {
     const tag = deserializer.deserializeOptionTag();
     if (!tag) {
         return null;
     } else {
-        return Script.deserialize(deserializer);
+        return ScriptFunction.deserialize(deserializer);
     }
   }
 

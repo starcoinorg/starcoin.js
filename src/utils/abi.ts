@@ -3,9 +3,9 @@ import * as starcoin_types from "../lib/runtime/starcoin_types";
 import { ScriptABI } from "../types";
 import * as bcs_to_json from "../encoding";
 
-export function decodeABI(bytes: Uint8Array): ScriptABI {
+export function decodeTransactionScriptABI(bytes: Uint8Array): ScriptABI {
   const de = new BcsDeserializer(bytes);
-  const abi = starcoin_types.ScriptABI.deserialize(de);
+  const abi = starcoin_types.TransactionScriptABI.deserialize(de);
   return {
     args: abi.args.map((a) => ({
       name: a.name,

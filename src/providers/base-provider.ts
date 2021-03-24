@@ -33,7 +33,7 @@ import {
   TransactionOutput,
   TransactionRequest,
   TransactionResponse, U64,
-  SignedUserTransactionView, AnnotatedMoveStruct
+  SignedUserTransactionView, AnnotatedMoveStruct, formatFunctionId
 } from '../types';
 
 const logger = new Logger(version);
@@ -1030,6 +1030,7 @@ export abstract class BaseProvider extends Provider {
     const params = await resolveProperties({
       request
     });
+    params.request.function_id = formatFunctionId(params.request.function_id);
     // eslint-disable-next-line no-return-await
     const rets = await this.perform(RPC_ACTION.call, params);
     return rets.map(v => this.formatter.moveValue(v));
@@ -1212,7 +1213,6 @@ export abstract class BaseProvider extends Provider {
           return undefined;
         }
 
-        // "geth-etc" returns receipts before they are ready
         if (result.block_hash == null) {
           return undefined;
         }

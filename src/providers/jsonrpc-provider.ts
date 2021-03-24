@@ -445,7 +445,7 @@ export class JsonrpcProvider extends BaseProvider {
         return ['state.get_account_state_set', [params.address]];
       case RPC_ACTION.call:
         return [
-          'dev.call_contract',
+          'contract.call',
           [
             params.request
           ]

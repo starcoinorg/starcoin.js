@@ -82,9 +82,9 @@ export abstract class Signer {
     const tx = await resolveProperties(this.checkTransaction(transaction));
     const txnOutput = await this.provider.dryRun(tx);
     if (typeof txnOutput.gas_used === 'number') {
-      return 10 * txnOutput.gas_used;
+      return 3 * txnOutput.gas_used;
     }
-    return 10n * txnOutput.gas_used.valueOf();
+    return 3n * txnOutput.gas_used.valueOf();
   }
 
   // calls with the transaction

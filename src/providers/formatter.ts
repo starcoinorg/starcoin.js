@@ -188,9 +188,9 @@ export class Formatter {
       author: address,
       author_auth_key: Formatter.allowNull(hex, null),
       /// The transaction accumulator root hash after executing this block.
-      accumulator_root: hash,
+      txn_accumulator_root: hash,
       /// The parent block accumulator root hash.
-      parent_block_accumulator_root: hash,
+      block_accumulator_root: hash,
       /// The last transaction state_root of this block after execute.
       state_root: hash,
       /// Gas used for contracts execution.
@@ -237,7 +237,6 @@ export class Formatter {
 
     formats.transactionOutput = {
       gas_used: u64,
-      delta_size: i64,
       status: this.transactionVmStatus.bind(this),
       events: Formatter.allowNull(Formatter.arrayOf(this.transactionEvent.bind(this))),
       write_set: Formatter.allowNull(Formatter.arrayOf(this.transactionWriteAction.bind(this)))
