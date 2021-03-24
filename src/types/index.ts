@@ -82,7 +82,12 @@ interface Script {
   // eslint-disable-next-line no-use-before-define
   args: TransactionArgument[];
 }
-
+interface ScriptFunction {
+  func: FunctionId;
+  ty_args: TypeTag[];
+  // eslint-disable-next-line no-use-before-define
+  args: TransactionArgument[];
+}
 interface Module {
   code: HexString;
 }
@@ -90,10 +95,10 @@ interface Module {
 interface Package {
   package_address: AccountAddress;
   modules: Module[];
-  init_script?: Script;
+  init_script?: ScriptFunction;
 }
 
-export type TransactionPayload = { Script: Script } | { Package: Package };
+export type TransactionPayload = { Script: Script } | { Package: Package } | {ScriptFunction: ScriptFunction};
 
 export type SignatureType = 'Ed25519' | 'MultiEd25519';
 
@@ -309,9 +314,7 @@ export interface TransactionRequest {
 }
 
 export interface CallRequest {
-  module_address: AccountAddress;
-  module_name: Identifier;
-  func: Identifier;
+  function_id: FunctionId;
   type_args?: string[];
   args?: string[];
 }
@@ -319,6 +322,7 @@ export interface CallRequest {
 /// block hash or block number
 export type BlockTag = string | number;
 export type ModuleId = string | { address: AccountAddress, name: Identifier };
+export type FunctionId = string | { address: AccountAddress, module: Identifier, function: Identifier };
 
 export interface BlockHeaderView {
   block_hash: HashValue;

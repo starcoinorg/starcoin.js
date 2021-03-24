@@ -77,7 +77,7 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
         package_address: addressFromSCS(packagePayload.package_address),
         modules: packagePayload.modules.map(m => ({ code: toHexString(m.code) })),
         init_script: packagePayload.init_script === null ? undefined : {
-          code: toHexString(packagePayload.init_script.code),
+          func: packagePayload.init_script.code,
           args: packagePayload.init_script.args.map(arg => txnArgFromSCS(arg)),
           ty_args: packagePayload.init_script.ty_args.map(ty => typeTagFromSCS(ty))
         }

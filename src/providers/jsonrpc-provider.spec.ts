@@ -1,4 +1,5 @@
 import { JsonrpcProvider } from '.';
+import * as fs from 'fs';
 
 describe('jsonrpc-provider', () => {
   // let provider = new JsonrpcProvider("http://39.102.41.156:9850", undefined);
@@ -77,6 +78,20 @@ describe('jsonrpc-provider', () => {
   test('get balances', async () => {
     let balances = await provider.getBalances("0x1");
     console.log(JSON.stringify(balances, (key, value) => (typeof value === 'bigint' ? value.toString() : value), 2));
+  });
+
+  test("mv panic", async () => {
+    const signer = await provider.getSigner();
+    await signer.unlock("");
+    let buffer = fs.readFileSync("../panic.mv");
+
+    const txnRequest = {
+      script: {
+        code: 'peer_to_peer',
+        type_args: ['0x1::STC::STC'],
+        args: ['0xc13b50bdb12e3fdd03c4e3b05e34926a', 'x"29b6012aee31a216af67c3d05e21a092c13b50bdb12e3fdd03c4e3b05e34926a"', '100000u128'],
+      }
+    };
   });
 
   test('txn sign and submit', async () => {
