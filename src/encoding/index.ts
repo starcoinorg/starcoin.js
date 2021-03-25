@@ -77,7 +77,22 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
       Script: {
         code: toHexString(script.code),
         ty_args: script.ty_args.map(t => typeTagFromSCS(t)),
-        args: []
+        args: script.args.map(arg => txnArgFromSCS(arg))
+      }
+    };
+  }
+
+  if (bcsTxnPayload instanceof starcoin_types.TransactionPayloadVariantScriptFunction) {
+    let scriptFunction  = bcsTxnPayload.value;
+    return {
+      ScriptFunction: {
+        func: {
+          address: addressFromSCS( scriptFunction.module.address),
+          module: scriptFunction.module.name.value,
+          function_name: scriptFunction.func.value,
+        },
+        ty_args: scriptFunction.ty_args.map(t => typeTagFromSCS(t)),
+        args: scriptFunction.args.map(arg => txnArgFromSCS(arg)),
       }
     };
   }
