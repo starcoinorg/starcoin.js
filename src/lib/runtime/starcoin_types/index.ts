@@ -530,19 +530,19 @@ static deserialize(deserializer: Deserializer): RawUserTransaction {
 }
 export class Script {
 
-constructor (public code: bytes, public ty_args: Seq<TypeTag>, public args: Seq<TransactionArgument>) {
+constructor (public code: bytes, public ty_args: Seq<TypeTag>, public args: Seq<bytes>) {
 }
 
 public serialize(serializer: Serializer): void {
   serializer.serializeBytes(this.code);
   Helpers.serializeVectorTypeTag(this.ty_args, serializer);
-  Helpers.serializeVectorTransactionArgument(this.args, serializer);
+  Helpers.serializeVectorBytes(this.args, serializer);
 }
 
 static deserialize(deserializer: Deserializer): Script {
   const code = deserializer.deserializeBytes();
   const ty_args = Helpers.deserializeVectorTypeTag(deserializer);
-  const args = Helpers.deserializeVectorTransactionArgument(deserializer);
+  const args = Helpers.deserializeVectorBytes(deserializer);
   return new Script(code,ty_args,args);
 }
 
@@ -597,23 +597,23 @@ static load(deserializer: Deserializer): ScriptABIVariantScriptFunction {
 
 }
 export class ScriptFunction {
-// need to rename `function` to `func` as `function` is a keyword in JS.
-constructor (public module: ModuleId, public func: Identifier, public ty_args: Seq<TypeTag>, public args: Seq<TransactionArgument>) {
+
+constructor (public module: ModuleId, public function: Identifier, public ty_args: Seq<TypeTag>, public args: Seq<bytes>) {
 }
 
 public serialize(serializer: Serializer): void {
   this.module.serialize(serializer);
-  this.func.serialize(serializer);
+  this.function.serialize(serializer);
   Helpers.serializeVectorTypeTag(this.ty_args, serializer);
-  Helpers.serializeVectorTransactionArgument(this.args, serializer);
+  Helpers.serializeVectorBytes(this.args, serializer);
 }
 
 static deserialize(deserializer: Deserializer): ScriptFunction {
   const module = ModuleId.deserialize(deserializer);
-  const func = Identifier.deserialize(deserializer);
+  const function = Identifier.deserialize(deserializer);
   const ty_args = Helpers.deserializeVectorTypeTag(deserializer);
-  const args = Helpers.deserializeVectorTransactionArgument(deserializer);
-  return new ScriptFunction(module,func,ty_args,args);
+  const args = Helpers.deserializeVectorBytes(deserializer);
+  return new ScriptFunction(module,function,ty_args,args);
 }
 
 }
@@ -1378,22 +1378,6 @@ export class Helpers {
     return list;
   }
 
-  static serializeVectorTransactionArgument(value: Seq<TransactionArgument>, serializer: Serializer): void {
-    serializer.serializeLen(value.length);
-    value.forEach((item: TransactionArgument) => {
-        item.serialize(serializer);
-    });
-  }
-
-  static deserializeVectorTransactionArgument(deserializer: Deserializer): Seq<TransactionArgument> {
-    const length = deserializer.deserializeLen();
-    const list: Seq<TransactionArgument> = [];
-    for (let i = 0; i < length; i++) {
-        list.push(TransactionArgument.deserialize(deserializer));
-    }
-    return list;
-  }
-
   static serializeVectorTypeArgumentAbi(value: Seq<TypeArgumentABI>, serializer: Serializer): void {
     serializer.serializeLen(value.length);
     value.forEach((item: TypeArgumentABI) => {
@@ -1422,6 +1406,22 @@ export class Helpers {
     const list: Seq<TypeTag> = [];
     for (let i = 0; i < length; i++) {
         list.push(TypeTag.deserialize(deserializer));
+    }
+    return list;
+  }
+
+  static serializeVectorBytes(value: Seq<bytes>, serializer: Serializer): void {
+    serializer.serializeLen(value.length);
+    value.forEach((item: bytes) => {
+        serializer.serializeBytes(item);
+    });
+  }
+
+  static deserializeVectorBytes(deserializer: Deserializer): Seq<bytes> {
+    const length = deserializer.deserializeLen();
+    const list: Seq<bytes> = [];
+    for (let i = 0; i < length; i++) {
+        list.push(deserializer.deserializeBytes());
     }
     return list;
   }
