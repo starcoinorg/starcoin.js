@@ -597,23 +597,23 @@ static load(deserializer: Deserializer): ScriptABIVariantScriptFunction {
 
 }
 export class ScriptFunction {
-
-constructor (public module: ModuleId, public function: Identifier, public ty_args: Seq<TypeTag>, public args: Seq<bytes>) {
+// need to rename `function` to `func` as `function` is a keyword in JS.
+constructor (public module: ModuleId, public func: Identifier, public ty_args: Seq<TypeTag>, public args: Seq<bytes>) {
 }
 
 public serialize(serializer: Serializer): void {
   this.module.serialize(serializer);
-  this.function.serialize(serializer);
+  this.func.serialize(serializer);
   Helpers.serializeVectorTypeTag(this.ty_args, serializer);
   Helpers.serializeVectorBytes(this.args, serializer);
 }
 
 static deserialize(deserializer: Deserializer): ScriptFunction {
   const module = ModuleId.deserialize(deserializer);
-  const function = Identifier.deserialize(deserializer);
+  const func = Identifier.deserialize(deserializer);
   const ty_args = Helpers.deserializeVectorTypeTag(deserializer);
   const args = Helpers.deserializeVectorBytes(deserializer);
-  return new ScriptFunction(module,function,ty_args,args);
+  return new ScriptFunction(module,func,ty_args,args);
 }
 
 }
