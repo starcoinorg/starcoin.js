@@ -6,7 +6,7 @@ import {
   ACCOUNT_ADDRESS_LENGTH,
   AccountAddress, EVENT_KEY_LENGTH, SignedUserTransactionView,
   StructTag,
-  TransactionArgument, TransactionPayload,
+   TransactionPayload,
   TypeTag
 } from '../types';
 import { fromHexString, toHexString } from '../utils/hex';
@@ -77,7 +77,7 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
       Script: {
         code: toHexString(script.code),
         ty_args: script.ty_args.map(t => typeTagFromSCS(t)),
-        args: script.args.map(arg => txnArgFromSCS(arg))
+        args: script.args.map(arg => hexlify(arg))
       }
     };
   }
@@ -89,10 +89,10 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
         func: {
           address: addressFromSCS( scriptFunction.module.address),
           module: scriptFunction.module.name.value,
-          function_name: scriptFunction.func.value,
+          functionName: scriptFunction.func.value,
         },
         ty_args: scriptFunction.ty_args.map(t => typeTagFromSCS(t)),
-        args: scriptFunction.args.map(arg => txnArgFromSCS(arg)),
+        args: scriptFunction.args.map(arg => hexlify(arg)),
       }
     };
   }
@@ -107,9 +107,9 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
           func: {
             address: addressFromSCS(packagePayload.init_script.module.address),
             module: packagePayload.init_script.module.name.value,
-            function_name: packagePayload.init_script.func.value,
+            functionName: packagePayload.init_script.func.value,
           },
-          args: packagePayload.init_script.args.map(arg => txnArgFromSCS(arg)),
+          args: packagePayload.init_script.args.map(arg => hexlify(arg)),
           ty_args: packagePayload.init_script.ty_args.map(ty => typeTagFromSCS(ty))
         }
       }
@@ -232,51 +232,51 @@ export function typeTagFromSCS(bcs_data: starcoin_types.TypeTag): TypeTag {
   throw new TypeError(`invalid bcs type tag: ${bcs_data}`);
 }
 
-export function txnArgFromSCS(data: starcoin_types.TransactionArgument): TransactionArgument {
-  if (data instanceof starcoin_types.TransactionArgumentVariantBool) {
-    return { Bool: data.value };
-  }
-  if (data instanceof starcoin_types.TransactionArgumentVariantU8) {
-    return { U8: data.value };
-  }
-  if (data instanceof starcoin_types.TransactionArgumentVariantU64) {
-    return { U64: data.value };
-  }
-  if (data instanceof starcoin_types.TransactionArgumentVariantU128) {
-    return { U128: data.value };
-  }
-  if (data instanceof starcoin_types.TransactionArgumentVariantAddress) {
-    return { Address: addressFromSCS(data.value) };
-  }
-  if (data instanceof starcoin_types.TransactionArgumentVariantU8Vector) {
-    return { U8Vector: data.value };
-  }
-  throw new TypeError(`cannot decode bcs type: ${data}`);
-}
+// export function txnArgFromSCS(data: starcoin_types.TransactionArgument): TransactionArgument {
+//   if (data instanceof starcoin_types.TransactionArgumentVariantBool) {
+//     return { Bool: data.value };
+//   }
+//   if (data instanceof starcoin_types.TransactionArgumentVariantU8) {
+//     return { U8: data.value };
+//   }
+//   if (data instanceof starcoin_types.TransactionArgumentVariantU64) {
+//     return { U64: data.value };
+//   }
+//   if (data instanceof starcoin_types.TransactionArgumentVariantU128) {
+//     return { U128: data.value };
+//   }
+//   if (data instanceof starcoin_types.TransactionArgumentVariantAddress) {
+//     return { Address: addressFromSCS(data.value) };
+//   }
+//   if (data instanceof starcoin_types.TransactionArgumentVariantU8Vector) {
+//     return { U8Vector: data.value };
+//   }
+//   throw new TypeError(`cannot decode bcs type: ${data}`);
+// }
 
-export function txnArgToSCS(
-  data: TransactionArgument
-): starcoin_types.TransactionArgument {
-  if ('U8' in data) {
-    return new starcoin_types.TransactionArgumentVariantU8(data.U8);
-  }
-  if ('U64' in data) {
-    return new starcoin_types.TransactionArgumentVariantU64(BigInt(data.U64));
-  }
-  if ('U128' in data) {
-    return new starcoin_types.TransactionArgumentVariantU128(BigInt(data.U128));
-  }
-  if ('Address' in data) {
-    return new starcoin_types.TransactionArgumentVariantAddress(
-      addressToSCS(data.Address)
-    );
-  }
-  if ('U8Vector' in data) {
-    return new starcoin_types.TransactionArgumentVariantU8Vector(data.U8Vector);
-  }
-  if ('Bool' in data) {
-    return new starcoin_types.TransactionArgumentVariantBool(data.Bool);
-  }
-  throw new Error(`invalid txn argument${data}`);
-
-}
+// export function txnArgToSCS(
+//   data: TransactionArgument
+// ): starcoin_types.TransactionArgument {
+//   if ('U8' in data) {
+//     return new starcoin_types.TransactionArgumentVariantU8(data.U8);
+//   }
+//   if ('U64' in data) {
+//     return new starcoin_types.TransactionArgumentVariantU64(BigInt(data.U64));
+//   }
+//   if ('U128' in data) {
+//     return new starcoin_types.TransactionArgumentVariantU128(BigInt(data.U128));
+//   }
+//   if ('Address' in data) {
+//     return new starcoin_types.TransactionArgumentVariantAddress(
+//       addressToSCS(data.Address)
+//     );
+//   }
+//   if ('U8Vector' in data) {
+//     return new starcoin_types.TransactionArgumentVariantU8Vector(data.U8Vector);
+//   }
+//   if ('Bool' in data) {
+//     return new starcoin_types.TransactionArgumentVariantBool(data.Bool);
+//   }
+//   throw new Error(`invalid txn argument${data}`);
+//
+// }

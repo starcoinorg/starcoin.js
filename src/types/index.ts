@@ -80,14 +80,14 @@ interface Script {
   code: HexString;
   ty_args: TypeTag[];
   // eslint-disable-next-line no-use-before-define
-  args: TransactionArgument[];
+  args: HexString[];
 }
 
 interface ScriptFunction {
   func: FunctionId;
   ty_args: TypeTag[];
   // eslint-disable-next-line no-use-before-define
-  args: TransactionArgument[];
+  args: HexString[];
 }
 
 interface Module {
@@ -119,13 +119,13 @@ export type TransactionAuthenticator =
 };
 
 
-export type TransactionArgument =
-  | { U8: number }
-  | { U64: BigInt }
-  | { U128: BigInt }
-  | { Address: AccountAddress }
-  | { U8Vector: Uint8Array }
-  | { Bool: boolean };
+// export type TransactionArgument =
+//   | { U8: number }
+//   | { U64: BigInt }
+//   | { U128: BigInt }
+//   | { Address: AccountAddress }
+//   | { U8Vector: Uint8Array }
+//   | { Bool: boolean };
 
 export interface AnnotatedMoveStruct {
   type_: string;
@@ -323,28 +323,28 @@ export interface CallRequest {
 /// block hash or block number
 export type BlockTag = string | number;
 export type ModuleId = string | { address: AccountAddress, name: Identifier };
-export type FunctionId = string | { address: AccountAddress, module: Identifier, function_name: Identifier };
+export type FunctionId = string | { address: AccountAddress, module: Identifier, functionName: Identifier };
 
-export function formatFunctionId(function_id: FunctionId): string {
-  if (typeof function_id != 'string') {
-    return `${function_id.address}::${function_id.module}::${function_id.function_name}`;
+export function formatFunctionId(functionId: FunctionId): string {
+  if (typeof functionId != 'string') {
+    return `${functionId.address}::${functionId.module}::${functionId.functionName}`;
   } else {
-    return function_id;
+    return functionId;
   }
 }
 
-export function parseFunctionId(function_id: FunctionId): { address: AccountAddress, module: Identifier, function_name: Identifier } {
-  if (typeof function_id != 'string') {
-    return function_id;
+export function parseFunctionId(functionId: FunctionId): { address: AccountAddress, module: Identifier, functionName: Identifier } {
+  if (typeof functionId != 'string') {
+    return functionId;
   } else {
-    let parts = function_id.split('::', 3);
+    let parts = functionId.split('::', 3);
     if (parts.length != 3) {
-      throw new Error(`cannot parse ${function_id} into FunctionId`);
+      throw new Error(`cannot parse ${functionId} into FunctionId`);
     }
     return {
       address: parts[0],
       module: parts[1],
-      function_name: parts[2]
+      functionName: parts[2]
     };
   }
 }
