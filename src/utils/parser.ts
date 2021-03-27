@@ -3,7 +3,7 @@ import decimal from 'is-decimal';
 import alphanumerical from 'is-alphanumerical';
 import alphabetical from 'is-alphabetical';
 import whitespace from 'is-whitespace-character';
-import { TransactionArgument, TypeTag } from '../types';
+import {  TypeTag } from '../types';
 import { fromHexString } from './hex';
 
 type Token =
@@ -136,45 +136,45 @@ class Parser {
     throw new Error(`unexpected token ${tok}, expected type tag`);
   }
 
-  parseTransactionArgument(): TransactionArgument {
-    let tok = this.next_tok();
-    // @ts-ignore
-    if (tok.U8 !== undefined) {
-      // @ts-ignore
-      return {U8: Number.parseInt(tok.U8)};
-    }
-    // @ts-ignore
-    if (tok.U64 !== undefined) {
-      // @ts-ignore
-      return {U64: BigInt(tok.U64)};
-    }
-    // @ts-ignore
-    if (tok.U128 !== undefined) {
-      // @ts-ignore
-      return {U128: BigInt(tok.U128)};
-    }
-
-
-    if (tok === 'True') {
-      return {Bool: true};
-    }
-    if (tok === 'False') {
-      return {Bool: false};
-    }
-
-    // @ts-ignore
-    if (tok.Address!==undefined) {
-      // @ts-ignore
-      return {Address: tok.Address };
-    }
-    // @ts-ignore
-    if (tok.Bytes!==undefined) {
-      // @ts-ignore
-      return {U8Vector: fromHexString(tok.Bytes)};
-    }
-
-    throw new Error(`unexpected token ${tok}, expected transaction argument`);
-  }
+  // parseTransactionArgument(): TransactionArgument {
+  //   let tok = this.next_tok();
+  //   // @ts-ignore
+  //   if (tok.U8 !== undefined) {
+  //     // @ts-ignore
+  //     return {U8: Number.parseInt(tok.U8)};
+  //   }
+  //   // @ts-ignore
+  //   if (tok.U64 !== undefined) {
+  //     // @ts-ignore
+  //     return {U64: BigInt(tok.U64)};
+  //   }
+  //   // @ts-ignore
+  //   if (tok.U128 !== undefined) {
+  //     // @ts-ignore
+  //     return {U128: BigInt(tok.U128)};
+  //   }
+  //
+  //
+  //   if (tok === 'True') {
+  //     return {Bool: true};
+  //   }
+  //   if (tok === 'False') {
+  //     return {Bool: false};
+  //   }
+  //
+  //   // @ts-ignore
+  //   if (tok.Address!==undefined) {
+  //     // @ts-ignore
+  //     return {Address: tok.Address };
+  //   }
+  //   // @ts-ignore
+  //   if (tok.Bytes!==undefined) {
+  //     // @ts-ignore
+  //     return {U8Vector: fromHexString(tok.Bytes)};
+  //   }
+  //
+  //   throw new Error(`unexpected token ${tok}, expected transaction argument`);
+  // }
 }
 
 // parse a number from string.
@@ -392,11 +392,11 @@ export function parseTypeTag(s: string): TypeTag {
   return parse(s, p => p.parseTypeTag());
 }
 
-export function parseTransactionArguments(s: string): TransactionArgument[] {
-  return parse(s, p => {
-    return p.parse_comma_list(p => p.parseTransactionArgument(), 'EOF', true);
-  });
-}
-export function parseTransactionArgument(s: string): TransactionArgument {
-  return parse(s, p => p.parseTransactionArgument());
-}
+// export fuction parseTransactionArguments(s: string): TransactionArgument[] {
+//   return parse(s, p => {
+//     return p.parse_comma_list(p => p.parseTransactionArgument(), 'EOF', true);
+//   });
+// }
+// export function parseTransactionArgument(s: string): TransactionArgument {
+//   return parse(s, p => p.parseTransactionArgument());
+// }
