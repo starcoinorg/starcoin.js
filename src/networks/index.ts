@@ -41,6 +41,10 @@ const STANDARD_NETWORKS: { [name: string]: Network } = {
     chainId: 254,
     name: 'dev',
   },
+  barnard: {
+    chainId: 251,
+    name: 'barnard',
+  },
   halley: {
     chainId: 3,
     name: 'halley',
