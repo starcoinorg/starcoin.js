@@ -4,7 +4,14 @@ starcoin.js is a full featured sdk for developing dapp on [Starcoin](https://git
 
 ## Usage
 
-First start a Starcoin node with websocket and http APIs open, for example:
+First, start a Starcoin node with websocket and http APIs opened.
+
+``` shell
+./starcoin -n dev --miner-thread 4 --websocket-apis all --http-apis all
+```
+
+or
+
 
 ``` shell
 ./starcoin -n barnard --miner-thread 4 --websocket-apis all --http-apis all
@@ -12,7 +19,7 @@ First start a Starcoin node with websocket and http APIs open, for example:
 
 
 ``` typescript
-let provider = new JsonrpcProvider("http:localhost:9850");
+let provider = new JsonrpcProvider("http://localhost:9850");
 
 /// Get txn data.
 const txnData = await provider.getTransaction(txnHash);
