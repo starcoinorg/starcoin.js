@@ -51,7 +51,7 @@ console.log(txnInfo);
 > yarn dev
 ```
 
-### Publish to [npm](https://www.npmjs.com/package/@starcoin/starcoin)
+## Publish to [npm](https://www.npmjs.com/package/@starcoin/starcoin)
 
 1. change version in `package.json`
 
@@ -59,7 +59,7 @@ console.log(txnInfo);
 
 3. `npm login`
 
-4. `npm config set registry https://npmjs.org/`
+4. `npm config set registry https://npmjs.org/`  # use `npm config ls` to confirm
 
 5. `npm publish --access public --tag latest`
 
