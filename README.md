@@ -55,7 +55,7 @@ console.log(txnInfo);
 
 1. change version in `src/version.ts`
 
-2. `npm build`
+2. `npm run build`
 
 3. `npm login`
 
