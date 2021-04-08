@@ -59,8 +59,10 @@ console.log(txnInfo);
 
 3. `npm login`
 
-4. `npm config set registry https://npmjs.org/`  # use `npm config ls` to confirm
+4. `npm config set registry https://registry.npmjs.org/`  # use `npm config ls` to confirm
 
-5. `npm publish --access public --tag latest`
+5. `npm publish --access public --tag latest --dry-run` # test locally before actually publishing to the registry
+
+6. `npm publish --access public --tag latest`
 
 Welcome for your PRs! 
