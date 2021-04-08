@@ -44,7 +44,7 @@ describe('jsonrpc-provider', () => {
 
   test('get code', async () => {
     let code = await provider.getCode("0x1::Account");
-    code = await provider.getCode("0x1::Accouny");
+    code = await provider.getCode("0x1::Account");
     expect(code).toBeUndefined();
   });
   test('get resource', async () => {
