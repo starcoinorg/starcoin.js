@@ -83,3 +83,6 @@ src/**/*.js
 # Compiled JavaScript files
 dist/
 coverage/
+
+# IDEs
+.idea

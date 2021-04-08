@@ -1,6 +1,5 @@
 {
   "name": "@starcoin/starcoin",
-  "version": "0.1.6",
   "description": "starcoin js sdk",
   "author": "lerencao",
   "license": "Apache-2.0",
@@ -41,10 +40,10 @@
     "@ethersproject/web": "^5.0.9",
     "is-alphabetical": "^1.0.4",
     "is-alphanumerical": "^1.0.4",
+    "is-decimal": "^1.0.4",
     "is-hexadecimal": "^1.0.4",
     "is-whitespace-character": "^1.0.4",
     "is-word-character": "^1.0.4",
-    "is-decimal": "^1.0.4",
     "ws": "7.2.3"
   },
   "devDependencies": {
@@ -90,5 +89,6 @@
   },
   "prettier": {
     "singleQuote": true
-  }
+  },
+  "version": "0.1.7"
 }

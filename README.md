@@ -47,8 +47,20 @@ console.log(txnInfo);
 
 ```shell
 > cd <project>
-> npm install
-> npm dev
+> yarn
+> yarn dev
 ```
+
+### Publish to [npm](https://www.npmjs.com/package/@starcoin/starcoin)
+
+1. change version in `src/version.ts`
+
+2. `npm build`
+
+3. `npm login`
+
+4. `npm config set registry https://npmjs.org/`
+
+5. `npm publish`
 
 Welcome for your PRs! 
