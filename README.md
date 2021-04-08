@@ -53,7 +53,7 @@ console.log(txnInfo);
 
 ### Publish to [npm](https://www.npmjs.com/package/@starcoin/starcoin)
 
-1. change version in `src/version.ts`
+1. change version in `package.json`
 
 2. `npm run build`
 
@@ -61,6 +61,6 @@ console.log(txnInfo);
 
 4. `npm config set registry https://npmjs.org/`
 
-5. `npm publish`
+5. `npm publish --access public --tag latest`
 
 Welcome for your PRs! 
