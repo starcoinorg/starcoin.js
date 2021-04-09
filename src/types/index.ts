@@ -314,19 +314,19 @@ export interface TransactionRequest {
   chain_id?: U8;
 }
 
+/// block hash or block number
+export type BlockTag = string | number;
+export type ModuleId = string | { address: AccountAddress, name: Identifier };
+export type FunctionId = string | { address: AccountAddress, module: Identifier, functionName: Identifier };
+
 export interface CallRequest {
   function_id: FunctionId;
   type_args?: string[];
   args?: string[];
 }
 
-/// block hash or block number
-export type BlockTag = string | number;
-export type ModuleId = string | { address: AccountAddress, name: Identifier };
-export type FunctionId = string | { address: AccountAddress, module: Identifier, functionName: Identifier };
-
 export function formatFunctionId(functionId: FunctionId): string {
-  if (typeof functionId != 'string') {
+  if (typeof functionId !== 'string') {
     return `${functionId.address}::${functionId.module}::${functionId.functionName}`;
   } else {
     return functionId;
@@ -334,11 +334,11 @@ export function formatFunctionId(functionId: FunctionId): string {
 }
 
 export function parseFunctionId(functionId: FunctionId): { address: AccountAddress, module: Identifier, functionName: Identifier } {
-  if (typeof functionId != 'string') {
+  if (typeof functionId !== 'string') {
     return functionId;
   } else {
-    let parts = functionId.split('::', 3);
-    if (parts.length != 3) {
+    const parts = functionId.split('::', 3);
+    if (parts.length !== 3) {
       throw new Error(`cannot parse ${functionId} into FunctionId`);
     }
     return {

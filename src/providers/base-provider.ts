@@ -178,13 +178,13 @@ export class Event {
   }
 }
 
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 function bytes32ify(value: number): string {
   return hexZeroPad(BigNumber.from(value).toHexString(), 32);
 }
 
 // Compute the Base58Check encoded data (checksum is first 4 bytes of sha256d)
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 function base58Encode(data: Uint8Array): string {
   return Base58.encode(
     concat([data, hexDataSlice(sha256(sha256(data)), 0, 4)])
@@ -212,6 +212,7 @@ let nextPollId = 1;
 
 export abstract class BaseProvider extends Provider {
   _networkPromise: Promise<Network>;
+
   _network: Network;
 
   _events: Array<Event>;
@@ -231,16 +232,21 @@ export abstract class BaseProvider extends Provider {
   _emitted: { [eventName: string]: number | 'pending' };
 
   _pollingInterval: number;
+
   _poller: NodeJS.Timer;
+
   _bootstrapPoll: NodeJS.Timer;
 
   _lastBlockNumber: number;
 
   _fastBlockNumber: number;
+
   _fastBlockNumberPromise: Promise<number>;
+
   _fastQueryDate: number;
 
   _maxInternalBlockNumber: number;
+
   _internalBlockNumber: Promise<{
     blockNumber: number;
     reqTime: number;
@@ -904,7 +910,7 @@ export abstract class BaseProvider extends Provider {
       // another story), so setting an emitted value forces us to
       // wait even if the node returns null for the receipt
       if (confirmations !== 0) {
-        this._emitted['t:' + tx.transaction_hash] = 'pending';
+        this._emitted[`t:${tx.transaction_hash}`] = 'pending';
       }
 
       const receipt = await this.waitForTransaction(
@@ -916,7 +922,7 @@ export abstract class BaseProvider extends Provider {
       }
 
       // No longer pending, allow the polling loop to garbage collect this
-      this._emitted['t:' + tx.transaction_hash] = receipt.block_number;
+      this._emitted[`t:${tx.transaction_hash}`] = receipt.block_number;
 
       result.block_hash = receipt.block_hash;
       result.block_number = receipt.block_number;
@@ -926,7 +932,7 @@ export abstract class BaseProvider extends Provider {
         logger.throwError('transaction failed', Logger.errors.CALL_EXCEPTION, {
           transactionHash: tx.transaction_hash,
           transaction: tx,
-          receipt: receipt
+          receipt
         });
       }
       return receipt;
@@ -1089,7 +1095,7 @@ export abstract class BaseProvider extends Provider {
           // not exist. If we did see it though, perhaps from a log, we know
           // it exists, and this node is just not caught up yet.
           if (params.blockHash != null) {
-            if (this._emitted['b:' + params.blockHash] == null) {
+            if (this._emitted[`b:${params.blockHash}`] == null) {
               return null;
             }
           }
@@ -1159,7 +1165,7 @@ export abstract class BaseProvider extends Provider {
         );
 
         if (result == null) {
-          if (this._emitted['t:' + transactionHash] == null) {
+          if (this._emitted[`t:${transactionHash}`] == null) {
             return null;
           }
           return undefined;
@@ -1167,9 +1173,9 @@ export abstract class BaseProvider extends Provider {
 
         const tx = this.formatter.transactionResponse(result);
 
-        if (tx.block_number == undefined) {
+        if (tx.block_number === undefined) {
           tx.confirmations = 0;
-        } else if (tx.confirmations == undefined) {
+        } else if (tx.confirmations === undefined) {
           const blockNumber = await this._getInternalBlockNumber(
             100 + 2 * this.pollingInterval
           );
@@ -1206,22 +1212,22 @@ export abstract class BaseProvider extends Provider {
           params
         );
 
-        if (result == null) {
-          if (this._emitted['t:' + transactionHash] == null) {
+        if (result === null) {
+          if (this._emitted[`t:${transactionHash}`] === null) {
             return null;
           }
           return undefined;
         }
 
-        if (result.block_hash == null) {
+        if (result.block_hash === null) {
           return undefined;
         }
 
         const transactionInfo = this.formatter.transactionInfo(result);
 
-        if (transactionInfo.block_number == null) {
+        if (transactionInfo.block_number === null) {
           transactionInfo.confirmations = 0;
-        } else if (transactionInfo.confirmations == null) {
+        } else if (transactionInfo.confirmations === null) {
           const blockNumber = await this._getInternalBlockNumber(
             100 + 2 * this.pollingInterval
           );
@@ -1244,7 +1250,7 @@ export abstract class BaseProvider extends Provider {
     filter: Filter | Promise<Filter>
   ): Promise<Array<TransactionEventView>> {
     await this.getNetwork();
-    const params = await resolveProperties({ filter: filter });
+    const params = await resolveProperties({ filter });
     const logs: Array<TransactionEventView> = await this.perform(
       RPC_ACTION.getEvents,
       params
@@ -1362,7 +1368,7 @@ export abstract class BaseProvider extends Provider {
   }
 
   off(eventName: EventType, listener?: Listener): this {
-    if (listener == null) {
+    if (listener === null) {
       return this.removeAllListeners(eventName);
     }
 
@@ -1372,7 +1378,7 @@ export abstract class BaseProvider extends Provider {
 
     const eventTag = getEventTag(eventName);
     this._events = this._events.filter((event) => {
-      if (event.tag !== eventTag || event.listener != listener) {
+      if (event.tag !== eventTag || event.listener !== listener) {
         return true;
       }
       if (found) {
@@ -1392,7 +1398,7 @@ export abstract class BaseProvider extends Provider {
 
   removeAllListeners(eventName?: EventType): this {
     let stopped: Array<Event> = [];
-    if (eventName == null) {
+    if (eventName === null) {
       stopped = this._events;
 
       this._events = [];

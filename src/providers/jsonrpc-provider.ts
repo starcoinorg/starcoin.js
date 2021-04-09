@@ -357,8 +357,8 @@ export class JsonrpcProvider extends BaseProvider {
 
   send(method: string, params: Array<any>): Promise<any> {
     const request = {
-      method: method,
-      params: params,
+      method,
+      params,
       id: this._nextId++,
       jsonrpc: '2.0'
     };
@@ -373,7 +373,7 @@ export class JsonrpcProvider extends BaseProvider {
       (result) => {
         this.emit('debug', {
           action: 'response',
-          request: request,
+          request,
           response: result,
           provider: this
         });
@@ -383,8 +383,8 @@ export class JsonrpcProvider extends BaseProvider {
       (error) => {
         this.emit('debug', {
           action: 'response',
-          error: error,
-          request: request,
+          error,
+          request,
           provider: this
         });
 
