@@ -1,12 +1,3 @@
-/* eslint-disable  max-classes-per-file */
-/* eslint-disable  @typescript-eslint/naming-convention */
-/* eslint-disable  prefer-template */
-/* eslint-disable  @typescript-eslint/no-useless-constructor */
-/* eslint-disable  no-else-return */
-/* eslint-disable  unicorn/no-null */
-/* eslint-disable  class-methods-use-this */
-/* eslint-disable  no-use-before-define */
-/* eslint-disable  @typescript-eslint/no-use-before-define */
 import { Serializer } from '../serde/serializer';
 import { Deserializer } from '../serde/deserializer';
 import { Optional, Seq, Tuple, ListTuple, unit, bool, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128, float32, float64, char, str, bytes } from '../serde/types';

@@ -12,17 +12,6 @@ If you want to update the codes:
 ./serdegen --language TypeScript --target-source-dir ./runtime --with-runtimes Bcs Serde ~/projects/starcoinorg/starcoin/etc/starcoin_types.yml
 ```
 
-2. To quiet the eslint error in the IDEs(like Vscode), please format code first, and add inset following lines at the top of the file `starcoin_types/index.ts`.
-```
-/* eslint-disable  max-classes-per-file */
-/* eslint-disable  @typescript-eslint/naming-convention */
-/* eslint-disable  prefer-template */
-/* eslint-disable  @typescript-eslint/no-useless-constructor */
-/* eslint-disable  no-else-return */
-/* eslint-disable  unicorn/no-null */
-/* eslint-disable  class-methods-use-this */
-/* eslint-disable  no-use-before-define */
-/* eslint-disable  @typescript-eslint/no-use-before-define */
-```
+2. please use IDEs(like VS Code) to format code of this file `starcoin_types/index.ts` first.
 
 3. Then use `git diff` to compare the changes, and cherry pick our modification back to the new generated runtime codes. 
