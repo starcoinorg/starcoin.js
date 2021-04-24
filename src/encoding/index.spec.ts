@@ -1,12 +1,41 @@
 import { addressToSCS, decodeEventKey, decodeTransactionPayload, decodeSignedUserTransaction } from '.';
+import { BcsSerializer } from '../lib/runtime/bcs';
+import { toHexString } from '../utils/hex';
+import { encodeScriptFunction } from "../utils/tx";
 
 test("encoding address", () => {
   expect(addressToSCS("0x1").value.length).toBe(16);
   expect(addressToSCS("0x01").value.length).toBe(16);
 });
 
+test("generate TransactionPayload->ScriptFunction hex", () => {
+
+  const functionId = '0x1::TransferScripts::peer_to_peer'
+
+  const address = '0x1';
+  // const address = '0x00000000000000000000000000000001';  // works too
+  const module = 'STC';
+  const name = 'STC';
+  const type_params = [];
+  const tyArgs = [{ Struct: { address, module, name, type_params } }]
+
+  const args = [
+    '0x1df9157f14b0041eed18dcc56520d829',
+    '0x2065acc62b12c75ae0d0db89411a8481601df9157f14b0041eed18dcc56520d829',
+    '0x0060d743dd500b000000000000000000'
+  ]
+
+  const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
+
+  const se = new BcsSerializer();
+  scriptFunction.serialize(se);
+  const payloadInHex = toHexString(se.getBytes());
+
+  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d829212065acc62b12c75ae0d0db89411a8481601df9157f14b0041eed18dcc56520d829100060d743dd500b000000000000000000";
+  expect(payloadInHex).toBe(hexExpected);
+});
+
 test("decoding txn payload", () => {
-  // associated generate test case: utils/tx.spec.ts -> "generate TransactionPayload->ScriptFunction hex"
   const payloadInHex = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d829212065acc62b12c75ae0d0db89411a8481601df9157f14b0041eed18dcc56520d829100060d743dd500b000000000000000000";
   const txnPayload = decodeTransactionPayload(payloadInHex);
   expect(txnPayload.hasOwnProperty("ScriptFunction")).toBeTruthy();
