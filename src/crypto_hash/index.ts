@@ -12,7 +12,6 @@ class DefaultHasher {
       const hasher = sha3.sha3_256.create();
       hasher.update(data);
       this.salt = new Uint8Array(hasher.arrayBuffer());
-      console.log('salt', this.salt)
     }
   }
 
