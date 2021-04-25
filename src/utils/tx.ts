@@ -55,8 +55,7 @@ export function encodePackage(
   );
 }
 
-export async function encodeSignedUserTransaction(
-  senderPrivateKey: HexString,
+function generateRawUserTransaction(
   senderAddress: HexString,
   receiverAddress: HexString,
   amount: U128,
@@ -64,9 +63,9 @@ export async function encodeSignedUserTransaction(
   senderSequenceNumber: U64,
   expirationTimestampSecs: U64,
   chainId: U8
-): Promise<starcoin_types.SignedUserTransaction> {
+): starcoin_types.RawUserTransaction {
 
-  // Step 1: generate payload hex of ScriptFunction
+  // Step 1-1: generate payload hex of ScriptFunction
   // TODO: check the receiver exists on the chain or not
   // assuming the receiver exists on the chain already
   const receiverAuthKeyHex = '0x00'
@@ -94,7 +93,7 @@ export async function encodeSignedUserTransaction(
 
   const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
 
-  // Step 2: generate RawUserTransaction
+  // Step 1-2: generate RawUserTransaction
   const sender = addressToSCS(senderAddress)
   const sequence_number = BigInt(senderSequenceNumber)
   const payload = scriptFunction
@@ -106,7 +105,14 @@ export async function encodeSignedUserTransaction(
 
   const rawUserTransaction = new starcoin_types.RawUserTransaction(sender, sequence_number, payload, max_gas_amount, gas_unit_price, gas_token_code, expiration_timestamp_secs, chain_id)
 
-  // Step 3: generate signature of RawUserTransaction
+  return rawUserTransaction
+}
+
+async function signRawUserTransaction(
+  rawUserTransaction: starcoin_types.RawUserTransaction,
+  senderPrivateKey: HexString,
+): Promise<string> {
+
   const hasher = createRawUserTransactionHasher();
   const hashSeedBytes = hasher.get_salt();
 
@@ -121,15 +127,46 @@ export async function encodeSignedUserTransaction(
   const signatureBytes = await ed.sign(megBytes, stripHexPrefix(senderPrivateKey))
   const signatureHex = hexlify(signatureBytes)
 
-  // Step 4: generate authenticator
+  return signatureHex
+}
+
+async function generateSignedUserTransaction(
+  senderPrivateKey: HexString,
+  signatureHex: string,
+  rawUserTransaction: starcoin_types.RawUserTransaction
+): Promise<starcoin_types.SignedUserTransaction> {
+  // Step 3-1: generate authenticator
   const senderPublicKeyMissingPrefix = await ed.getPublicKey(stripHexPrefix(senderPrivateKey))
 
   const public_key = new starcoin_types.Ed25519PublicKey(arrayify(senderPublicKeyMissingPrefix, { allowMissingPrefix: true }))
   const signature = new starcoin_types.Ed25519Signature(arrayify(signatureHex))
   const transactionAuthenticatorVariantEd25519 = new starcoin_types.TransactionAuthenticatorVariantEd25519(public_key, signature)
 
-  // Step 5: generate SignedUserTransaction
+  // Step 3-2: generate SignedUserTransaction
   const signedUserTransaction = new starcoin_types.SignedUserTransaction(rawUserTransaction, transactionAuthenticatorVariantEd25519)
+
+  return signedUserTransaction
+}
+
+export async function encodeSignedUserTransaction(
+  senderPrivateKey: HexString,
+  senderAddress: HexString,
+  receiverAddress: HexString,
+  amount: U128,
+  maxGasAmount: U64,
+  senderSequenceNumber: U64,
+  expirationTimestampSecs: U64,
+  chainId: U8
+): Promise<starcoin_types.SignedUserTransaction> {
+
+  // Step 1: generate RawUserTransaction
+  const rawUserTransaction = generateRawUserTransaction(senderAddress, receiverAddress, amount, maxGasAmount, senderSequenceNumber, expirationTimestampSecs, chainId);
+
+  // Step 2: generate signature of RawUserTransaction
+  const signatureHex = await signRawUserTransaction(rawUserTransaction, senderPrivateKey)
+
+  // Step 3: generate SignedUserTransaction
+  const signedUserTransaction = await generateSignedUserTransaction(senderPrivateKey, signatureHex, rawUserTransaction)
 
   return signedUserTransaction
 }
