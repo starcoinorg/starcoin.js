@@ -39,12 +39,15 @@
     "@ethersproject/properties": "^5.0.4",
     "@ethersproject/sha2": "^5.0.4",
     "@ethersproject/web": "^5.0.9",
+    "ethereumjs-util": "5.1.0",
     "is-alphabetical": "^1.0.4",
     "is-alphanumerical": "^1.0.4",
     "is-decimal": "^1.0.4",
     "is-hexadecimal": "^1.0.4",
     "is-whitespace-character": "^1.0.4",
     "is-word-character": "^1.0.4",
+    "js-sha3": "^0.8.0",
+    "noble-ed25519": "^1.0.4",
     "ws": "7.2.3"
   },
   "devDependencies": {
@@ -69,7 +72,9 @@
   "scripts": {
     "build": "microbundle -o dist/ --sourcemap false --compress false -f modern,es,cjs",
     "dev": "microbundle watch -o dist/ --sourcemap false --compress false -f modern,es,cjs",
-    "test": "jest --coverage",
+    "test": "yarn test:coverage",
+    "test:unit": "jest",
+    "test:coverage": "jest --coverage",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx ."
   },
   "jest": {

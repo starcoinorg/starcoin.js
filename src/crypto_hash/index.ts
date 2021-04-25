@@ -8,10 +8,11 @@ class DefaultHasher {
 
   constructor(typename?: string) {
     if (typename) {
-      const data = new Uint8Array(new Buffer(STARCOIN_HASH_PREFIX + typename));
+      const data = new Uint8Array(Buffer.from(STARCOIN_HASH_PREFIX + typename));
       const hasher = sha3.sha3_256.create();
       hasher.update(data);
       this.salt = new Uint8Array(hasher.arrayBuffer());
+      console.log('salt', this.salt)
     }
   }
 
@@ -23,9 +24,14 @@ class DefaultHasher {
     hasher.update(arrayify(data));
     return '0x' + hasher.hex();
   }
+
+  get_salt(): Uint8Array {
+    return this.salt;
+  }
 }
 export interface CryptoHash {
   crypto_hash(data: BytesLike): string;
+  get_salt(): Uint8Array;
 }
 
 export function createHash(typename: string): CryptoHash {
@@ -35,4 +41,8 @@ export function createHash(typename: string): CryptoHash {
 
 export function createUserTransactionHasher(): CryptoHash {
   return createHash("SignedUserTransaction");
+}
+
+export function createRawUserTransactionHasher(): CryptoHash {
+  return createHash("RawUserTransaction");
 }

@@ -7,7 +7,7 @@ import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U8 } from '../types';
 import { addressToSCS, typeTagToSCS } from '../encoding';
-
+import { createRawUserTransactionHasher } from "../crypto_hash";
 
 export function encodeTransactionScript(
   code: bytes,
@@ -107,14 +107,8 @@ export async function encodeSignedUserTransaction(
   const rawUserTransaction = new starcoin_types.RawUserTransaction(sender, sequence_number, payload, max_gas_amount, gas_unit_price, gas_token_code, expiration_timestamp_secs, chain_id)
 
   // Step 3: generate signature of RawUserTransaction
-  const HASH_PRE_FIX = 'STARCOIN::'
-  const typeName = 'RawUserTransaction'
-
-  const salt = `${HASH_PRE_FIX}${typeName}`
-
-  const hashSeed = sha3_256.create();
-  hashSeed.update(salt);
-  const hashSeedBytes = hashSeed.digest();
+  const hasher = createRawUserTransactionHasher();
+  const hashSeedBytes = hasher.get_salt();
 
   const rawUserTransactionBytes = (function () {
     const se = new BcsSerializer();
