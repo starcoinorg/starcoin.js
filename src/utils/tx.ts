@@ -61,11 +61,12 @@ export async function encodeSignedUserTransaction(
   receiverAddress: HexString,
   amount: U128,
   maxGasAmount: U64,
+  senderSequenceNumber: U64,
+  expirationTimestampSecs: U64,
   chainId: U8
 ): Promise<starcoin_types.SignedUserTransaction> {
 
   // Step 1: generate payload hex of ScriptFunction
-
   // TODO: check the receiver exists on the chain or not
   // assuming the receiver exists on the chain already
   const receiverAuthKeyHex = '0x00'
@@ -93,29 +94,19 @@ export async function encodeSignedUserTransaction(
 
   const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
 
-  const payloadInHex = (function () {
-    const se = new BcsSerializer();
-    scriptFunction.serialize(se);
-    return hexlify(se.getBytes());
-  })();
-
   // Step 2: generate RawUserTransaction
   const sender = addressToSCS(senderAddress)
-  // TODO: call get_sequence_number
-  const sequence_number = BigInt(16)
+  const sequence_number = BigInt(senderSequenceNumber)
   const payload = scriptFunction
   const max_gas_amount = BigInt(maxGasAmount)
   const gas_unit_price = BigInt(1)
   const gas_token_code = '0x1::STC::STC'
-  // expired after 12 hours(43200 seconds)
-  // TODO: call node.info, now_seconds + 43200  
-  const expiration_timestamp_secs = BigInt(44008)
+  const expiration_timestamp_secs = BigInt(expirationTimestampSecs)
   const chain_id = new starcoin_types.ChainId(chainId)
 
   const rawUserTransaction = new starcoin_types.RawUserTransaction(sender, sequence_number, payload, max_gas_amount, gas_unit_price, gas_token_code, expiration_timestamp_secs, chain_id)
 
   // Step 3: generate signature of RawUserTransaction
-
   const HASH_PRE_FIX = 'STARCOIN::'
   const typeName = 'RawUserTransaction'
 
