@@ -62,7 +62,7 @@ export async function encodeSignedUserTransaction(
   amount: U128,
   maxGasAmount: U64,
   chainId: U8
-): Promise<string> {
+): Promise<starcoin_types.SignedUserTransaction> {
 
   // Step 1: generate payload hex of ScriptFunction
 
@@ -70,7 +70,7 @@ export async function encodeSignedUserTransaction(
   // assuming the receiver exists on the chain already
   const receiverAuthKeyHex = '0x00'
 
-  const functionId = '0x00000000000000000000000000000001::TransferScripts::peer_to_peer'
+  const functionId = '0x1::TransferScripts::peer_to_peer'
 
   const address = '0x1';
   const module = 'STC';
@@ -98,8 +98,6 @@ export async function encodeSignedUserTransaction(
     scriptFunction.serialize(se);
     return hexlify(se.getBytes());
   })();
-
-  console.log({ payloadInHex })
 
   // Step 2: generate RawUserTransaction
   const sender = addressToSCS(senderAddress)
@@ -137,7 +135,16 @@ export async function encodeSignedUserTransaction(
 
   const signatureBytes = await ed.sign(megBytes, stripHexPrefix(senderPrivateKey))
   const signatureHex = hexlify(signatureBytes)
-  console.log({ signatureHex })
 
-  return "0x49624992dd72da077ee19d0be210406a100000000000000002000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f706565720107000000000000000000000000000000010353544303535443000310621500bf2b4aad17a690cb24f9a225c601001000ca9a3b0000000000000000000000001fe501000000000001000000000000000d3078313a3a5354433a3a535443e8ab000000000000fe002020e2c9a32b0ce41c3a5f4a5f010909741f12e265debcb681c9f9d58c2e69e65c4040288d5662f0f0e72d181073c00bd4f6a15fcfaf4911f6ac35827e09c5e6e02d0df0f2d1bb81c90617911362a39801b88cf6ae405ef226c2e6645a1e5c946e09";
+  // Step 4: generate authenticator
+  const senderPublicKeyMissingPrefix = await ed.getPublicKey(stripHexPrefix(senderPrivateKey))
+
+  const public_key = new starcoin_types.Ed25519PublicKey(arrayify(senderPublicKeyMissingPrefix, { allowMissingPrefix: true }))
+  const signature = new starcoin_types.Ed25519Signature(arrayify(signatureHex))
+  const transactionAuthenticatorVariantEd25519 = new starcoin_types.TransactionAuthenticatorVariantEd25519(public_key, signature)
+
+  // Step 5: generate SignedUserTransaction
+  const signedUserTransaction = new starcoin_types.SignedUserTransaction(rawUserTransaction, transactionAuthenticatorVariantEd25519)
+
+  return signedUserTransaction
 }
