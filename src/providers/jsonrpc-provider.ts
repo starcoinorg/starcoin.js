@@ -23,7 +23,7 @@ const errorGas = new Set(['call', 'estimateGas']);
 
 // FIXME: recheck the error.
 function checkError(method: string, error: any, params: any): never {
-  let {message} = error;
+  let { message } = error;
   if (
     error.code === Logger.errors.SERVER_ERROR &&
     error.error &&
@@ -99,7 +99,7 @@ function checkError(method: string, error: any, params: any): never {
 }
 
 function timer(timeout: number): Promise<any> {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     setTimeout(resolve, timeout);
   });
 }
@@ -198,8 +198,8 @@ export class JsonRpcSigner extends Signer {
     }
 
     return this.provider.send('account.sign_txn_request', [request]).then((hexTxnData) => {
-        return hexTxnData;
-      },
+      return hexTxnData;
+    },
       (error) => {
         return checkError('signTransaction', error, request);
       });
@@ -355,6 +355,11 @@ export class JsonrpcProvider extends BaseProvider {
     });
   }
 
+  async getNowSeconds(): Promise<number> {
+    const nodeInfo = await this.perform(RPC_ACTION.getNodeInfo, null);
+    return nodeInfo.now_seconds;
+  }
+
   send(method: string, params: Array<any>): Promise<any> {
     const request = {
       method,
@@ -398,6 +403,8 @@ export class JsonrpcProvider extends BaseProvider {
     switch (method) {
       case RPC_ACTION.getChainInfo:
         return ['chain.info', []];
+      case RPC_ACTION.getNodeInfo:
+        return ['node.info', []];
       case RPC_ACTION.getGasPrice:
         return ['txpool.gas_price', []];
       case RPC_ACTION.dryRun:

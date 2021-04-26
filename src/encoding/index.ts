@@ -6,11 +6,11 @@ import {
   ACCOUNT_ADDRESS_LENGTH,
   AccountAddress, EVENT_KEY_LENGTH, SignedUserTransactionView,
   StructTag,
-   TransactionPayload,
+  TransactionPayload,
   TypeTag
 } from '../types';
 import { fromHexString, toHexString } from '../utils/hex';
-import { createUserTransactionHasher} from '../crypto_hash';
+import { createUserTransactionHasher } from '../crypto_hash';
 
 
 export interface SerdeSerializable {
@@ -83,11 +83,11 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
   }
 
   if (bcsTxnPayload instanceof starcoin_types.TransactionPayloadVariantScriptFunction) {
-    let scriptFunction  = bcsTxnPayload.value;
+    let scriptFunction = bcsTxnPayload.value;
     return {
       ScriptFunction: {
         func: {
-          address: addressFromSCS( scriptFunction.module.address),
+          address: addressFromSCS(scriptFunction.module.address),
           module: scriptFunction.module.name.value,
           functionName: scriptFunction.func.value,
         },
