@@ -193,6 +193,7 @@ function base58Encode(data: Uint8Array): string {
 
 export const RPC_ACTION = {
   getChainInfo: 'getChainInfo',
+  getNodeInfo: 'getNodeInfo',
   sendTransaction: 'sendTransaction',
   getBlock: 'getBlock',
   getTransactionByHash: 'getTransactionByHash',
@@ -879,7 +880,7 @@ export abstract class BaseProvider extends Provider {
     if (value) {
       // @ts-ignore
       return Object.entries(value.resources)
-        .reduce((o, [k, v])=>({...o, [k]: this.formatter.moveStruct(v as AnnotatedMoveStruct)}), {});
+        .reduce((o, [k, v]) => ({ ...o, [k]: this.formatter.moveStruct(v as AnnotatedMoveStruct) }), {});
     }
   }
 
@@ -946,12 +947,16 @@ export abstract class BaseProvider extends Provider {
   ): Promise<TransactionResponse> {
     await this.getNetwork();
     const hexTx = await signedTransaction;
+    console.log('basic-provider: sendTransaction')
+    console.log({ hexTx })
     const tx = this.formatter.userTransactionData(hexTx);
+    console.log('tx', tx)
+    console.log('_wrapTransaction', this._wrapTransaction(tx))
     try {
       // FIXME: check rpc call
-      await this.perform(RPC_ACTION.sendTransaction, {
-        signedTransaction: hexTx
-      });
+      // await this.perform(RPC_ACTION.sendTransaction, {
+      //   signedTransaction: hexTx
+      // });
       return this._wrapTransaction(tx);
     } catch (error) {
       (<any>error).transaction = tx;
