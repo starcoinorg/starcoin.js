@@ -1,6 +1,7 @@
 import { addressToSCS, decodeEventKey, decodeTransactionPayload, decodeSignedUserTransaction } from '.';
 import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
 import { toHexString } from '../utils/hex';
+import { JsonrpcProvider } from '../providers/jsonrpc-provider';
 import { encodeScriptFunction, encodeSignedUserTransaction } from "../utils/tx";
 
 test("encoding address", () => {
@@ -56,20 +57,26 @@ test("encoding SignedUserTransaction hex", async () => {
 
   const senderAddressHex = '0x49624992dd72da077ee19d0be210406a'
 
-  // TODO: call get_sequence_number
-  const senderSequenceNumber = 16
+  const nodeUrl = 'http://localhost:9850'
+
+  const provider = new JsonrpcProvider(nodeUrl);
+
+  const senderSequenceNumber = await provider.getSequenceNumber(senderAddressHex)
 
   const receiverAddressHex = '0x621500bf2b4aad17a690cb24f9a225c6'
 
   const amount = 1000000000
 
+  // TODO: generate maxGasAmount from contract.dry_run -> gas_used
   const maxGasAmount = 124191
 
   const chainId = 254
 
-  // expired after 12 hours(43200 seconds)
-  // TODO: call node.info, now_seconds + 43200  
-  const expirationTimestampSecs = 44008
+  // because the time system in dev network is relatively static, 
+  // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
+  const nowSeconds = await provider.getNowSeconds()
+  // expired after 12 hours since Unix Epoch
+  const expirationTimestampSecs = nowSeconds + 43200
 
   const signedUserTransaction = await encodeSignedUserTransaction(senderPrivateKeyHex, senderAddressHex, receiverAddressHex, amount, maxGasAmount, senderSequenceNumber, expirationTimestampSecs, chainId);
 
