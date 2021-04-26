@@ -947,16 +947,12 @@ export abstract class BaseProvider extends Provider {
   ): Promise<TransactionResponse> {
     await this.getNetwork();
     const hexTx = await signedTransaction;
-    console.log('basic-provider: sendTransaction')
-    console.log({ hexTx })
     const tx = this.formatter.userTransactionData(hexTx);
-    console.log('tx', tx)
-    console.log('_wrapTransaction', this._wrapTransaction(tx))
     try {
       // FIXME: check rpc call
-      // await this.perform(RPC_ACTION.sendTransaction, {
-      //   signedTransaction: hexTx
-      // });
+      await this.perform(RPC_ACTION.sendTransaction, {
+        signedTransaction: hexTx
+      });
       return this._wrapTransaction(tx);
     } catch (error) {
       (<any>error).transaction = tx;

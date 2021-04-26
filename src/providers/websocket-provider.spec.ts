@@ -30,7 +30,7 @@ describe('websocket-provider', () => {
   });
 
   test('call contract', async () => {
-    const values = await provider.call( {
+    const values = await provider.call({
       function_id: '0x1::Account::balance',
       type_args: ['0x1::STC::STC'],
       args: ['0x1'],
@@ -49,9 +49,10 @@ describe('websocket-provider', () => {
   });
 
 
-  test('txn sign and submit', async () => {
+  test('txn sign using sender password and submit', async () => {
     const signer = await provider.getSigner();
-    await signer.unlock("");
+    const password = ""; // put password into the quotes
+    await signer.unlock(password);
     const txnRequest = {
       script: {
         code: '0x1::TransferScripts::peer_to_peer',

@@ -1,4 +1,3 @@
-import { sha3_256 } from 'js-sha3';
 import * as ed from 'noble-ed25519';
 import { stripHexPrefix } from 'ethereumjs-util';
 import { arrayify, hexlify } from '@ethersproject/bytes';
@@ -122,9 +121,14 @@ async function signRawUserTransaction(
     return se.getBytes();
   })();
 
-  const megBytes = new Uint8Array([...hashSeedBytes, ...rawUserTransactionBytes]);
+  const msgBytes = ((a, b) => {
+    const tmp = new Uint8Array(a.length + b.length);
+    tmp.set(a, 0);
+    tmp.set(b, a.length);
+    return tmp;
+  })(hashSeedBytes, rawUserTransactionBytes);
 
-  const signatureBytes = await ed.sign(megBytes, stripHexPrefix(senderPrivateKey))
+  const signatureBytes = await ed.sign(msgBytes, stripHexPrefix(senderPrivateKey))
   const signatureHex = hexlify(signatureBytes)
 
   return signatureHex
@@ -148,7 +152,15 @@ async function generateSignedUserTransaction(
   return signedUserTransaction
 }
 
-export async function encodeSignedUserTransaction(
+function getSignedUserTransactionHex(
+  signedUserTransaction: starcoin_types.SignedUserTransaction
+): string {
+  const se = new BcsSerializer();
+  signedUserTransaction.serialize(se);
+  return hexlify(se.getBytes());
+}
+
+async function encodeSignedUserTransaction(
   senderPrivateKey: HexString,
   senderAddress: HexString,
   receiverAddress: HexString,
@@ -169,4 +181,22 @@ export async function encodeSignedUserTransaction(
   const signedUserTransaction = await generateSignedUserTransaction(senderPrivateKey, signatureHex, rawUserTransaction)
 
   return signedUserTransaction
+}
+
+export async function generateSignedUserTransactionHex(
+  senderPrivateKey: HexString,
+  senderAddress: HexString,
+  receiverAddress: HexString,
+  amount: U128,
+  maxGasAmount: U64,
+  senderSequenceNumber: U64,
+  expirationTimestampSecs: U64,
+  chainId: U8
+): Promise<string> {
+
+  const signedUserTransaction = await encodeSignedUserTransaction(senderPrivateKey, senderAddress, receiverAddress, amount, maxGasAmount, senderSequenceNumber, expirationTimestampSecs, chainId);
+
+  const hex = getSignedUserTransactionHex(signedUserTransaction)
+
+  return hex
 }
