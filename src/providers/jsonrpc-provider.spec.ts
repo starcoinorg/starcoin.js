@@ -1,12 +1,19 @@
 import { JsonrpcProvider } from '.';
 
+const log = (data: any): void => {
+  console.log(JSON.stringify(data, undefined, 2))
+}
+
 describe('jsonrpc-provider', () => {
   // let provider = new JsonrpcProvider("http://39.102.41.156:9850", undefined);
 
-  const provider = new JsonrpcProvider(undefined, undefined);
+  const nodeUrl = 'http://localhost:9850'
+  const chainId = 254
+
+  const provider = new JsonrpcProvider(nodeUrl);
   test('detectNetwork', async () => {
     const net = await provider.getNetwork();
-    expect(net.chainId).toBe(254);
+    expect(net.chainId).toBe(chainId);
   });
   test('getBlockNumber', async () => {
     const blockNumber = await provider.getBlockNumber();
@@ -30,16 +37,16 @@ describe('jsonrpc-provider', () => {
     const events = await provider.getTransactionEvents({
       event_keys: []
     });
-    console.log(events);
+    log(events);
   });
 
   test('call contract', async () => {
-    const values = await provider.call( {
+    const values = await provider.call({
       function_id: '0x1::Account::balance',
       type_args: ['0x1::STC::STC'],
       args: ['0x1'],
     });
-    console.log(values);
+    log(values);
   });
 
   test('get code', async () => {
@@ -87,5 +94,13 @@ describe('jsonrpc-provider', () => {
       expect(balance).toBe(100000);
     }
 
+  }, 10000);
+
+  test('SignedUserTransaction', async () => {
+    const senderAddress = '0x49624992dd72da077ee19d0be210406a'
+    const receiverAddress = '0x621500bf2b4aad17a690cb24f9a225c6'
+    const signer = provider.getSigner(senderAddress);
+    const balanceBefore = await provider.getBalance(receiverAddress);
+    log({ balanceBefore })
   }, 10000);
 });

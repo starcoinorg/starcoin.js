@@ -2,6 +2,8 @@
 
 starcoin.js is a full featured sdk for developing dapp on [Starcoin](https://github.com/starcoinorg/starcoin) blockchain network.
 
+[Type Architecture Diagram](./src/lib/README.md)
+
 ## Usage
 
 First, start a Starcoin node with websocket and http APIs opened.

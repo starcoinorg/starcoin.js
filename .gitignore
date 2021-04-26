@@ -86,3 +86,5 @@ coverage/
 
 # IDEs
 .idea
+
+.DS_Store
