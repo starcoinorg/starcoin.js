@@ -206,10 +206,25 @@ export class JsonRpcSigner extends Signer {
   }
 
   // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
-  async signMessage(message: Bytes | string): Promise<string> {
-    return logger.throwError('signing message is unsupported', Logger.errors.UNSUPPORTED_OPERATION, {
-      operation: 'signMessage'
-    });
+  // async signMessage(message: Bytes | string): Promise<string> {
+  async signMessage(message: string): Promise<string> {
+    // return logger.throwError('signing message is unsupported', Logger.errors.UNSUPPORTED_OPERATION, {
+    //  operation: 'signMessage'
+    // });
+    const { provider } = this;
+    const address = await this.getAddress();
+    const u8a = new Uint8Array(Buffer.from(message))
+    const msgArray = Array.from(u8a)
+    const messageArg = { message: msgArray }
+    return provider.send('account.sign', [address.toLowerCase(), messageArg]);
+    /*
+    return this.provider.send('account.sign', [request]).then((hexSignedMessageData) => {
+        return hexSignedMessageData;
+      },
+      (error) => {
+        return checkError('signMessage', error, request);
+      });
+    */
     // const data = ((typeof(message) === "string") ? toUtf8Bytes(message): message);
     // const address = await this.getAddress();
     //
