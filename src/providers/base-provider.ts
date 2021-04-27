@@ -193,6 +193,7 @@ function base58Encode(data: Uint8Array): string {
 
 export const RPC_ACTION = {
   getChainInfo: 'getChainInfo',
+  getNodeInfo: 'getNodeInfo',
   sendTransaction: 'sendTransaction',
   getBlock: 'getBlock',
   getTransactionByHash: 'getTransactionByHash',

@@ -104,10 +104,22 @@ describe('jsonrpc-provider', () => {
     log({ balanceBefore })
   }, 10000);
 
-  test('Sign Message', async () => {
+  test('Sign String Message', async () => {
     const signerAddress = '0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
     const unlockPassword = 'your-password'
     const message = 'foo'
+    const signer = provider.getSigner(signerAddress);
+    await signer.unlock(unlockPassword)
+    const signedMessage = await signer.signMessage(message);
+    expect(signedMessage).toBe("0xc51dada886afe59d4651f36b56f3c4a1a84da53dfbddf396d81a5b36ab5cdc265aa1559ad3185b714cb8b62583c4172833026820e6cf264a02f0e3ebd424301a80a15c3e2381c0419a91477805a3c5d60131d353eb29313a786584d4565fb203");
+  }, 10000);
+
+  test('Sign Bytes Message', async () => {
+    const signerAddress = '0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    const unlockPassword = 'your-password'
+    // const message = new Uint8Array(Buffer.from('foo'))
+    // Bytes here means ArrayLike<number>, check '@ethersproject/bytes'
+    const message = { 0: 102, 1: 111, 2: 111, length: 3 }
     const signer = provider.getSigner(signerAddress);
     await signer.unlock(unlockPassword)
     const signedMessage = await signer.signMessage(message);
