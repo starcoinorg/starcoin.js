@@ -40,8 +40,7 @@ export abstract class Signer {
   // - Bytes as a binary message
   // - string as a UTF8-message
   // i.e. "0x1234" is a SIX (6) byte string, NOT 2 bytes of data
-  // abstract signMessage(message: Bytes | string): Promise<string>;
-  abstract signMessage(message: string): Promise<string>;
+  abstract signMessage(message: Bytes | string): Promise<string>;
 
   // Signs a transaction and returns the fully serialized, signed transaction.
   // The EXACT transaction MUST be signed, and NO additional properties to be added.
@@ -239,7 +238,7 @@ export class VoidSigner extends Signer {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  signMessage(message: string): Promise<string> {
+  signMessage(message: Bytes | string): Promise<string> {
     return this.fail('VoidSigner cannot sign messages', 'signMessage');
   }
 

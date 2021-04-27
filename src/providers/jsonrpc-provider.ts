@@ -8,7 +8,7 @@ import {
   shallowCopy
 } from '@ethersproject/properties';
 import { ConnectionInfo, fetchJson } from '@ethersproject/web';
-import { Bytes } from '@ethersproject/bytes';
+import { Bytes, isBytes } from '@ethersproject/bytes';
 import { getNetwork, Network, Networkish } from '../networks';
 import { version } from '../version';
 import { BaseProvider, CONSTANTS, Event, RPC_ACTION } from './base-provider';
@@ -206,14 +206,22 @@ export class JsonRpcSigner extends Signer {
   }
 
   // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
-  // async signMessage(message: Bytes | string): Promise<string> {
-  async signMessage(message: string): Promise<string> {
+  async signMessage(message: Bytes | string): Promise<string> {
     // return logger.throwError('signing message is unsupported', Logger.errors.UNSUPPORTED_OPERATION, {
     //  operation: 'signMessage'
     // });
     const { provider } = this;
     const address = await this.getAddress();
-    const u8a = new Uint8Array(Buffer.from(message))
+    let u8a
+    if (typeof message === "string") {
+      u8a = new Uint8Array(Buffer.from(message))
+    } else if (isBytes(message)) {
+      u8a = message
+    } else {
+      return logger.throwError('type of message input is unsupported', Logger.errors.UNSUPPORTED_OPERATION, {
+        operation: 'signMessage'
+      });
+    }
     const msgArray = Array.from(u8a)
     const messageArg = { message: msgArray }
     return provider.send('account.sign', [address.toLowerCase(), messageArg]);
