@@ -7,7 +7,7 @@ const log = (data: any): void => {
 describe('jsonrpc-provider', () => {
   // let provider = new JsonrpcProvider("http://39.102.41.156:9850", undefined);
 
-  const nodeUrl = 'https://starcoin.git.xin'
+  // const nodeUrl = 'http://localhost:9850'
   const chainId = 251
 
   const provider = new JsonrpcProvider(nodeUrl);
@@ -105,8 +105,8 @@ describe('jsonrpc-provider', () => {
   }, 10000);
 
   test('Sign String Message', async () => {
-    const signerAddress = '0x3f19d5422824f47e6c021978cee98f35'
-    const unlockPassword = '123456'
+    const signerAddress = '0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    const unlockPassword = 'your-password'
     const message = 'foo'
     const signer = provider.getSigner(signerAddress);
     await signer.unlock(unlockPassword)
@@ -115,8 +115,8 @@ describe('jsonrpc-provider', () => {
   }, 10000);
 
   test('Sign Bytes Message', async () => {
-    const signerAddress = '0x3f19d5422824f47e6c021978cee98f35'
-    const unlockPassword = '123456'
+    const signerAddress = '0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    const unlockPassword = 'your-password'
     // const message = new Uint8Array(Buffer.from('foo'))
     // Bytes here means ArrayLike<number>, check '@ethersproject/bytes'
     const message = { 0: 102, 1: 111, 2: 111, length: 3 }
