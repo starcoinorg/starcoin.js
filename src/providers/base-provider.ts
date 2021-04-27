@@ -748,7 +748,7 @@ export abstract class BaseProvider extends Provider {
     if (
       (transactionInfo ? transactionInfo.confirmations : 0) >= confirmations
     ) {
-      return transactionInfo;
+      return Promise.resolve(transactionInfo);
     }
 
     // Poll until the receipt is good...
@@ -1225,10 +1225,9 @@ export abstract class BaseProvider extends Provider {
         }
 
         const transactionInfo = this.formatter.transactionInfo(result);
-
         if (transactionInfo.block_number === null) {
           transactionInfo.confirmations = 0;
-        } else if (transactionInfo.confirmations === null) {
+        } else if (!transactionInfo.confirmations) {
           const blockNumber = await this._getInternalBlockNumber(
             100 + 2 * this.pollingInterval
           );
@@ -1238,9 +1237,9 @@ export abstract class BaseProvider extends Provider {
           if (confirmations <= 0) {
             confirmations = 1;
           }
+
           transactionInfo.confirmations = confirmations;
         }
-
         return transactionInfo;
       },
       { oncePoll: this }
