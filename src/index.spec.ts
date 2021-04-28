@@ -1,5 +1,5 @@
 import { bcsDecode } from './encoding';
-import { DepositEvent, NewBlockEvent } from './lib/runtime/onchain_events';
+import { DepositEvent, NewBlockEvent, BlockRewardEvent } from './lib/runtime/onchain_events';
 import './index';
 
 describe('test onchain events decoding', () => {
@@ -15,6 +15,14 @@ describe('test onchain events decoding', () => {
     const t = bcsDecode(
       DepositEvent,
       '0x00ca9a3b00000000000000000000000000000000000000000000000000000001035354430353544300'
+    );
+    // @ts-ignore
+    console.log(t.toJS());
+  });
+  it('should decode to block reward event', () => {
+    const t = bcsDecode(
+      BlockRewardEvent,
+      '0x57fa0200000000006041c420010000000000000000000000000000000000000000000000000000009a306cd9afde5d249257c2c6e6f39103'
     );
     // @ts-ignore
     console.log(t.toJS());
