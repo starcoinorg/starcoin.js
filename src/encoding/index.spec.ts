@@ -1,8 +1,8 @@
 import { addressToSCS, decodeEventKey, decodeTransactionPayload, decodeSignedUserTransaction } from '.';
-import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
+import { BcsSerializer } from '../lib/runtime/bcs';
 import { toHexString } from '../utils/hex';
 import { JsonrpcProvider } from '../providers/jsonrpc-provider';
-import { encodeScriptFunction, encodeSignedUserTransaction } from "../utils/tx";
+import { encodeScriptFunction, generateSignedUserTransactionHex } from "../utils/tx";
 
 test("encoding address", () => {
   expect(addressToSCS("0x1").value.length).toBe(16);
@@ -78,17 +78,11 @@ test("encoding SignedUserTransaction hex", async () => {
   // expired after 12 hours since Unix Epoch
   const expirationTimestampSecs = nowSeconds + 43200
 
-  const signedUserTransaction = await encodeSignedUserTransaction(senderPrivateKeyHex, senderAddressHex, receiverAddressHex, amount, maxGasAmount, senderSequenceNumber, expirationTimestampSecs, chainId);
-
-  const hex = (function () {
-    const se = new BcsSerializer();
-    signedUserTransaction.serialize(se);
-    return toHexString(se.getBytes());
-  })();
-
+  const hex = await generateSignedUserTransactionHex(senderPrivateKeyHex, senderAddressHex, receiverAddressHex, amount, maxGasAmount, senderSequenceNumber, expirationTimestampSecs, chainId);
   console.log(hex)
+
   const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
-  // console.log(signedUserTransactionDecoded)
+
   expect(signedUserTransactionDecoded.raw_txn.sender).toBe(senderAddressHex);
 });
 

@@ -1,14 +1,11 @@
 import { JsonrpcProvider } from '.';
-
-const log = (data: any): void => {
-  console.log(JSON.stringify(data, undefined, 2))
-}
+import { generateSignedUserTransactionHex } from '../utils/tx';
 
 describe('jsonrpc-provider', () => {
   // let provider = new JsonrpcProvider("http://39.102.41.156:9850", undefined);
 
-  // const nodeUrl = 'http://localhost:9850'
-  const chainId = 251
+  const nodeUrl = 'http://localhost:9850'
+  const chainId = 254
 
   const provider = new JsonrpcProvider(nodeUrl);
   test('detectNetwork', async () => {
@@ -37,7 +34,7 @@ describe('jsonrpc-provider', () => {
     const events = await provider.getTransactionEvents({
       event_keys: []
     });
-    log(events);
+    console.log(JSON.stringify(events, undefined, 2));
   });
 
   test('call contract', async () => {
@@ -46,7 +43,7 @@ describe('jsonrpc-provider', () => {
       type_args: ['0x1::STC::STC'],
       args: ['0x1'],
     });
-    log(values);
+    console.log(JSON.stringify(values, undefined, 2));
   });
 
   test('get code', async () => {
@@ -69,9 +66,10 @@ describe('jsonrpc-provider', () => {
     let balances = await provider.getBalances("0x1");
   });
 
-  test('txn sign and submit', async () => {
+  test('txn sign using sender password and submit', async () => {
     const signer = await provider.getSigner();
-    await signer.unlock("");
+    const password = ""; // put password into the quotes
+    await signer.unlock(password);
     const txnRequest = {
       script: {
         code: '0x1::TransferScripts::peer_to_peer',
@@ -93,15 +91,45 @@ describe('jsonrpc-provider', () => {
     } else {
       expect(balance).toBe(100000);
     }
-
   }, 10000);
 
-  test('SignedUserTransaction', async () => {
-    const senderAddress = '0x49624992dd72da077ee19d0be210406a'
-    const receiverAddress = '0x621500bf2b4aad17a690cb24f9a225c6'
-    const signer = provider.getSigner(senderAddress);
-    const balanceBefore = await provider.getBalance(receiverAddress);
-    log({ balanceBefore })
+  test('txn sign using sender privateKey and submit', async () => {
+    // privateKey is generated in starcoin console using command:
+    // starcoin% account export <ADDRESS> -p <PASSWORD>
+    const senderPrivateKeyHex = '0x83c7829c68e1ad81ced10f69d11ea741f7f18c7a5f059215e8a965362a5ae25e'
+
+    const senderAddressHex = '0x49624992dd72da077ee19d0be210406a'
+
+    const senderSequenceNumber = await provider.getSequenceNumber(senderAddressHex)
+
+    const receiverAddressHex = '0x621500bf2b4aad17a690cb24f9a225c6'
+
+    const amount = 1000000000
+
+    // TODO: generate maxGasAmount from contract.dry_run -> gas_used
+    const maxGasAmount = 124191
+
+    // because the time system in dev network is relatively static, 
+    // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
+    const nowSeconds = await provider.getNowSeconds()
+    // expired after 12 hours since Unix Epoch
+    const expirationTimestampSecs = nowSeconds + 43200
+
+    const signedUserTransactionHex = await generateSignedUserTransactionHex(senderPrivateKeyHex, senderAddressHex, receiverAddressHex, amount, maxGasAmount, senderSequenceNumber, expirationTimestampSecs, chainId);
+
+    console.log({ signedUserTransactionHex })
+
+    const balanceBefore = await provider.getBalance(receiverAddressHex);
+    const txn = await provider.sendTransaction(signedUserTransactionHex);
+    const txnInfo = await txn.wait(1);
+    const balance = await provider.getBalance(receiverAddressHex);
+    if (balanceBefore !== undefined) {
+      // @ts-ignore
+      const diff = balance - balanceBefore;
+      expect(diff).toBe(amount);
+    } else {
+      expect(balance).toBe(amount);
+    }
   }, 10000);
 
   test('Sign String Message', async () => {
@@ -126,3 +154,4 @@ describe('jsonrpc-provider', () => {
     expect(signedMessage).toBe("0xc51dada886afe59d4651f36b56f3c4a1a84da53dfbddf396d81a5b36ab5cdc265aa1559ad3185b714cb8b62583c4172833026820e6cf264a02f0e3ebd424301a80a15c3e2381c0419a91477805a3c5d60131d353eb29313a786584d4565fb203");
   }, 10000);
 });
+
