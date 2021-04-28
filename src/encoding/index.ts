@@ -4,20 +4,34 @@ import * as starcoin_types from '../lib/runtime/starcoin_types';
 import * as serde from '../lib/runtime/serde';
 import {
   ACCOUNT_ADDRESS_LENGTH,
-  AccountAddress, EVENT_KEY_LENGTH, SignedUserTransactionView,
+  AccountAddress,
+  EVENT_KEY_LENGTH,
+  SignedUserTransactionView,
   StructTag,
   TransactionPayload,
-  TypeTag
+  TypeTag,
 } from '../types';
 import { fromHexString, toHexString } from '../utils/hex';
 import { createUserTransactionHasher } from '../crypto_hash';
-
+import { Deserializer } from '../lib/runtime/serde';
 
 export interface SerdeSerializable {
   serialize(serializer: serde.Serializer): void;
 }
 
-export function serializeBCSData(data: SerdeSerializable): string {
+export interface Deserializable<T> {
+  deserialize(deserializer: Deserializer): T;
+}
+
+export function bcsDecode<D extends Deserializable<T>, T>(
+  t: D,
+  data: BytesLike
+): T {
+  const de = new BcsDeserializer(arrayify(data));
+  return t.deserialize(de);
+}
+
+export function bcsEncode(data: SerdeSerializable): string {
   const se = new BcsSerializer();
   data.serialize(se);
   return toHexString(se.getBytes());
@@ -33,7 +47,10 @@ export function decodeSignedUserTransaction(
   })();
 
   let authenticator;
-  if (scsData.authenticator instanceof starcoin_types.TransactionAuthenticatorVariantEd25519) {
+  if (
+    scsData.authenticator instanceof
+    starcoin_types.TransactionAuthenticatorVariantEd25519
+  ) {
     const publicKey = hexlify(scsData.authenticator.public_key.value);
     const signature = hexlify(scsData.authenticator.signature.value);
     authenticator = { Ed25519: { public_key: publicKey, signature } };
@@ -65,9 +82,10 @@ export function decodeSignedUserTransaction(
   };
 }
 
-
 /// Decode a hex view or raw bytes of TransactionPayload into js struct.
-export function decodeTransactionPayload(payload: BytesLike): TransactionPayload {
+export function decodeTransactionPayload(
+  payload: BytesLike
+): TransactionPayload {
   const bytes = arrayify(payload);
   const de = new BcsDeserializer(bytes);
   const bcsTxnPayload = starcoin_types.TransactionPayload.deserialize(de);
@@ -76,13 +94,16 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
     return {
       Script: {
         code: toHexString(script.code),
-        ty_args: script.ty_args.map(t => typeTagFromSCS(t)),
-        args: script.args.map(arg => hexlify(arg))
-      }
+        ty_args: script.ty_args.map((t) => typeTagFromSCS(t)),
+        args: script.args.map((arg) => hexlify(arg)),
+      },
     };
   }
 
-  if (bcsTxnPayload instanceof starcoin_types.TransactionPayloadVariantScriptFunction) {
+  if (
+    bcsTxnPayload instanceof
+    starcoin_types.TransactionPayloadVariantScriptFunction
+  ) {
     let scriptFunction = bcsTxnPayload.value;
     return {
       ScriptFunction: {
@@ -91,28 +112,41 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
           module: scriptFunction.module.name.value,
           functionName: scriptFunction.func.value,
         },
-        ty_args: scriptFunction.ty_args.map(t => typeTagFromSCS(t)),
-        args: scriptFunction.args.map(arg => hexlify(arg)),
-      }
+        ty_args: scriptFunction.ty_args.map((t) => typeTagFromSCS(t)),
+        args: scriptFunction.args.map((arg) => hexlify(arg)),
+      },
     };
   }
 
-  if (bcsTxnPayload instanceof starcoin_types.TransactionPayloadVariantPackage) {
+  if (
+    bcsTxnPayload instanceof starcoin_types.TransactionPayloadVariantPackage
+  ) {
     const packagePayload = bcsTxnPayload.value;
     return {
       Package: {
         package_address: addressFromSCS(packagePayload.package_address),
-        modules: packagePayload.modules.map(m => ({ code: toHexString(m.code) })),
-        init_script: packagePayload.init_script === null ? undefined : {
-          func: {
-            address: addressFromSCS(packagePayload.init_script.module.address),
-            module: packagePayload.init_script.module.name.value,
-            functionName: packagePayload.init_script.func.value,
-          },
-          args: packagePayload.init_script.args.map(arg => hexlify(arg)),
-          ty_args: packagePayload.init_script.ty_args.map(ty => typeTagFromSCS(ty))
-        }
-      }
+        modules: packagePayload.modules.map((m) => ({
+          code: toHexString(m.code),
+        })),
+        init_script:
+          packagePayload.init_script === null
+            ? undefined
+            : {
+                func: {
+                  address: addressFromSCS(
+                    packagePayload.init_script.module.address
+                  ),
+                  module: packagePayload.init_script.module.name.value,
+                  functionName: packagePayload.init_script.func.value,
+                },
+                args: packagePayload.init_script.args.map((arg) =>
+                  hexlify(arg)
+                ),
+                ty_args: packagePayload.init_script.ty_args.map((ty) =>
+                  typeTagFromSCS(ty)
+                ),
+              },
+      },
     };
   }
 
@@ -121,10 +155,14 @@ export function decodeTransactionPayload(payload: BytesLike): TransactionPayload
 
 /// Decode a hex view or raw bytes of event key into parts.
 /// EventKey is constructed by `Salt+AccountAddress`.
-export function decodeEventKey(eventKey: BytesLike): { address: AccountAddress, salt: BigInt } {
+export function decodeEventKey(
+  eventKey: BytesLike
+): { address: AccountAddress; salt: BigInt } {
   const bytes = arrayify(eventKey);
   if (bytes.byteLength !== EVENT_KEY_LENGTH) {
-    throw new Error(`invalid eventkey data, expect byte length to be ${EVENT_KEY_LENGTH}, actual: ${bytes.byteLength}`);
+    throw new Error(
+      `invalid eventkey data, expect byte length to be ${EVENT_KEY_LENGTH}, actual: ${bytes.byteLength}`
+    );
   }
   const saltBytes = bytes.slice(0, EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
   const salt = Buffer.from(saltBytes).readBigUInt64LE();
@@ -167,14 +205,10 @@ export function typeTagToSCS(ty: TypeTag): starcoin_types.TypeTag {
     return new starcoin_types.TypeTagVariantSigner();
   }
   if ('Vector' in ty) {
-    return new starcoin_types.TypeTagVariantVector(
-      typeTagToSCS(ty.Vector)
-    );
+    return new starcoin_types.TypeTagVariantVector(typeTagToSCS(ty.Vector));
   }
   if ('Struct' in ty) {
-    return new starcoin_types.TypeTagVariantStruct(
-      structTagToSCS(ty.Struct)
-    );
+    return new starcoin_types.TypeTagVariantStruct(structTagToSCS(ty.Struct));
   }
   throw new Error(`invalid type tag: ${ty}`);
 }
@@ -195,7 +229,7 @@ export function structTagFromSCS(
     module: bcs_data.module.value,
     name: bcs_data.name.value,
     type_params: bcs_data.type_params.map((t) => typeTagFromSCS(t)),
-    address: addressFromSCS(bcs_data.address)
+    address: addressFromSCS(bcs_data.address),
   };
 }
 
@@ -221,12 +255,12 @@ export function typeTagFromSCS(bcs_data: starcoin_types.TypeTag): TypeTag {
   }
   if (bcs_data instanceof starcoin_types.TypeTagVariantStruct) {
     return {
-      Struct: structTagFromSCS(bcs_data.value)
+      Struct: structTagFromSCS(bcs_data.value),
     };
   }
   if (bcs_data instanceof starcoin_types.TypeTagVariantVector) {
     return {
-      Vector: typeTagFromSCS(bcs_data.value)
+      Vector: typeTagFromSCS(bcs_data.value),
     };
   }
   throw new TypeError(`invalid bcs type tag: ${bcs_data}`);
