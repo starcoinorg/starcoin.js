@@ -1,6 +1,6 @@
 {
   "name": "@starcoin/starcoin",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "starcoin js sdk",
   "author": "lerencao",
   "license": "Apache-2.0",
