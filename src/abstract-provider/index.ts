@@ -9,24 +9,25 @@ import {
   BlockWithTransactions,
   CallRequest,
   EventFilter,
-  Filter, formatStructTag,
+  Filter,
+  formatStructTag,
   HashValue,
   ModuleId,
   MoveStruct,
-  MoveValue, StructTag,
+  MoveValue,
+  StructTag,
   TransactionEventView,
   TransactionInfoView,
   TransactionOutput,
   TransactionRequest,
   TransactionResponse,
   U128,
-  U64
+  U64,
 } from '../types';
 import { parseTypeTag } from '../utils/parser';
 
 const version = 'abstract-provider/5.0.5';
 const logger = new Logger(version);
-
 
 export type EventType = string | Array<string> | EventFilter;
 
@@ -43,7 +44,6 @@ export abstract class Provider implements OnceBlockable {
   // Latest State
   abstract getBlockNumber(): Promise<number>;
 
-
   abstract getGasPrice(): Promise<U64>;
 
   // Account
@@ -59,7 +59,11 @@ export abstract class Provider implements OnceBlockable {
       // eslint-disable-next-line no-param-reassign
       token = '0x1::STC::STC';
     }
-    const resource = await this.getResource(address, `0x1::Account::Balance<${token}>`, blockTag);
+    const resource = await this.getResource(
+      address,
+      `0x1::Account::Balance<${token}>`,
+      blockTag
+    );
     if (resource !== undefined) {
       return ((resource as MoveStruct).token as MoveStruct).value as U128;
     }
@@ -69,14 +73,14 @@ export abstract class Provider implements OnceBlockable {
   async getBalances(
     address: AccountAddress | Promise<AccountAddress>,
     blockTag?: BlockTag | Promise<BlockTag>
-  ): Promise<{[k: string]: U128} | undefined> {
+  ): Promise<{ [k: string]: U128 } | undefined> {
     const resources = await this.getResources(address, blockTag);
     if (resources === undefined) {
       return;
     }
     let tokenBalances = {};
     // @ts-ignore
-    for (let k in resources ) {
+    for (let k in resources) {
       let typeTag = parseTypeTag(k);
 
       // filter out balance resources.
@@ -86,8 +90,11 @@ export abstract class Provider implements OnceBlockable {
         let structTag: StructTag = typeTag.Struct;
         if (structTag.module === 'Account' && structTag.name === 'Balance') {
           // @ts-ignore
-          let tokenStruct = formatStructTag(structTag.type_params[0].Struct as StructTag);
-          tokenBalances[tokenStruct] = (resources[k].token as MoveStruct).value as U128;
+          let tokenStruct = formatStructTag(
+            structTag.type_params[0]['Struct'] as StructTag
+          );
+          tokenBalances[tokenStruct] = (resources[k].token as MoveStruct)
+            .value as U128;
         }
       }
     }
@@ -99,7 +106,11 @@ export abstract class Provider implements OnceBlockable {
     address: AccountAddress | Promise<AccountAddress>,
     blockTag?: BlockTag | Promise<BlockTag>
   ): Promise<U64 | undefined> {
-    const resource = await this.getResource(address, '0x1::Account::Account', blockTag);
+    const resource = await this.getResource(
+      address,
+      '0x1::Account::Account',
+      blockTag
+    );
     if (resource !== undefined) {
       return resource.sequence_number as number;
     }
@@ -153,6 +164,10 @@ export abstract class Provider implements OnceBlockable {
   abstract getTransactionInfo(
     transactionHash: HashValue
   ): Promise<TransactionInfoView>;
+
+  abstract getEventsOfTransaction(
+    transactionHash: HashValue
+  ): Promise<TransactionEventView[]>;
 
   // Bloom-filter Queries
   abstract getTransactionEvents(

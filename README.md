@@ -52,16 +52,16 @@ console.log(txnInfo);
 TransactionEvents returned from node are encoded in BCS format.
 client sdk should decode the data to see the detailed information.
 
-
 ```js
 import encoding from 'starcoin';
 import 'starcoin';
+
 let provider = new JsonrpcProvider("http://localhost:9850");
 
 // Get txn info.
-const txnInfoData = await provider.getTransactionInfo(txnHash);
+const txnEvents = await provider.getEventsOfTransaction(txnHash);
 // get a txn event.
-const txnEvent = txnInfoData.txn_events.pop();
+const txnEvent = txnEvents.pop();
 // then decode with pre-determined event type in onchain_event_types.
 console.log(encoding.bcsDecode(DepositEvent, txnEvent.data).toJS());
 ```
