@@ -7,7 +7,9 @@ Only a little modification.
 
 |-js(client level):  lib/runtime/index.ts 
 |
-|-scs:  lib/runtime/starcoin_types/index.ts
+|-starcoin_types:  lib/runtime/starcoin_types/index.ts
+|
+|-onchain_events:  lib/runtime/onchain_events/index.ts
 |
 |-bcs:  lib/runtime/bcs/index.ts
 |
@@ -19,6 +21,7 @@ If you want to update the codes:
 1. remove the old runtime dir, and use the cmd to rewrite.
 ```shell
 ./serdegen --language TypeScript --target-source-dir ./runtime --with-runtimes Bcs Serde ~/projects/starcoinorg/starcoin/etc/starcoin_types.yml
+./serdegen --language TypeScript --target-source-dir ./runtime ~/projects/starcoinorg/starcoin/etc/onchain_events.yml
 ```
 
 2. please use IDEs(like VS Code) to format code of this file `starcoin_types/index.ts` first.

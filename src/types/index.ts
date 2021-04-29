@@ -1,3 +1,5 @@
+import { uint128, uint64, uint8 } from '../lib/runtime/serde';
+
 export type Identifier = string;
 export type AccountAddress = string;
 export type HashValue = string;
@@ -100,24 +102,26 @@ interface Package {
   init_script?: ScriptFunction;
 }
 
-export type TransactionPayload = { Script: Script } | { Package: Package } | { ScriptFunction: ScriptFunction };
+export type TransactionPayload =
+  | { Script: Script }
+  | { Package: Package }
+  | { ScriptFunction: ScriptFunction };
 
 export type SignatureType = 'Ed25519' | 'MultiEd25519';
 
 export type TransactionAuthenticator =
   | {
-  Ed25519: {
-    public_key: Ed25519PublicKey;
-    signature: Ed25519Signature;
-  };
-}
+      Ed25519: {
+        public_key: Ed25519PublicKey;
+        signature: Ed25519Signature;
+      };
+    }
   | {
-  MultiEd25519: {
-    public_key: MultiEd25519PublicKey;
-    signature: MultiEd25519Signature;
-  };
-};
-
+      MultiEd25519: {
+        public_key: MultiEd25519PublicKey;
+        signature: MultiEd25519Signature;
+      };
+    };
 
 // export type TransactionArgument =
 //   | { U8: number }
@@ -146,13 +150,13 @@ export type AnnotatedMoveValue =
 // eslint-disable-next-line no-use-before-define
 export type MoveStruct = { [key in Identifier]: MoveValue };
 export type MoveValue =
-  | number | bigint
+  | number
+  | bigint
   | boolean
   | AccountAddress
   | HexString
   | MoveValue[]
   | MoveStruct;
-
 
 export interface EventHandle {
   count: U64;
@@ -225,12 +229,14 @@ export interface ScriptABI {
   args: ArgumentABI[];
 }
 
-export type AbortLocation = 'Script' | {
-  Module: {
-    address: AccountAddress;
-    name: Identifier;
-  }
-};
+export type AbortLocation =
+  | 'Script'
+  | {
+      Module: {
+        address: AccountAddress;
+        name: Identifier;
+      };
+    };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const TransactionVMStatus_Executed = 'Executed';
@@ -243,15 +249,16 @@ export type TransactionVMStatus =
   | 'OutOfGas'
   | 'MiscellaneousError'
   | {
-  MoveAbort: { location: AbortLocation; abort_code: U64 };
-}
+      MoveAbort: { location: AbortLocation; abort_code: U64 };
+    }
   | {
-  ExecutionFailure: {
-    location: AbortLocation;
-    function: U16;
-    code_offset: U16;
-  };
-} | { Discard: { status_code: U64 } };
+      ExecutionFailure: {
+        location: AbortLocation;
+        function: U16;
+        code_offset: U16;
+      };
+    }
+  | { Discard: { status_code: U64 } };
 
 // Exported Types
 export interface RawUserTransactionView {
@@ -302,11 +309,11 @@ export interface TransactionRequest {
   sequence_number?: U64;
 
   script?: {
-    code: string,
-    type_args?: Array<string>,
-    args?: Array<string>,
+    code: string;
+    type_args?: Array<string>;
+    args?: Array<string>;
   };
-  modules?: Array<HexString>,
+  modules?: Array<HexString>;
 
   max_gas_amount?: U64;
   gas_unit_price?: U64;
@@ -316,8 +323,10 @@ export interface TransactionRequest {
 
 /// block hash or block number
 export type BlockTag = string | number;
-export type ModuleId = string | { address: AccountAddress, name: Identifier };
-export type FunctionId = string | { address: AccountAddress, module: Identifier, functionName: Identifier };
+export type ModuleId = string | { address: AccountAddress; name: Identifier };
+export type FunctionId =
+  | string
+  | { address: AccountAddress; module: Identifier; functionName: Identifier };
 
 export interface CallRequest {
   function_id: FunctionId;
@@ -333,7 +342,9 @@ export function formatFunctionId(functionId: FunctionId): string {
   }
 }
 
-export function parseFunctionId(functionId: FunctionId): { address: AccountAddress, module: Identifier, functionName: Identifier } {
+export function parseFunctionId(
+  functionId: FunctionId
+): { address: AccountAddress; module: Identifier; functionName: Identifier } {
   if (typeof functionId !== 'string') {
     return functionId;
   } else {
@@ -344,7 +355,7 @@ export function parseFunctionId(functionId: FunctionId): { address: AccountAddre
     return {
       address: parts[0],
       module: parts[1],
-      functionName: parts[2]
+      functionName: parts[2],
     };
   }
 }
@@ -406,7 +417,6 @@ export interface TransactionEventView extends TxnBlockInfo {
   event_seq_number: U64;
 }
 
-
 export interface AccessPath {
   address: AccountAddress;
   path: HexString;
@@ -456,4 +466,69 @@ export interface EventFilter {
 export interface Filter extends EventFilter {
   from_block?: BlockNumber;
   to_block?: BlockNumber;
+}
+
+export interface OnchainEvent<T> {
+  address: AccountAddress;
+  eventId: uint64;
+  eventSequenceNumber: uint64;
+  eventData: T;
+}
+
+export interface AcceptTokenEvent {
+  token_code: TokenCode;
+}
+
+export interface TokenCode {
+  address: AccountAddress;
+  module: string;
+  name: string;
+}
+
+export interface BlockRewardEvent {
+  block_number: uint64;
+  block_reward: uint128;
+  gas_fees: uint128;
+  miner: AccountAddress;
+}
+
+export interface BurnEvent {
+  amount: uint128;
+  token_code: TokenCode;
+}
+export interface MintEvent {
+  amount: uint128;
+  token_code: TokenCode;
+}
+
+export interface DepositEvent {
+  amount: uint128;
+  token_code: TokenCode;
+  metadata: uint8[];
+}
+export interface WithdrawEvent {
+  amount: uint128;
+  token_code: TokenCode;
+  metadata: uint8[];
+}
+
+export interface NewBlockEvent {
+  number: uint64;
+  author: AccountAddress;
+
+  timestamp: uint64;
+  uncles: uint64;
+}
+
+export interface ProposalCreatedEvent {
+  proposal_id: uint64;
+  proposer: AccountAddress;
+}
+
+export interface VoteChangedEvent {
+  proposal_id: uint64;
+  proposer: AccountAddress;
+  voter: AccountAddress;
+  agree: boolean;
+  vote: uint128;
 }

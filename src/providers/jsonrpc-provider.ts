@@ -2,10 +2,12 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { Logger } from '@ethersproject/logger';
 import {
-  deepCopy, Deferrable,
+  deepCopy,
+  Deferrable,
   defineReadOnly,
-  getStatic, resolveProperties,
-  shallowCopy
+  getStatic,
+  resolveProperties,
+  shallowCopy,
 } from '@ethersproject/properties';
 import { ConnectionInfo, fetchJson } from '@ethersproject/web';
 import { Bytes, isBytes } from '@ethersproject/bytes';
@@ -47,7 +49,7 @@ function checkError(method: string, error: any, params: any): never {
       {
         error,
         method,
-        transaction
+        transaction,
       }
     );
   }
@@ -60,7 +62,7 @@ function checkError(method: string, error: any, params: any): never {
       {
         error,
         method,
-        transaction
+        transaction,
       }
     );
   }
@@ -73,7 +75,7 @@ function checkError(method: string, error: any, params: any): never {
       {
         error,
         method,
-        transaction
+        transaction,
       }
     );
   }
@@ -90,7 +92,7 @@ function checkError(method: string, error: any, params: any): never {
       {
         error,
         method,
-        transaction
+        transaction,
       }
     );
   }
@@ -128,13 +130,19 @@ export class JsonRpcSigner extends Signer {
   _address?: string;
 
   // eslint-disable-next-line no-use-before-define
-  constructor(constructorGuard: any, provider: JsonrpcProvider, addressOrIndex?: string | number) {
+  constructor(
+    constructorGuard: any,
+    provider: JsonrpcProvider,
+    addressOrIndex?: string | number
+  ) {
     logger.checkNew(new.target, JsonRpcSigner);
 
     super();
 
     if (constructorGuard !== _constructorGuard) {
-      throw new Error('do not call the JsonRpcSigner constructor directly; use provider.getSigner');
+      throw new Error(
+        'do not call the JsonRpcSigner constructor directly; use provider.getSigner'
+      );
     }
 
     defineReadOnly(this, 'provider', provider);
@@ -144,20 +152,32 @@ export class JsonRpcSigner extends Signer {
       addressOrIndex = 0;
     }
 
-    if (typeof (addressOrIndex) === 'string') {
-      defineReadOnly(this, '_address', this.provider.formatter.address(addressOrIndex));
-    } else if (typeof (addressOrIndex) === 'number') {
+    if (typeof addressOrIndex === 'string') {
+      defineReadOnly(
+        this,
+        '_address',
+        this.provider.formatter.address(addressOrIndex)
+      );
+    } else if (typeof addressOrIndex === 'number') {
       defineReadOnly(this, '_index', addressOrIndex);
     } else {
-      logger.throwArgumentError('invalid address or index', 'addressOrIndex', addressOrIndex);
+      logger.throwArgumentError(
+        'invalid address or index',
+        'addressOrIndex',
+        addressOrIndex
+      );
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,class-methods-use-this
   connect(provider: Provider): JsonRpcSigner {
-    return logger.throwError('cannot alter JSON-RPC Signer connection', Logger.errors.UNSUPPORTED_OPERATION, {
-      operation: 'connect'
-    });
+    return logger.throwError(
+      'cannot alter JSON-RPC Signer connection',
+      Logger.errors.UNSUPPORTED_OPERATION,
+      {
+        operation: 'connect',
+      }
+    );
   }
 
   // connectUnchecked(): JsonRpcSigner {
@@ -171,38 +191,49 @@ export class JsonRpcSigner extends Signer {
       return Promise.resolve(this._address);
     }
 
-
     return this.provider.listAccounts().then((accounts) => {
       // eslint-disable-next-line no-underscore-dangle
       if (accounts.length <= this._index) {
         // eslint-disable-next-line no-underscore-dangle
-        logger.throwError(`unknown account #${this._index}`, Logger.errors.UNSUPPORTED_OPERATION, {
-          operation: 'getAddress'
-        });
+        logger.throwError(
+          `unknown account #${this._index}`,
+          Logger.errors.UNSUPPORTED_OPERATION,
+          {
+            operation: 'getAddress',
+          }
+        );
       }
       // eslint-disable-next-line no-underscore-dangle
       return accounts[this._index];
     });
   }
 
-  async signTransaction(transaction: Deferrable<TransactionRequest>): Promise<string> {
+  async signTransaction(
+    transaction: Deferrable<TransactionRequest>
+  ): Promise<string> {
     // eslint-disable-next-line no-param-reassign
     const request = await resolveProperties(transaction);
     const sender = await this.getAddress();
     if (request.sender !== undefined) {
       if (request.sender !== sender) {
-        logger.throwArgumentError('from address mismatch', 'transaction', transaction);
+        logger.throwArgumentError(
+          'from address mismatch',
+          'transaction',
+          transaction
+        );
       }
     } else {
       request.sender = sender;
     }
 
-    return this.provider.send('account.sign_txn_request', [request]).then((hexTxnData) => {
-      return hexTxnData;
-    },
+    return this.provider.send('account.sign_txn_request', [request]).then(
+      (hexTxnData) => {
+        return hexTxnData;
+      },
       (error) => {
         return checkError('signTransaction', error, request);
-      });
+      }
+    );
   }
 
   // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
@@ -212,18 +243,22 @@ export class JsonRpcSigner extends Signer {
     // });
     const { provider } = this;
     const address = await this.getAddress();
-    let u8a
-    if (typeof message === "string") {
-      u8a = new Uint8Array(Buffer.from(message))
+    let u8a;
+    if (typeof message === 'string') {
+      u8a = new Uint8Array(Buffer.from(message));
     } else if (isBytes(message)) {
-      u8a = message
+      u8a = message;
     } else {
-      return logger.throwError('type of message input is unsupported', Logger.errors.UNSUPPORTED_OPERATION, {
-        operation: 'signMessage'
-      });
+      return logger.throwError(
+        'type of message input is unsupported',
+        Logger.errors.UNSUPPORTED_OPERATION,
+        {
+          operation: 'signMessage',
+        }
+      );
     }
-    const msgArray = Array.from(u8a)
-    const messageArg = { message: msgArray }
+    const msgArray = Array.from(u8a);
+    const messageArg = { message: msgArray };
     return provider.send('account.sign', [address.toLowerCase(), messageArg]);
     /*
     return this.provider.send('account.sign', [request]).then((hexSignedMessageData) => {
@@ -245,7 +280,11 @@ export class JsonRpcSigner extends Signer {
 
     const address = await this.getAddress();
 
-    return provider.send('account.unlock', [address.toLowerCase(), password, undefined]);
+    return provider.send('account.unlock', [
+      address.toLowerCase(),
+      password,
+      undefined,
+    ]);
   }
 }
 
@@ -267,7 +306,6 @@ export class JsonRpcSigner extends Signer {
 //     });
 //   }
 // }
-
 
 export class JsonrpcProvider extends BaseProvider {
   readonly connection: ConnectionInfo;
@@ -308,7 +346,7 @@ export class JsonrpcProvider extends BaseProvider {
         this,
         'connection',
         Object.freeze({
-          url: url
+          url: url,
         })
       );
     } else {
@@ -334,8 +372,7 @@ export class JsonrpcProvider extends BaseProvider {
         const chainInfo = await this.perform(RPC_ACTION.getChainInfo, null);
         chainId = chainInfo.chain_id;
         // eslint-disable-next-line no-empty
-      } catch (error) {
-      }
+      } catch (error) {}
     }
 
     if (chainId != null) {
@@ -348,7 +385,7 @@ export class JsonrpcProvider extends BaseProvider {
           {
             chainId: chainId,
             event: 'invalidNetwork',
-            serverError: error
+            serverError: error,
           }
         );
       }
@@ -358,7 +395,7 @@ export class JsonrpcProvider extends BaseProvider {
       'could not detect network',
       Logger.errors.NETWORK_ERROR,
       {
-        event: 'noNetwork'
+        event: 'noNetwork',
       }
     );
   }
@@ -373,9 +410,11 @@ export class JsonrpcProvider extends BaseProvider {
 
   listAccounts(): Promise<Array<string>> {
     // eslint-disable-next-line @typescript-eslint/ban-types
-    return this.send('account.list', []).then((accounts: Array<{ address: AccountAddress }>) => {
-      return accounts.map(({ address }) => this.formatter.address(address));
-    });
+    return this.send('account.list', []).then(
+      (accounts: Array<{ address: AccountAddress }>) => {
+        return accounts.map(({ address }) => this.formatter.address(address));
+      }
+    );
   }
 
   async getNowSeconds(): Promise<number> {
@@ -388,13 +427,13 @@ export class JsonrpcProvider extends BaseProvider {
       method,
       params,
       id: this._nextId++,
-      jsonrpc: '2.0'
+      jsonrpc: '2.0',
     };
 
     this.emit('debug', {
       action: 'request',
       request: deepCopy(request),
-      provider: this
+      provider: this,
     });
 
     return fetchJson(this.connection, JSON.stringify(request), getResult).then(
@@ -403,7 +442,7 @@ export class JsonrpcProvider extends BaseProvider {
           action: 'response',
           request,
           response: result,
-          provider: this
+          provider: this,
         });
 
         return result;
@@ -413,7 +452,7 @@ export class JsonrpcProvider extends BaseProvider {
           action: 'response',
           error,
           request,
-          provider: this
+          provider: this,
         });
 
         throw error;
@@ -466,7 +505,8 @@ export class JsonrpcProvider extends BaseProvider {
 
       case RPC_ACTION.getTransactionInfo:
         return ['chain.get_transaction_info', [params.transactionHash]];
-
+      case RPC_ACTION.getEventsOfTransaction:
+        return ['chain.get_events_by_txn_hash', [params.transactionHash]];
       case RPC_ACTION.getCode:
         return ['contract.get_code', [params.moduleId]];
       case RPC_ACTION.getResource:
@@ -474,12 +514,7 @@ export class JsonrpcProvider extends BaseProvider {
       case RPC_ACTION.getAccountState:
         return ['state.get_account_state_set', [params.address]];
       case RPC_ACTION.call:
-        return [
-          'contract.call',
-          [
-            params.request
-          ]
-        ];
+        return ['contract.call', [params.request]];
 
       // case 'estimateGas': {
       //   const hexlifyTransaction = getStatic<
