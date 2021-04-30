@@ -2,6 +2,10 @@ import { arrayify, BytesLike } from '@ethersproject/bytes';
 import { stripHexPrefix } from 'ethereumjs-util';
 import sha3 from 'js-sha3';
 const jsSHA = require('jssha/dist/sha3');
+const Buffer = require('safe-buffer').Buffer;
+const ed = require('noble-ed25519');
+const sha3_256 = require('js-sha3').sha3_256;
+const assert = require('assert');
 
 const STARCOIN_HASH_PREFIX = 'STARCOIN::';
 
@@ -54,4 +58,18 @@ export function publicKeyToAuthKey(public_key: string): string {
   shaObj.update("00");
   const hash = shaObj.getHash("HEX");
   return '0x' + hash
+}
+
+export function publicKeyToAddress(public_key: string): string {
+  const shaObj = new jsSHA("SHA3-256", "HEX", { encoding: "UTF8" });
+  shaObj.update(stripHexPrefix(public_key));
+  shaObj.update("00");
+  const hash = shaObj.getHash("HEX");
+  const address = hash.slice(hash.length/2);
+  return '0x' + address
+}
+
+export async function privateKeyToPublicKey(private_key: string): Promise<string> {
+  const public_key = await ed.getPublicKey(stripHexPrefix(private_key))
+  return '0x' + public_key
 }
