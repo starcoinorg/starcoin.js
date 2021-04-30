@@ -1,4 +1,5 @@
 import { arrayify, BytesLike } from '@ethersproject/bytes';
+import { stripHexPrefix } from 'ethereumjs-util';
 import sha3 from 'js-sha3';
 const jsSHA = require('jssha/dist/sha3');
 
@@ -49,7 +50,7 @@ export function createRawUserTransactionHasher(): CryptoHash {
 
 export function publicKeyToAuthKey(public_key: string): string {
   const shaObj = new jsSHA("SHA3-256", "HEX", { encoding: "UTF8" });
-  shaObj.update(public_key.slice(2));
+  shaObj.update(stripHexPrefix(public_key));
   shaObj.update("00");
   const hash = shaObj.getHash("HEX");
   return '0x' + hash
