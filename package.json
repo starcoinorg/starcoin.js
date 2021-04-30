@@ -1,8 +1,8 @@
 {
   "name": "@starcoin/starcoin",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "starcoin js sdk",
-  "author": "lerencao",
+  "author": "lerencao, wk3368, tarvos21",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/starcoinorg/starcoin.js"
@@ -18,7 +18,8 @@
     "dapp",
     "sdk",
     "blockchain",
-    "client"
+    "client",
+    "javascript"
   ],
   "source": "index.ts",
   "types": "dist/index.d.ts",
