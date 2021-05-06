@@ -1,5 +1,5 @@
 import { JsonrpcProvider } from '.';
-import { generateSignedUserTransactionHex } from '../utils/tx';
+import { generateRawUserTransaction, signRawUserTransaction } from '../utils/tx';
 
 describe('jsonrpc-provider', () => {
   // let provider = new JsonrpcProvider("http://39.102.41.156:9850", undefined);
@@ -133,8 +133,7 @@ describe('jsonrpc-provider', () => {
     // expired after 12 hours since Unix Epoch
     const expirationTimestampSecs = nowSeconds + 43200;
 
-    const signedUserTransactionHex = await generateSignedUserTransactionHex(
-      senderPrivateKeyHex,
+    const rawUserTransaction = generateRawUserTransaction(
       senderAddressHex,
       receiverAddressHex,
       amount,
@@ -142,6 +141,12 @@ describe('jsonrpc-provider', () => {
       senderSequenceNumber,
       expirationTimestampSecs,
       chainId
+    );
+    console.log({ rawUserTransaction });
+
+    const signedUserTransactionHex = await signRawUserTransaction(
+      senderPrivateKeyHex,
+      rawUserTransaction
     );
 
     console.log({ signedUserTransactionHex });
