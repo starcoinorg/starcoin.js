@@ -54,7 +54,8 @@ export function encodePackage(
   );
 }
 
-function generateRawUserTransaction(
+// Step 1: generate RawUserTransaction
+export function generateRawUserTransaction(
   senderAddress: HexString,
   receiverAddress: HexString,
   amount: U128,
@@ -107,7 +108,7 @@ function generateRawUserTransaction(
   return rawUserTransaction
 }
 
-async function signRawUserTransaction(
+async function getSignatureHex(
   rawUserTransaction: starcoin_types.RawUserTransaction,
   senderPrivateKey: HexString,
 ): Promise<string> {
@@ -160,42 +161,18 @@ function getSignedUserTransactionHex(
   return hexlify(se.getBytes());
 }
 
-async function encodeSignedUserTransaction(
+export async function signRawUserTransaction(
   senderPrivateKey: HexString,
-  senderAddress: HexString,
-  receiverAddress: HexString,
-  amount: U128,
-  maxGasAmount: U64,
-  senderSequenceNumber: U64,
-  expirationTimestampSecs: U64,
-  chainId: U8
-): Promise<starcoin_types.SignedUserTransaction> {
-
-  // Step 1: generate RawUserTransaction
-  const rawUserTransaction = generateRawUserTransaction(senderAddress, receiverAddress, amount, maxGasAmount, senderSequenceNumber, expirationTimestampSecs, chainId);
+  rawUserTransaction: starcoin_types.RawUserTransaction
+): Promise<string> {
 
   // Step 2: generate signature of RawUserTransaction
-  const signatureHex = await signRawUserTransaction(rawUserTransaction, senderPrivateKey)
+  const signatureHex = await getSignatureHex(rawUserTransaction, senderPrivateKey)
 
   // Step 3: generate SignedUserTransaction
   const signedUserTransaction = await generateSignedUserTransaction(senderPrivateKey, signatureHex, rawUserTransaction)
 
-  return signedUserTransaction
-}
-
-export async function generateSignedUserTransactionHex(
-  senderPrivateKey: HexString,
-  senderAddress: HexString,
-  receiverAddress: HexString,
-  amount: U128,
-  maxGasAmount: U64,
-  senderSequenceNumber: U64,
-  expirationTimestampSecs: U64,
-  chainId: U8
-): Promise<string> {
-
-  const signedUserTransaction = await encodeSignedUserTransaction(senderPrivateKey, senderAddress, receiverAddress, amount, maxGasAmount, senderSequenceNumber, expirationTimestampSecs, chainId);
-
+  // Step 4: get SignedUserTransaction Hex
   const hex = getSignedUserTransactionHex(signedUserTransaction)
 
   return hex
