@@ -1,9 +1,12 @@
 import { Deserializer } from './deserializer';
 
+// to be compatible with node.js 10
+const util= require('util');
+
 export abstract class BinaryDeserializer implements Deserializer {
   private static readonly BIG_32 = BigInt(32);
   private static readonly BIG_64 = BigInt(64);
-  private static readonly textDecoder = new TextDecoder();
+  private static readonly textDecoder = new util.TextDecoder('utf-8');
   public buffer: ArrayBuffer;
   public offset: number;
 
