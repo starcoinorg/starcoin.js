@@ -1,5 +1,8 @@
 import { Serializer } from './serializer';
 
+// to be compatible with node.js 10
+const util= require('util');
+
 export abstract class BinarySerializer implements Serializer {
     private static readonly BIG_32 = BigInt(32);
     private static readonly BIG_64 = BigInt(64);
@@ -10,7 +13,7 @@ export abstract class BinarySerializer implements Serializer {
     private static readonly BIG_32Fs = BigInt('4294967295');
     private static readonly BIG_64Fs = BigInt('18446744073709551615');
 
-    private static readonly textEncoder = new TextEncoder();
+    private static readonly textEncoder = new util.TextEncoder('utf-8');
 
     private buffer: ArrayBuffer;
     private offset: number;
