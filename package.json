@@ -40,6 +40,7 @@
     "@ethersproject/properties": "^5.0.4",
     "@ethersproject/sha2": "^5.0.4",
     "@ethersproject/web": "^5.0.9",
+    "bech32": "^2.0.0",
     "ethereumjs-util": "5.1.0",
     "is-alphabetical": "^1.0.4",
     "is-alphanumerical": "^1.0.4",

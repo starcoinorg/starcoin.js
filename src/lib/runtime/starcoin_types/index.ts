@@ -1,3 +1,5 @@
+import { bech32 } from 'bech32';
+import { BcsDeserializer, BcsSerializer } from '../bcs';
 import { Serializer } from '../serde/serializer';
 import { Deserializer } from '../serde/deserializer';
 import { Optional, Seq, Tuple, ListTuple, unit, bool, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128, float32, float64, char, str, bytes } from '../serde/types';
@@ -20,6 +22,7 @@ export class AccessPath {
 
 }
 export class AccountAddress {
+  static LENGTH: uint8 = 16;
 
   constructor(public value: ListTuple<[uint8]>) {
   }
@@ -1459,3 +1462,55 @@ export class Helpers {
 
 }
 
+export class AuthKey {
+
+  constructor(public value: bytes) {
+  }
+
+  public hex(): string {
+    return Buffer.from(this.value).toString('hex')
+  }
+
+}
+/**
+ * Receipt Identifier
+ * https://github.com/starcoinorg/SIPs/blob/master/sip-21/index.md
+ * 
+ */
+export class ReceiptIdentifier {
+  constructor(public accountAddress: AccountAddress, public authKey: Optional<AuthKey>) {
+  }
+
+  public encode(): string {
+    const VERSION = '1'
+    const PREFIX = 'stc'
+
+    const se = new BcsSerializer();
+    this.accountAddress.serialize(se);
+
+    const dataBuff = Buffer.concat([se.getBytes(), Buffer.from(this.authKey.value)])
+    const words = bech32.toWords(dataBuff)
+    const wordsPrefixVersion = [Number(VERSION)].concat(words)
+    const encodedStr = bech32.encode(PREFIX, wordsPrefixVersion)
+    return encodedStr
+  }
+
+  static decode(value: string): ReceiptIdentifier {
+    const result = bech32.decode(value)
+    const wordsPrefixVersion = result.words
+
+    // const versionBytes = wordsPrefixVersion.slice(0, 1)
+    // const version = versionBytes.toString()
+
+    const words = wordsPrefixVersion.slice(1)
+
+    const dataBytes = Buffer.from(bech32.fromWords(words))
+
+    const accountAddressBytes = dataBytes.slice(0, AccountAddress.LENGTH)
+    const authKeyBytes = dataBytes.slice(AccountAddress.LENGTH)
+
+    const accountAddress = AccountAddress.deserialize(new BcsDeserializer(accountAddressBytes))
+    const authKey = new AuthKey(authKeyBytes)
+    return new ReceiptIdentifier(accountAddress, authKey)
+  }
+}

@@ -132,20 +132,20 @@ export function decodeTransactionPayload(
           packagePayload.init_script === null
             ? undefined
             : {
-                func: {
-                  address: addressFromSCS(
-                    packagePayload.init_script.module.address
-                  ),
-                  module: packagePayload.init_script.module.name.value,
-                  functionName: packagePayload.init_script.func.value,
-                },
-                args: packagePayload.init_script.args.map((arg) =>
-                  hexlify(arg)
+              func: {
+                address: addressFromSCS(
+                  packagePayload.init_script.module.address
                 ),
-                ty_args: packagePayload.init_script.ty_args.map((ty) =>
-                  typeTagFromSCS(ty)
-                ),
+                module: packagePayload.init_script.module.name.value,
+                functionName: packagePayload.init_script.func.value,
               },
+              args: packagePayload.init_script.args.map((arg) =>
+                hexlify(arg)
+              ),
+              ty_args: packagePayload.init_script.ty_args.map((ty) =>
+                typeTagFromSCS(ty)
+              ),
+            },
       },
     };
   }
@@ -264,6 +264,12 @@ export function typeTagFromSCS(bcs_data: starcoin_types.TypeTag): TypeTag {
     };
   }
   throw new TypeError(`invalid bcs type tag: ${bcs_data}`);
+}
+
+export function encodeReceiptIdentifier(addressStr: string, authKeyStr = ''): string {
+  const accountAddress = addressToSCS(addressStr)
+  const authKey = new starcoin_types.AuthKey(Buffer.from(authKeyStr, 'hex'))
+  return new starcoin_types.ReceiptIdentifier(accountAddress, authKey).encode();
 }
 
 // export function txnArgFromSCS(data: starcoin_types.TransactionArgument): TransactionArgument {
