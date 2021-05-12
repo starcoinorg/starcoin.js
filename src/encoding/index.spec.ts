@@ -122,7 +122,7 @@ test("encode && decode receipt identifier", () => {
 
     const decoded = ReceiptIdentifier.decode(encodedStr)
     expect(stripHexPrefix(addressFromSCS(decoded.accountAddress))).toBe(address)
-    expect(Buffer.from(decoded.authKey).toString('hex')).toBe(authKey)
+    expect(decoded.authKey.hex()).toBe(authKey)
   })();
 
   // address only
@@ -134,7 +134,7 @@ test("encode && decode receipt identifier", () => {
 
     const decoded = ReceiptIdentifier.decode(encodedStr)
     expect(stripHexPrefix(addressFromSCS(decoded.accountAddress))).toBe(address)
-    expect(Buffer.from(decoded.authKey).toString('hex')).toBe("")
+    expect(decoded.authKey.hex()).toBe("")
   })();
 
   // address + empty authKey
@@ -146,7 +146,7 @@ test("encode && decode receipt identifier", () => {
 
     const decoded = ReceiptIdentifier.decode(encodedStr)
     expect(stripHexPrefix(addressFromSCS(decoded.accountAddress))).toBe(address)
-    expect(Buffer.from(decoded.authKey).toString('hex')).toBe("")
+    expect(decoded.authKey.hex()).toBe("")
   })();
 
 });

@@ -266,8 +266,10 @@ export function typeTagFromSCS(bcs_data: starcoin_types.TypeTag): TypeTag {
   throw new TypeError(`invalid bcs type tag: ${bcs_data}`);
 }
 
-export function encodeReceiptIdentifier(accountAddress: string, authKey = ''): string {
-  return new starcoin_types.ReceiptIdentifier(addressToSCS(accountAddress), Buffer.from(authKey, 'hex')).encode();
+export function encodeReceiptIdentifier(addressStr: string, authKeyStr = ''): string {
+  const accountAddress = addressToSCS(addressStr)
+  const authKey = new starcoin_types.AuthKey(Buffer.from(authKeyStr, 'hex'))
+  return new starcoin_types.ReceiptIdentifier(accountAddress, authKey).encode();
 }
 
 // export function txnArgFromSCS(data: starcoin_types.TransactionArgument): TransactionArgument {

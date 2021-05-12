@@ -1462,13 +1462,23 @@ export class Helpers {
 
 }
 
+export class AuthKey {
+
+  constructor(public value: bytes) {
+  }
+
+  public hex(): string {
+    return Buffer.from(this.value).toString('hex')
+  }
+
+}
 /**
  * Receipt Identifier
  * https://github.com/starcoinorg/SIPs/blob/master/sip-21/index.md
  * 
  */
 export class ReceiptIdentifier {
-  constructor(public accountAddress: AccountAddress, public authKey: Optional<bytes>) {
+  constructor(public accountAddress: AccountAddress, public authKey: Optional<AuthKey>) {
   }
 
   public encode(): string {
@@ -1478,7 +1488,7 @@ export class ReceiptIdentifier {
     const se = new BcsSerializer();
     this.accountAddress.serialize(se);
 
-    const dataBuff = Buffer.concat([se.getBytes(), Buffer.from(this.authKey)])
+    const dataBuff = Buffer.concat([se.getBytes(), Buffer.from(this.authKey.value)])
     const words = bech32.toWords(dataBuff)
     const wordsPrefixVersion = [Number(VERSION)].concat(words)
     const encodedStr = bech32.encode(PREFIX, wordsPrefixVersion)
@@ -1499,6 +1509,8 @@ export class ReceiptIdentifier {
     const accountAddressBytes = dataBytes.slice(0, AccountAddress.LENGTH)
     const authKeyBytes = dataBytes.slice(AccountAddress.LENGTH)
 
-    return new ReceiptIdentifier(AccountAddress.deserialize(new BcsDeserializer(accountAddressBytes)), authKeyBytes);
+    const accountAddress = AccountAddress.deserialize(new BcsDeserializer(accountAddressBytes))
+    const authKey = new AuthKey(authKeyBytes)
+    return new ReceiptIdentifier(accountAddress, authKey)
   }
 }
