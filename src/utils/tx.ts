@@ -1,11 +1,11 @@
 import * as ed from 'noble-ed25519';
-import { stripHexPrefix } from 'ethereumjs-util';
+import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { bytes } from '../lib/runtime/serde';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U8 } from '../types';
-import { addressToSCS, typeTagToSCS } from '../encoding';
+import { addressToSCS, addressFromSCS, typeTagToSCS } from '../encoding';
 import { createRawUserTransactionHasher } from "../crypto_hash";
 
 export function encodeTransactionScript(
@@ -23,13 +23,13 @@ export function encodeTransactionScript(
 
 export function encodeScriptFunction(functionId: FunctionId,
   tyArgs: TypeTag[],
-  args: HexString[]): starcoin_types.TransactionPayloadVariantScriptFunction {
+  args: bytes[]): starcoin_types.TransactionPayloadVariantScriptFunction {
   let funcId = parseFunctionId(functionId);
   const scriptFunction = new starcoin_types.ScriptFunction(
     new starcoin_types.ModuleId(addressToSCS(funcId.address), new starcoin_types.Identifier(funcId.module)),
     new starcoin_types.Identifier(funcId.functionName),
     tyArgs.map((t) => typeTagToSCS(t)),
-    args.map((t) => arrayify(t))
+    args
   );
   return new starcoin_types.TransactionPayloadVariantScriptFunction(scriptFunction);
 }
@@ -37,7 +37,7 @@ export function encodeScriptFunction(functionId: FunctionId,
 export function encodePackage(
   moduleAddress: string,
   moduleCodes: HexString[],
-  initScriptFunction?: { functionId: FunctionId; tyArgs: TypeTag[]; args: HexString[] }
+  initScriptFunction?: { functionId: FunctionId; tyArgs: TypeTag[]; args: bytes[] }
 ): starcoin_types.TransactionPayloadVariantPackage {
   const modules = moduleCodes.map((m) => new starcoin_types.Module(arrayify(m)));
   let scriptFunction = null;
@@ -57,7 +57,7 @@ export function encodePackage(
 // Step 1: generate RawUserTransaction
 export function generateRawUserTransaction(
   senderAddress: HexString,
-  receiverAddress: HexString,
+  receiverInfo: string,
   amount: U128,
   maxGasAmount: U64,
   senderSequenceNumber: U64,
@@ -66,9 +66,26 @@ export function generateRawUserTransaction(
 ): starcoin_types.RawUserTransaction {
 
   // Step 1-1: generate payload hex of ScriptFunction
-  // TODO: check the receiver exists on the chain or not
-  // assuming the receiver exists on the chain already
-  const receiverAuthKeyHex = '0x00'
+
+  let receiverAddress
+  let receiverAuthKeyBytes
+  if (receiverInfo.slice(0, 3) === 'stc') {
+    const receiptIdentifier = starcoin_types.ReceiptIdentifier.decode(receiverInfo)
+    receiverAddress = addressFromSCS(receiptIdentifier.accountAddress);
+    if (receiptIdentifier.authKey) {
+      receiverAuthKeyBytes = (() => {
+        const se = new BcsSerializer();
+        receiptIdentifier.authKey.serialize(se);
+        return se.getBytes();
+      })();
+    } else {
+      receiverAuthKeyBytes = Buffer.from('00', 'hex')
+    }
+  } else {
+    receiverAddress = receiverInfo
+    receiverAuthKeyBytes = Buffer.from('00', 'hex')
+  }
+
 
   const functionId = '0x1::TransferScripts::peer_to_peer'
 
@@ -86,9 +103,9 @@ export function generateRawUserTransaction(
   })();
 
   const args = [
-    receiverAddress,
-    receiverAuthKeyHex,
-    amountSCSHex
+    arrayify(receiverAddress),
+    receiverAuthKeyBytes,
+    arrayify(amountSCSHex)
   ]
 
   const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);

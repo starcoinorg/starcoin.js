@@ -1,9 +1,10 @@
 import { stripHexPrefix } from 'ethereumjs-util';
-import { generatePrivateKey, generateAccount, showAccount } from "./account";
+import { generatePrivateKey, generateAccount, showAccount, isAccountExists } from "./account";
 
 test('show account', async () => {
-  const privateKey = '0xdb197493f170eee7d8c8278140949e620e5dab9ec8b2feab68a285e516229269'
+  const privateKey = 'e424e16db235e3f3b9ef2475516c51d4c15aa5287ceb364213698bd551eab4f2';
   const accountInfo = await showAccount(privateKey)
+  console.log('accountInfo', accountInfo);
   expect(accountInfo.privateKey).toBe(privateKey);
   expect(accountInfo.publicKey).toBe('0x65994ce732bb6a0219099fc93c68583d591b5667161ea08f3b7064319a177228');
   expect(accountInfo.address).toBe('0x701514f6880c1aed801b1710fc8479c9');
@@ -12,14 +13,13 @@ test('show account', async () => {
 })
 
 test('generate privateKey', () => {
-  const privateKey = generatePrivateKey()
-  console.log({ privateKey })
+  const privateKey = generatePrivateKey();
+  console.log('privateKey', privateKey);
   expect(stripHexPrefix(privateKey).length).toBe(64);
 })
 
 test('generate account', async () => {
-  const account = await generateAccount()
-  console.log({ account })
+  const account = await generateAccount();
+  console.log('account', account);
   expect(stripHexPrefix(account.privateKey).length).toBe(64);
 })
-
