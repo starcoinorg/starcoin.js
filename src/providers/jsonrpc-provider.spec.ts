@@ -88,7 +88,7 @@ describe('jsonrpc-provider', () => {
         type_args: ['0x1::STC::STC'],
         args: [
           '0xc13b50bdb12e3fdd03c4e3b05e34926a',
-          'x"29b6012aee31a216af67c3d05e21a092c13b50bdb12e3fdd03c4e3b05e34926a"',
+          'x""',
           '100000u128',
         ],
       },
@@ -133,21 +133,10 @@ describe('jsonrpc-provider', () => {
     const receiver = '0x84d6de1c82bea949966fd13e7896e381'
     let receiverAddressHex = ''
     let receiverAuthKeyHex = ''
-    console.log(receiver, receiver.length)
     if (receiver.slice(0, 3) === 'stc') {
-      console.log(receiver.length)
       const receiptIdentifier = ReceiptIdentifier.decode(receiver)
       receiverAddressHex = addressFromSCS(receiptIdentifier.accountAddress)
       receiverAuthKeyHex = receiptIdentifier.authKey.hex()
-      console.log({ receiverAddressHex })
-      console.log({ receiverAuthKeyHex })
-      // if (toAccount.length === 88) {
-
-      // } else if (toAccount.length === 37) {
-
-      // } else {
-      //   alert('')
-      // }
     } else {
       receiverAddressHex = receiver
       receiverAuthKeyHex = ''
