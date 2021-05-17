@@ -1467,6 +1467,10 @@ export class AuthKey {
   constructor(public value: bytes) {
   }
 
+  public serialize(serializer: Serializer): void {
+    serializer.serializeBytes(this.value);
+  }
+
   public hex(): string {
     return Buffer.from(this.value).toString('hex')
   }

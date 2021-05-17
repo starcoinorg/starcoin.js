@@ -1,4 +1,5 @@
 import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
+import { arrayify } from '@ethersproject/bytes';
 import { addressToSCS, addressFromSCS, decodeEventKey, decodeTransactionPayload, decodeSignedUserTransaction, encodeReceiptIdentifier } from '.';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { toHexString } from '../utils/hex';
@@ -23,9 +24,9 @@ test("encoding TransactionPayload->ScriptFunction hex", () => {
   const tyArgs = [{ Struct: { address, module, name, type_params } }]
 
   const args = [
-    '0x1df9157f14b0041eed18dcc56520d829',
-    '0x2065acc62b12c75ae0d0db89411a8481601df9157f14b0041eed18dcc56520d829',
-    '0x0060d743dd500b000000000000000000'
+    arrayify('0x1df9157f14b0041eed18dcc56520d829'),
+    Buffer.from(''),
+    arrayify('0x0060d743dd500b000000000000000000')
   ]
 
   const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
@@ -34,12 +35,12 @@ test("encoding TransactionPayload->ScriptFunction hex", () => {
   scriptFunction.serialize(se);
   const payloadInHex = toHexString(se.getBytes());
 
-  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d829212065acc62b12c75ae0d0db89411a8481601df9157f14b0041eed18dcc56520d829100060d743dd500b000000000000000000";
+  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
   expect(payloadInHex).toBe(hexExpected);
 });
 
 test("decoding txn payload", () => {
-  const payloadInHex = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d829212065acc62b12c75ae0d0db89411a8481601df9157f14b0041eed18dcc56520d829100060d743dd500b000000000000000000";
+  const payloadInHex = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
   const txnPayload = decodeTransactionPayload(payloadInHex);
   expect(txnPayload.hasOwnProperty("ScriptFunction")).toBeTruthy();
   let scriptFunction = txnPayload["ScriptFunction"];
@@ -120,9 +121,9 @@ test("encode && decode receipt identifier", () => {
     const encodedStr = encodeReceiptIdentifier(address, authKey)
     expect(encodedStr).toBe(encodedStrExcepted)
 
-    const decoded = ReceiptIdentifier.decode(encodedStr)
-    expect(stripHexPrefix(addressFromSCS(decoded.accountAddress))).toBe(address)
-    expect(decoded.authKey.hex()).toBe(authKey)
+    const receiptIdentifier = ReceiptIdentifier.decode(encodedStr)
+    expect(stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))).toBe(address)
+    expect(receiptIdentifier.authKey.hex()).toBe(authKey)
   })();
 
   // address only
@@ -132,9 +133,9 @@ test("encode && decode receipt identifier", () => {
     const encodedStr = encodeReceiptIdentifier(address)
     expect(encodedStr).toBe(encodedStrExcepted)
 
-    const decoded = ReceiptIdentifier.decode(encodedStr)
-    expect(stripHexPrefix(addressFromSCS(decoded.accountAddress))).toBe(address)
-    expect(decoded.authKey.hex()).toBe("")
+    const receiptIdentifier = ReceiptIdentifier.decode(encodedStr)
+    expect(stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))).toBe(address)
+    expect(receiptIdentifier.authKey.hex()).toBe("")
   })();
 
   // address + empty authKey
@@ -144,9 +145,9 @@ test("encode && decode receipt identifier", () => {
     const encodedStr = encodeReceiptIdentifier(address, "")
     expect(encodedStr).toBe(encodedStrExcepted)
 
-    const decoded = ReceiptIdentifier.decode(encodedStr)
-    expect(stripHexPrefix(addressFromSCS(decoded.accountAddress))).toBe(address)
-    expect(decoded.authKey.hex()).toBe("")
+    const receiptIdentifier = ReceiptIdentifier.decode(encodedStr)
+    expect(stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))).toBe(address)
+    expect(receiptIdentifier.authKey.hex()).toBe("")
   })();
 
 });

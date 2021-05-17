@@ -1,11 +1,16 @@
 import { JsonrpcProvider } from '.';
 import { generateRawUserTransaction, signRawUserTransaction } from '../utils/tx';
+import { ReceiptIdentifier } from '../lib/runtime/starcoin_types';
+import { addressFromSCS } from '../encoding';
 
 describe('jsonrpc-provider', () => {
   // let provider = new JsonrpcProvider("http://39.102.41.156:9850", undefined);
 
-  const nodeUrl = 'http://localhost:9850';
-  const chainId = 254;
+  // const nodeUrl = 'http://localhost:9850';
+  // const chainId = 254;
+  const nodeUrl = 'http://barnard.seed.starcoin.org:9850';
+  const chainId = 251;
+
 
   const provider = new JsonrpcProvider(nodeUrl);
   test('detectNetwork', async () => {
@@ -83,7 +88,7 @@ describe('jsonrpc-provider', () => {
         type_args: ['0x1::STC::STC'],
         args: [
           '0xc13b50bdb12e3fdd03c4e3b05e34926a',
-          'x"29b6012aee31a216af67c3d05e21a092c13b50bdb12e3fdd03c4e3b05e34926a"',
+          'x""',
           '100000u128',
         ],
       },
@@ -112,20 +117,52 @@ describe('jsonrpc-provider', () => {
     // privateKey is generated in starcoin console using command:
     // starcoin% account export <ADDRESS> -p <PASSWORD>
     const senderPrivateKeyHex =
-      '0x83c7829c68e1ad81ced10f69d11ea741f7f18c7a5f059215e8a965362a5ae25e';
+      '0xe424e16db235e3f3b9ef2475516c51d4c15aa5287ceb364213698bd551eab4f2';
 
-    const senderAddressHex = '0x49624992dd72da077ee19d0be210406a';
+    const senderPublicKeyHex =
+      '0x704148879e1341243f754d62fa5228529ccb207be6bd3af20b2c5422f6f234d8';
+
+    const senderAddressHex = '0x319ccfe5fc73a2cdae11c40f31ca1b61';
 
     const senderSequenceNumber = await provider.getSequenceNumber(
       senderAddressHex
     );
 
-    const receiverAddressHex = '0x621500bf2b4aad17a690cb24f9a225c6';
+    // const receiverAddressHex = '0x84d6de1c82bea949966fd13e7896e381';
+    // const receiverAuthKeyHex = 'd9bddf7607b58be4331c888116e2365f84d6de1c82bea949966fd13e7896e381';
+    const receiver = '0x84d6de1c82bea949966fd13e7896e381'
+    let receiverAddressHex = ''
+    let receiverAuthKeyHex = ''
+    if (receiver.slice(0, 3) === 'stc') {
+      const receiptIdentifier = ReceiptIdentifier.decode(receiver)
+      receiverAddressHex = addressFromSCS(receiptIdentifier.accountAddress)
+      receiverAuthKeyHex = receiptIdentifier.authKey.hex()
+    } else {
+      receiverAddressHex = receiver
+      receiverAuthKeyHex = ''
+    }
 
-    const amount = 1000000000;
+    const amount = 1024;
+    const sendAmountString = `${amount.toString()}u128`
+    const txnRequest = {
+      chain_id: chainId,
+      gas_unit_price: 1,
+      sender: senderAddressHex,
+      sender_public_key: senderPublicKeyHex,
+      sequence_number: senderSequenceNumber,
+      max_gas_amount: 10000000,
+      script: {
+        code: '0x1::TransferScripts::peer_to_peer',
+        type_args: ['0x1::STC::STC'],
+        args: [receiverAddressHex, `x"${receiverAuthKeyHex}"`, sendAmountString],
+      },
+    }
+    console.log({ txnRequest })
+    const txnOutput = await provider.dryRun(txnRequest)
+    console.log({ txnOutput })
 
     // TODO: generate maxGasAmount from contract.dry_run -> gas_used
-    const maxGasAmount = 124191;
+    const maxGasAmount = 10000000;
 
     // because the time system in dev network is relatively static,
     // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
@@ -135,7 +172,7 @@ describe('jsonrpc-provider', () => {
 
     const rawUserTransaction = generateRawUserTransaction(
       senderAddressHex,
-      receiverAddressHex,
+      receiver,
       amount,
       maxGasAmount,
       senderSequenceNumber,
@@ -153,7 +190,10 @@ describe('jsonrpc-provider', () => {
 
     const balanceBefore = await provider.getBalance(receiverAddressHex);
     const txn = await provider.sendTransaction(signedUserTransactionHex);
+    console.log({ txn })
+
     const txnInfo = await txn.wait(1);
+    console.log({ txnInfo })
     const balance = await provider.getBalance(receiverAddressHex);
     if (balanceBefore !== undefined) {
       // @ts-ignore
