@@ -8,7 +8,7 @@ describe('jsonrpc-provider', () => {
 
   // const nodeUrl = 'http://localhost:9850';
   // const chainId = 254;
-  const nodeUrl = 'http://barnard.seed.starcoin.org:9850';
+  const nodeUrl = 'https://barnard.seed.starcoin.org';
   const chainId = 251;
 
 
@@ -113,7 +113,7 @@ describe('jsonrpc-provider', () => {
     }
   }, 10000);
 
-  test('txn sign using sender privateKey and submit', async () => {
+  test('txn sign using sender privateKey and submit(timeout in 2 minutes)', async () => {
     // privateKey is generated in starcoin console using command:
     // starcoin% account export <ADDRESS> -p <PASSWORD>
     const senderPrivateKeyHex =
@@ -202,7 +202,7 @@ describe('jsonrpc-provider', () => {
     } else {
       expect(balance).toBe(amount);
     }
-  }, 10000);
+  }, 120000);
 
   test('Sign String Message', async () => {
     const signerAddress = '0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';

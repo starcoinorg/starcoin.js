@@ -1,5 +1,5 @@
 import { stripHexPrefix } from 'ethereumjs-util';
-import { generatePrivateKey, generateAccount, showAccount, isAccountExists } from "./account";
+import { generatePrivateKey, generateAccount, showAccount } from "./account";
 
 test('show account', async () => {
   const privateKey = 'e424e16db235e3f3b9ef2475516c51d4c15aa5287ceb364213698bd551eab4f2';
