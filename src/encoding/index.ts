@@ -1,4 +1,6 @@
 import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
+import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
+import * as ed from 'noble-ed25519';
 import { BcsDeserializer, BcsSerializer } from '../lib/runtime/bcs';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import * as serde from '../lib/runtime/serde';
@@ -14,6 +16,8 @@ import {
 import { fromHexString, toHexString } from '../utils/hex';
 import { createUserTransactionHasher } from '../crypto_hash';
 import { Deserializer } from '../lib/runtime/serde';
+
+const jsSHA = require('jssha/dist/sha3');
 
 export interface SerdeSerializable {
   serialize(serializer: serde.Serializer): void;
@@ -266,10 +270,41 @@ export function typeTagFromSCS(bcs_data: starcoin_types.TypeTag): TypeTag {
   throw new TypeError(`invalid bcs type tag: ${bcs_data}`);
 }
 
+export async function privateKeyToPublicKey(privateKey: string): Promise<string> {
+  const publicKey = await ed.getPublicKey(stripHexPrefix(privateKey))
+  return addHexPrefix(publicKey)
+}
+
+export function publicKeyToAuthKey(publicKey: string): string {
+  const shaObj = new jsSHA("SHA3-256", "HEX", { encoding: "UTF8" });
+  shaObj.update(stripHexPrefix(publicKey));
+  shaObj.update("00");
+  const hash = shaObj.getHash("HEX");
+  return addHexPrefix(hash)
+}
+
+export function publicKeyToAddress(publicKey: string): string {
+  const shaObj = new jsSHA("SHA3-256", "HEX", { encoding: "UTF8" });
+  shaObj.update(stripHexPrefix(publicKey));
+  shaObj.update("00");
+  const hash = shaObj.getHash("HEX");
+  const address = hash.slice(hash.length / 2);
+  return addHexPrefix(address)
+}
+
 export function encodeReceiptIdentifier(addressStr: string, authKeyStr = ''): string {
   const accountAddress = addressToSCS(addressStr)
   const authKey = new starcoin_types.AuthKey(Buffer.from(authKeyStr, 'hex'))
   return new starcoin_types.ReceiptIdentifier(accountAddress, authKey).encode();
+}
+
+export function publicKeyToReceiptIdentifier(publicKey: string): string {
+  const address = publicKeyToAddress(publicKey)
+  const authKey = publicKeyToAuthKey(publicKey)
+  console.log(address)
+  console.log(authKey)
+  const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address), stripHexPrefix(authKey))
+  return receiptIdentifier
 }
 
 // export function txnArgFromSCS(data: starcoin_types.TransactionArgument): TransactionArgument {
