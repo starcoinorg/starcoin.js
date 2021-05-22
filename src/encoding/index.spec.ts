@@ -154,7 +154,7 @@ test("encode && decode receipt identifier", () => {
     const encodedStr = encodeReceiptIdentifier(address, authKey)
     expect(encodedStr).toBe(encodedStrExcepted)
 
-    const { address: decodedAddress, authKey: decodedAuthKey } = decodeReceiptIdentifier(encodedStr)
+    const { accountAddress: decodedAddress, authKey: decodedAuthKey } = decodeReceiptIdentifier(encodedStr)
     expect(decodedAddress).toBe(address)
     expect(decodedAuthKey).toBe(authKey)
   })();
@@ -166,7 +166,7 @@ test("encode && decode receipt identifier", () => {
     const encodedStr = encodeReceiptIdentifier(address)
     expect(encodedStr).toBe(encodedStrExcepted)
 
-    const { address: decodedAddress, authKey: decodedAuthKey } = decodeReceiptIdentifier(encodedStr)
+    const { accountAddress: decodedAddress, authKey: decodedAuthKey } = decodeReceiptIdentifier(encodedStr)
     expect(decodedAddress).toBe(address)
     expect(decodedAuthKey).toBe("")
   })();
@@ -178,7 +178,7 @@ test("encode && decode receipt identifier", () => {
     const encodedStr = encodeReceiptIdentifier(address, "")
     expect(encodedStr).toBe(encodedStrExcepted)
 
-    const { address: decodedAddress, authKey: decodedAuthKey } = decodeReceiptIdentifier(encodedStr)
+    const { accountAddress: decodedAddress, authKey: decodedAuthKey } = decodeReceiptIdentifier(encodedStr)
     expect(decodedAddress).toBe(address)
     expect(decodedAuthKey).toBe("")
   })();

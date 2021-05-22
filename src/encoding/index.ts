@@ -300,9 +300,9 @@ export function encodeReceiptIdentifier(addressStr: string, authKeyStr = ''): st
 
 export function decodeReceiptIdentifier(value: string): Record<string, string> {
   const receiptIdentifier = starcoin_types.ReceiptIdentifier.decode(value)
-  const address = stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))
+  const accountAddress = stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))
   const authKey = receiptIdentifier.authKey.hex()
-  return { address, authKey }
+  return { accountAddress, authKey }
 }
 
 export function publicKeyToReceiptIdentifier(publicKey: string): string {
