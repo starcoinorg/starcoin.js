@@ -298,11 +298,16 @@ export function encodeReceiptIdentifier(addressStr: string, authKeyStr = ''): st
   return new starcoin_types.ReceiptIdentifier(accountAddress, authKey).encode();
 }
 
+export function decodeReceiptIdentifier(value: string): Record<string, string> {
+  const receiptIdentifier = starcoin_types.ReceiptIdentifier.decode(value)
+  const address = stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))
+  const authKey = receiptIdentifier.authKey.hex()
+  return { address, authKey }
+}
+
 export function publicKeyToReceiptIdentifier(publicKey: string): string {
   const address = publicKeyToAddress(publicKey)
   const authKey = publicKeyToAuthKey(publicKey)
-  console.log(address)
-  console.log(authKey)
   const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address), stripHexPrefix(authKey))
   return receiptIdentifier
 }

@@ -1,11 +1,9 @@
-import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
 import { arrayify } from '@ethersproject/bytes';
-import { addressToSCS, addressFromSCS, decodeEventKey, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier } from '.';
+import { addressToSCS, decodeEventKey, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier, decodeReceiptIdentifier } from '.';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { toHexString } from '../utils/hex';
 import { JsonrpcProvider } from '../providers/jsonrpc-provider';
 import { encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction } from "../utils/tx";
-import { ReceiptIdentifier } from '../lib/runtime/starcoin_types';
 
 test("encoding address", () => {
   expect(addressToSCS("0x1").value.length).toBe(16);
@@ -156,9 +154,9 @@ test("encode && decode receipt identifier", () => {
     const encodedStr = encodeReceiptIdentifier(address, authKey)
     expect(encodedStr).toBe(encodedStrExcepted)
 
-    const receiptIdentifier = ReceiptIdentifier.decode(encodedStr)
-    expect(stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))).toBe(address)
-    expect(receiptIdentifier.authKey.hex()).toBe(authKey)
+    const { address: decodedAddress, authKey: decodedAuthKey } = decodeReceiptIdentifier(encodedStr)
+    expect(decodedAddress).toBe(address)
+    expect(decodedAuthKey).toBe(authKey)
   })();
 
   // address only
@@ -168,9 +166,9 @@ test("encode && decode receipt identifier", () => {
     const encodedStr = encodeReceiptIdentifier(address)
     expect(encodedStr).toBe(encodedStrExcepted)
 
-    const receiptIdentifier = ReceiptIdentifier.decode(encodedStr)
-    expect(stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))).toBe(address)
-    expect(receiptIdentifier.authKey.hex()).toBe("")
+    const { address: decodedAddress, authKey: decodedAuthKey } = decodeReceiptIdentifier(encodedStr)
+    expect(decodedAddress).toBe(address)
+    expect(decodedAuthKey).toBe("")
   })();
 
   // address + empty authKey
@@ -180,9 +178,9 @@ test("encode && decode receipt identifier", () => {
     const encodedStr = encodeReceiptIdentifier(address, "")
     expect(encodedStr).toBe(encodedStrExcepted)
 
-    const receiptIdentifier = ReceiptIdentifier.decode(encodedStr)
-    expect(stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))).toBe(address)
-    expect(receiptIdentifier.authKey.hex()).toBe("")
+    const { address: decodedAddress, authKey: decodedAuthKey } = decodeReceiptIdentifier(encodedStr)
+    expect(decodedAddress).toBe(address)
+    expect(decodedAuthKey).toBe("")
   })();
 
 });
