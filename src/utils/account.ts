@@ -1,8 +1,7 @@
 
 import { utils } from 'noble-ed25519';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
-import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress } from "../crypto_hash";
-import { encodeReceiptIdentifier } from "../encoding";
+import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier } from "../encoding";
 
 export function generatePrivateKey(): string {
   // 32-byte Uint8Array

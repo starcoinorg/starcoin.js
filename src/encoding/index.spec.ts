@@ -1,6 +1,6 @@
 import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
 import { arrayify } from '@ethersproject/bytes';
-import { addressToSCS, addressFromSCS, decodeEventKey, decodeTransactionPayload, decodeSignedUserTransaction, encodeReceiptIdentifier } from '.';
+import { addressToSCS, addressFromSCS, decodeEventKey, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier } from '.';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { toHexString } from '../utils/hex';
 import { JsonrpcProvider } from '../providers/jsonrpc-provider';
@@ -109,6 +109,41 @@ test("decoding SignedUserTransaction hex", () => {
   expect(signedUserTransaction.raw_txn.sender).toBe("0x49624992dd72da077ee19d0be210406a");
 });
 
+test("should convert public key to auth key correctly", () => {
+  // work on barnard network
+  const publicKey = '0xe8eba2c517d0b5012c20737b3627c58447ccd6098aaae84027520afcc82a4ded'
+  const value = publicKeyToAuthKey(publicKey)
+  console.log({ auth_key: value })
+  expect(value).toBe(
+    "0x049ad0f8c75341261eb354aba13b3a4f400e8f6e15f47c92519e2527fcd64b3a"
+  );
+});
+
+test("should convert public key to address correctly", () => {
+  const publicKey = '0xe8eba2c517d0b5012c20737b3627c58447ccd6098aaae84027520afcc82a4ded'
+  const value = publicKeyToAddress(publicKey)
+  console.log({ address: value })
+  expect(value).toBe(
+    "0x400e8f6e15f47c92519e2527fcd64b3a"
+  );
+});
+
+test("should convert private key to publick key correctly", async () => {
+  const privateKey = '0xa6d8991ca3d6813f493d13216d6dedd30211a649d21b2ca102b860bea51045fd'
+  const value = await privateKeyToPublicKey(privateKey)
+  console.log({ publicKey: value })
+  expect(value).toBe(
+    "0xe8eba2c517d0b5012c20737b3627c58447ccd6098aaae84027520afcc82a4ded"
+  );
+});
+
+test("publicKeyToReceiptIdentifier", () => {
+  const publicKey = "0x94c3732e3c08eee7738d33b4e6f74daa615da14a94607ac00b531d189cb5b0dd"
+  const encodedStrExcepted = "stc1pvg2sp0etf2k30f5sevj0ng39cmhuvhh4vzevdu07ksg38r0mrd0xy9gqhu454tgh56gvkf8e5gjuv6hqjnv"
+
+  const encodedStr = publicKeyToReceiptIdentifier(publicKey)
+  expect(encodedStr).toBe(encodedStrExcepted)
+});
 
 test("encode && decode receipt identifier", () => {
   const address = "1603d10ce8649663e4e5a757a8681833";
