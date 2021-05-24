@@ -5,7 +5,7 @@ Only a little modification.
 
 ## Type Architecture Diagram
 
-|-js(client level):  lib/runtime/index.ts 
+|-js(client level):  types/index.ts 
 |
 |-starcoin_types:  lib/runtime/starcoin_types/index.ts
 |
