@@ -12,6 +12,7 @@ import {
   StructTag,
   TransactionPayload,
   TypeTag,
+  ReceiptIdentifierView,
 } from '../types';
 import { fromHexString, toHexString } from '../utils/hex';
 import { createUserTransactionHasher } from '../crypto_hash';
@@ -298,11 +299,12 @@ export function encodeReceiptIdentifier(addressStr: string, authKeyStr = ''): st
   return new starcoin_types.ReceiptIdentifier(accountAddress, authKey).encode();
 }
 
-export function decodeReceiptIdentifier(value: string): Record<string, string> {
+export function decodeReceiptIdentifier(value: string): ReceiptIdentifierView {
   const receiptIdentifier = starcoin_types.ReceiptIdentifier.decode(value)
   const accountAddress = stripHexPrefix(addressFromSCS(receiptIdentifier.accountAddress))
   const authKey = receiptIdentifier.authKey.hex()
-  return { accountAddress, authKey }
+  const receiptIdentifierView = { accountAddress, authKey }
+  return receiptIdentifierView
 }
 
 export function publicKeyToReceiptIdentifier(publicKey: string): string {
