@@ -111,17 +111,17 @@ export type SignatureType = 'Ed25519' | 'MultiEd25519';
 
 export type TransactionAuthenticator =
   | {
-      Ed25519: {
-        public_key: Ed25519PublicKey;
-        signature: Ed25519Signature;
-      };
-    }
-  | {
-      MultiEd25519: {
-        public_key: MultiEd25519PublicKey;
-        signature: MultiEd25519Signature;
-      };
+    Ed25519: {
+      public_key: Ed25519PublicKey;
+      signature: Ed25519Signature;
     };
+  }
+  | {
+    MultiEd25519: {
+      public_key: MultiEd25519PublicKey;
+      signature: MultiEd25519Signature;
+    };
+  };
 
 // export type TransactionArgument =
 //   | { U8: number }
@@ -232,11 +232,11 @@ export interface ScriptABI {
 export type AbortLocation =
   | 'Script'
   | {
-      Module: {
-        address: AccountAddress;
-        name: Identifier;
-      };
+    Module: {
+      address: AccountAddress;
+      name: Identifier;
     };
+  };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const TransactionVMStatus_Executed = 'Executed';
@@ -249,18 +249,24 @@ export type TransactionVMStatus =
   | 'OutOfGas'
   | 'MiscellaneousError'
   | {
-      MoveAbort: { location: AbortLocation; abort_code: U64 };
-    }
+    MoveAbort: { location: AbortLocation; abort_code: U64 };
+  }
   | {
-      ExecutionFailure: {
-        location: AbortLocation;
-        function: U16;
-        code_offset: U16;
-      };
-    }
+    ExecutionFailure: {
+      location: AbortLocation;
+      function: U16;
+      code_offset: U16;
+    };
+  }
   | { Discard: { status_code: U64 } };
 
 // Exported Types
+
+export interface ReceiptIdentifierView {
+  accountAddress: string,
+  authKey: string
+}
+
 export interface RawUserTransactionView {
   /// Sender's address.
   sender: AccountAddress;
