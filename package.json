@@ -1,6 +1,6 @@
 {
   "name": "@starcoin/starcoin",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "starcoin js sdk",
   "author": "lerencao, wk3368, tarvos21",
   "license": "Apache-2.0",
@@ -51,6 +51,7 @@
     "js-sha3": "^0.8.0",
     "jssha": "^3.2.0",
     "noble-ed25519": "^1.0.4",
+    "read-bigint": "^0.1.6",
     "ws": "7.2.3"
   },
   "devDependencies": {
