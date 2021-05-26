@@ -7,4 +7,5 @@ export * as onchain_event_types from './lib/runtime/onchain_events';
 export * as providers from './providers';
 export * as crypto_hash from './crypto_hash';
 export * as encoding from './encoding';
+export * as decode_event from './onchain-events/decode-event';
 import './onchain-events';
