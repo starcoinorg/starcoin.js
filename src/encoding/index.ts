@@ -18,6 +18,8 @@ import {
 import { fromHexString, toHexString } from '../utils/hex';
 import { createUserTransactionHasher } from '../crypto_hash';
 import { Deserializer } from '../lib/runtime/serde';
+import '../onchain-events';
+import * as onchain_events_types from '../lib/runtime/onchain_events';
 
 const jsSHA = require('jssha/dist/sha3');
 
@@ -315,6 +317,16 @@ export function publicKeyToReceiptIdentifier(publicKey: string): string {
   const authKey = publicKeyToAuthKey(publicKey)
   const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address), stripHexPrefix(authKey))
   return receiptIdentifier
+}
+
+
+export function decodeEventData(eventName: string, eventData: string): any {
+  const eventType = onchain_events_types[eventName];
+  const d = bcsDecode(
+    eventType,
+    eventData
+  );
+  return d;
 }
 
 // export function txnArgFromSCS(data: starcoin_types.TransactionArgument): TransactionArgument {
