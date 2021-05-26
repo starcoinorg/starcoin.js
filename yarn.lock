@@ -6464,6 +6464,11 @@ react-is@^17.0.1:
   resolved "https://registry.npm.taobao.org/react-is/download/react-is-17.0.2.tgz"
   integrity "sha1-5pHUqOnHiTZWVVOas3J2Kw77VPA= sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w=="
 
+read-bigint@^0.1.6:
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/read-bigint/-/read-bigint-0.1.6.tgz#451fdb5ef5a9bb425fba1f92511038e2a54e5f26"
+  integrity sha512-WHfCMBWes972LRSGYb1/mTW6yy83DQ28Lj94TfVM1HIhFf2I7Di09bUoc8+pPsx4JXgEge2r0d9y+7lj6x3j4g==
+
 read-pkg-up@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npm.taobao.org/read-pkg-up/download/read-pkg-up-2.0.0.tgz"

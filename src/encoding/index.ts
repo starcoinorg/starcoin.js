@@ -1,6 +1,7 @@
 import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import * as ed from 'noble-ed25519';
+import { readBigUInt64LE } from "read-bigint";
 import { BcsDeserializer, BcsSerializer } from '../lib/runtime/bcs';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import * as serde from '../lib/runtime/serde';
@@ -170,7 +171,9 @@ export function decodeEventKey(
     );
   }
   const saltBytes = bytes.slice(0, EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
-  const salt = Buffer.from(saltBytes).readBigUInt64LE();
+  const buff = Buffer.from(saltBytes);
+  // const salt = buff.readBigUInt64LE();
+  const salt = readBigUInt64LE(buff);
   const addressBytes = bytes.slice(EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
   const address = toHexString(addressBytes);
   return { address, salt };
