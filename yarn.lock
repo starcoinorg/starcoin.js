@@ -1462,6 +1462,11 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
+"@starcoin/stc-ed25519@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.npmjs.org/@starcoin/stc-ed25519/-/stc-ed25519-0.1.0.tgz#56e65b388889a5953e01806cc3deaa20ddaf8174"
+  integrity sha512-H3oz8fNQD604Ak0cSNTDcbfzLxsB9XAKw1aJO7iBPuZWcHF8bgn7xxOzsinx5V5LGaPeleWc/Qw4vCKnK6cxHQ==
+
 "@types/babel__core@^7.0.0", "@types/babel__core@^7.1.7":
   version "7.1.14"
   resolved "https://registry.npm.taobao.org/@types/babel__core/download/@types/babel__core-7.1.14.tgz?cache=0&sync_timestamp=1616202213220&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40types%2Fbabel__core%2Fdownload%2F%40types%2Fbabel__core-7.1.14.tgz"
@@ -5565,11 +5570,6 @@ nice-try@^1.0.4:
   resolved "https://registry.npm.taobao.org/nice-try/download/nice-try-1.0.5.tgz?cache=0&sync_timestamp=1614510093028&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fnice-try%2Fdownload%2Fnice-try-1.0.5.tgz"
   integrity sha1-ozeKdpbOfSI+iPybdkvX7xCJ42Y=
 
-noble-ed25519@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.npmjs.org/noble-ed25519/-/noble-ed25519-1.0.4.tgz"
-  integrity sha512-Sp9F8ukrY5v9PZezW8Q8dI+tbIH5f6i4E2Alb7kPDPgsQA5CgsrM0BVyUoy06/CRH5QoN2QUOVZH+QIXgesNLQ==
-
 node-int64@^0.4.0:
   version "0.4.0"
   resolved "https://registry.npm.taobao.org/node-int64/download/node-int64-0.4.0.tgz"
@@ -6466,7 +6466,7 @@ react-is@^17.0.1:
 
 read-bigint@^0.1.6:
   version "0.1.6"
-  resolved "https://registry.yarnpkg.com/read-bigint/-/read-bigint-0.1.6.tgz#451fdb5ef5a9bb425fba1f92511038e2a54e5f26"
+  resolved "https://registry.npmjs.org/read-bigint/-/read-bigint-0.1.6.tgz#451fdb5ef5a9bb425fba1f92511038e2a54e5f26"
   integrity sha512-WHfCMBWes972LRSGYb1/mTW6yy83DQ28Lj94TfVM1HIhFf2I7Di09bUoc8+pPsx4JXgEge2r0d9y+7lj6x3j4g==
 
 read-pkg-up@^2.0.0:
