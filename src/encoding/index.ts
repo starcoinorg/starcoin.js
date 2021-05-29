@@ -1,14 +1,12 @@
 import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
-import * as ed from 'noble-ed25519';
-import { readBigUInt64LE } from "read-bigint";
+
+import * as ed from '@starcoin/stc-ed25519';
 import { BcsDeserializer, BcsSerializer } from '../lib/runtime/bcs';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import * as serde from '../lib/runtime/serde';
 import {
-  ACCOUNT_ADDRESS_LENGTH,
   AccountAddress,
-  EVENT_KEY_LENGTH,
   SignedUserTransactionView,
   StructTag,
   TransactionPayload,
@@ -18,8 +16,6 @@ import {
 import { fromHexString, toHexString } from '../utils/hex';
 import { createUserTransactionHasher } from '../crypto_hash';
 import { Deserializer } from '../lib/runtime/serde';
-import '../onchain-events';
-import * as onchain_events_types from '../lib/runtime/onchain_events';
 
 const jsSHA = require('jssha/dist/sha3');
 
@@ -161,26 +157,6 @@ export function decodeTransactionPayload(
   throw new TypeError(`cannot decode bcs data ${bcsTxnPayload}`);
 }
 
-/// Decode a hex view or raw bytes of event key into parts.
-/// EventKey is constructed by `Salt+AccountAddress`.
-export function decodeEventKey(
-  eventKey: BytesLike
-): { address: AccountAddress; salt: BigInt } {
-  const bytes = arrayify(eventKey);
-  if (bytes.byteLength !== EVENT_KEY_LENGTH) {
-    throw new Error(
-      `invalid eventkey data, expect byte length to be ${EVENT_KEY_LENGTH}, actual: ${bytes.byteLength}`
-    );
-  }
-  const saltBytes = bytes.slice(0, EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
-  const buff = Buffer.from(saltBytes);
-  // const salt = buff.readBigUInt64LE();
-  const salt = readBigUInt64LE(buff);
-  const addressBytes = bytes.slice(EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
-  const address = toHexString(addressBytes);
-  return { address, salt };
-}
-
 export function addressToSCS(
   addr: AccountAddress
 ): starcoin_types.AccountAddress {
@@ -317,16 +293,6 @@ export function publicKeyToReceiptIdentifier(publicKey: string): string {
   const authKey = publicKeyToAuthKey(publicKey)
   const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address), stripHexPrefix(authKey))
   return receiptIdentifier
-}
-
-
-export function decodeEventData(eventName: string, eventData: string): any {
-  const eventType = onchain_events_types[eventName];
-  const d = bcsDecode(
-    eventType,
-    eventData
-  );
-  return d;
 }
 
 // export function txnArgFromSCS(data: starcoin_types.TransactionArgument): TransactionArgument {

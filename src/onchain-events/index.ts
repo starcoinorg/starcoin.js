@@ -1,4 +1,7 @@
+import { readBigUInt64LE } from "read-bigint";
+import { arrayify, BytesLike } from '@ethersproject/bytes';
 import {
+  AccountAddress,
   AcceptTokenEvent,
   BlockRewardEvent,
   BurnEvent,
@@ -10,9 +13,13 @@ import {
   VoteChangedEvent,
   WithdrawEvent,
 } from '../types';
+import { addressFromSCS, bcsDecode } from '../encoding';
+import { toHexString } from '../utils/hex';
 import { uint128, uint8 } from '../lib/runtime/serde';
-import { addressFromSCS } from '../encoding';
 import * as onchain_events from '../lib/runtime/onchain_events';
+
+const ACCOUNT_ADDRESS_LENGTH = 16;
+const EVENT_KEY_LENGTH = ACCOUNT_ADDRESS_LENGTH + 8;
 
 declare module '../lib/runtime/onchain_events' {
   interface TokenCode {
@@ -132,3 +139,33 @@ onchain_events.DepositEvent.prototype.toJS = function (): DepositEvent {
     token_code: this.token_code.toJS(),
   };
 };
+
+
+/// Decode a hex view or raw bytes of event key into parts.
+/// EventKey is constructed by `Salt+AccountAddress`.
+export function decodeEventKey(
+  eventKey: BytesLike
+): { address: AccountAddress; salt: BigInt } {
+  const bytes = arrayify(eventKey);
+  if (bytes.byteLength !== EVENT_KEY_LENGTH) {
+    throw new Error(
+      `invalid eventkey data, expect byte length to be ${EVENT_KEY_LENGTH}, actual: ${bytes.byteLength}`
+    );
+  }
+  const saltBytes = bytes.slice(0, EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
+  const buff = Buffer.from(saltBytes);
+  // const salt = buff.readBigUInt64LE();
+  const salt = readBigUInt64LE(buff);
+  const addressBytes = bytes.slice(EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
+  const address = toHexString(addressBytes);
+  return { address, salt };
+}
+
+export function decodeEventData(eventName: string, eventData: string): any {
+  const eventType = onchain_events[eventName];
+  const d = bcsDecode(
+    eventType,
+    eventData
+  );
+  return d;
+}
