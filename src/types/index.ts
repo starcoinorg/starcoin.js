@@ -17,10 +17,6 @@ export type MultiEd25519PublicKey = string;
 export type MultiEd25519Signature = string;
 export type EventKey = string;
 export type HexString = string;
-
-export const ACCOUNT_ADDRESS_LENGTH = 16;
-export const EVENT_KEY_LENGTH = ACCOUNT_ADDRESS_LENGTH + 8;
-
 export interface StructTag {
   address: string;
   module: string;

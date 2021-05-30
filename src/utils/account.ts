@@ -1,5 +1,5 @@
 
-import { utils } from 'noble-ed25519';
+import { utils } from '@starcoin/stc-ed25519';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier } from "../encoding";
 

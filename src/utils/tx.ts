@@ -1,4 +1,4 @@
-import * as ed from 'noble-ed25519';
+import * as ed from '@starcoin/stc-ed25519';
 import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { bytes } from '../lib/runtime/serde';
