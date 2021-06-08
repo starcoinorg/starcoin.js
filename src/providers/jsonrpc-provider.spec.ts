@@ -1,10 +1,10 @@
-import { JsonrpcProvider } from '.';
+import { JsonRpcProvider } from '.';
 import { generateRawUserTransaction, signRawUserTransaction } from '../utils/tx';
 import { ReceiptIdentifier } from '../lib/runtime/starcoin_types';
 import { addressFromSCS } from '../encoding';
 
 describe('jsonrpc-provider', () => {
-  // let provider = new JsonrpcProvider("http://39.102.41.156:9850", undefined);
+  // let provider = new JsonRpcProvider("http://39.102.41.156:9850", undefined);
 
   // const nodeUrl = 'http://localhost:9850';
   // const chainId = 254;
@@ -12,7 +12,7 @@ describe('jsonrpc-provider', () => {
   const chainId = 251;
 
 
-  const provider = new JsonrpcProvider(nodeUrl);
+  const provider = new JsonRpcProvider(nodeUrl);
   test('detectNetwork', async () => {
     const net = await provider.getNetwork();
     expect(net.chainId).toBe(chainId);

@@ -21,7 +21,7 @@ or
 
 
 ``` typescript
-let provider = new JsonrpcProvider("http://localhost:9850");
+let provider = new JsonRpcProvider("http://localhost:9850");
 
 /// Get txn data.
 const txnData = await provider.getTransaction(txnHash);
@@ -56,7 +56,7 @@ client sdk should decode the data to see the detailed information.
 import encoding from 'starcoin';
 import 'starcoin';
 
-let provider = new JsonrpcProvider("http://localhost:9850");
+let provider = new JsonRpcProvider("http://localhost:9850");
 
 // Get txn info.
 const txnEvents = await provider.getEventsOfTransaction(txnHash);

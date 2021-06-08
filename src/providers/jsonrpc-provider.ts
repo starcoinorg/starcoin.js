@@ -15,7 +15,7 @@ import { getNetwork, Network, Networkish } from '../networks';
 import { version } from '../version';
 import { BaseProvider, CONSTANTS, Event, RPC_ACTION } from './base-provider';
 // eslint-disable-next-line import/order
-import { AccountAddress, ChainId, TransactionRequest } from '../types';
+import { AccountAddress, ChainId, TransactionRequest, DappTransactionRequest } from '../types';
 import { Signer } from '../abstract-signer';
 import { Provider } from '../abstract-provider';
 
@@ -125,14 +125,14 @@ const _constructorGuard = {};
 
 export class JsonRpcSigner extends Signer {
   // eslint-disable-next-line no-use-before-define
-  readonly provider: JsonrpcProvider;
+  readonly provider: JsonRpcProvider;
   _index?: number;
   _address?: string;
 
   // eslint-disable-next-line no-use-before-define
   constructor(
     constructorGuard: any,
-    provider: JsonrpcProvider,
+    provider: JsonRpcProvider,
     addressOrIndex?: string | number
   ) {
     logger.checkNew(new.target, JsonRpcSigner);
@@ -236,6 +236,20 @@ export class JsonRpcSigner extends Signer {
     );
   }
 
+  sendTransaction(transaction: Deferrable<DappTransactionRequest>): Promise<TransactionResponse> {
+    return this.sendUncheckedTransaction(transaction).then((hash) => {
+      return poll(() => {
+        return this.provider.getTransaction(hash).then((tx: TransactionResponse) => {
+          if (tx === null) { return undefined; }
+          return this.provider._wrapTransaction(tx, hash);
+        });
+      }, { onceBlock: this.provider }).catch((error: Error) => {
+        (<any>error).transactionHash = hash;
+        throw error;
+      });
+    });
+  }
+
   // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-unused-vars
   async signMessage(message: Bytes | string): Promise<string> {
     // return logger.throwError('signing message is unsupported', Logger.errors.UNSUPPORTED_OPERATION, {
@@ -307,14 +321,14 @@ export class JsonRpcSigner extends Signer {
 //   }
 // }
 
-export class JsonrpcProvider extends BaseProvider {
+export class JsonRpcProvider extends BaseProvider {
   readonly connection: ConnectionInfo;
 
   _pendingFilter: Promise<number>;
   _nextId: number;
 
   constructor(url?: ConnectionInfo | string, network?: Networkish) {
-    logger.checkNew(new.target, JsonrpcProvider);
+    logger.checkNew(new.target, JsonRpcProvider);
 
     let networkOrReady: Networkish | Promise<Network> = network;
 
@@ -372,7 +386,7 @@ export class JsonrpcProvider extends BaseProvider {
         const chainInfo = await this.perform(RPC_ACTION.getChainInfo, null);
         chainId = chainInfo.chain_id;
         // eslint-disable-next-line no-empty
-      } catch (error) {}
+      } catch (error) { }
     }
 
     if (chainId != null) {

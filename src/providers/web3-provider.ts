@@ -1,6 +1,6 @@
 import { defineReadOnly } from "@ethersproject/properties";
 import { Logger } from "@ethersproject/logger";
-import { JsonrpcProvider } from './jsonrpc-provider';
+import { JsonRpcProvider } from './jsonrpc-provider';
 import { Networkish } from '../networks';
 import { version } from '../version';
 
@@ -50,7 +50,7 @@ function buildWeb3LegacyFetcher(provider: ExternalProvider, sendFunc: Web3Legacy
     }
 }
 
-export class Web3Provider extends JsonrpcProvider {
+export class Web3Provider extends JsonRpcProvider {
     readonly provider: ExternalProvider;
 
     readonly jsonRpcFetchFunc: JsonRpcFetchFunc;
