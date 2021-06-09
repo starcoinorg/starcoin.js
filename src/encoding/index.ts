@@ -1,5 +1,6 @@
 import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
+import { createHash } from "../crypto_hash";
 
 import * as ed from '@starcoin/stc-ed25519';
 import { BcsDeserializer, BcsSerializer } from '../lib/runtime/bcs';
@@ -17,7 +18,7 @@ import { fromHexString, toHexString } from '../utils/hex';
 import { createUserTransactionHasher } from '../crypto_hash';
 import { Deserializer } from '../lib/runtime/serde';
 
-const jsSHA = require('jssha/dist/sha3');
+const sha3_256 = require('js-sha3').sha3_256;
 
 export interface SerdeSerializable {
   serialize(serializer: serde.Serializer): void;
@@ -258,19 +259,19 @@ export async function privateKeyToPublicKey(privateKey: string): Promise<string>
 }
 
 export function publicKeyToAuthKey(publicKey: string): string {
-  const shaObj = new jsSHA("SHA3-256", "HEX", { encoding: "UTF8" });
-  shaObj.update(stripHexPrefix(publicKey));
-  shaObj.update("00");
-  const hash = shaObj.getHash("HEX");
+  const hasher = sha3_256.create()
+  hasher.update(fromHexString(stripHexPrefix(publicKey)))
+  hasher.update(fromHexString("00"))
+  const hash = hasher.hex()
   return addHexPrefix(hash)
 }
 
 export function publicKeyToAddress(publicKey: string): string {
-  const shaObj = new jsSHA("SHA3-256", "HEX", { encoding: "UTF8" });
-  shaObj.update(stripHexPrefix(publicKey));
-  shaObj.update("00");
-  const hash = shaObj.getHash("HEX");
-  const address = hash.slice(hash.length / 2);
+  const hasher = sha3_256.create()
+  hasher.update(fromHexString(stripHexPrefix(publicKey)))
+  hasher.update(fromHexString("00"))
+  const hash = hasher.hex()
+  const address = hash.slice(hash.length / 2)
   return addHexPrefix(address)
 }
 
