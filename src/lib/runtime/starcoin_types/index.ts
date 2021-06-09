@@ -1492,7 +1492,7 @@ export class ReceiptIdentifier {
     const se = new BcsSerializer();
     this.accountAddress.serialize(se);
 
-    const dataBuff = Buffer.concat([se.getBytes(), Buffer.from(this.authKey.value)])
+    const dataBuff = Buffer.concat([Buffer.from(se.getBytes()), Buffer.from(this.authKey.value)])
     const words = bech32.toWords(dataBuff)
     const wordsPrefixVersion = [Number(VERSION)].concat(words)
     const encodedStr = bech32.encode(PREFIX, wordsPrefixVersion)
