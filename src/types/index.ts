@@ -1,3 +1,5 @@
+import { BigNumberish } from "@ethersproject/bignumber";
+import { BytesLike } from "@ethersproject/bytes";
 import { uint128, uint64, uint8 } from '../lib/runtime/serde';
 
 export type Identifier = string;
@@ -306,6 +308,16 @@ export interface SignedUserTransactionView {
 }
 
 export interface TransactionRequest {
+  to?: string,
+  from?: string,
+  nonce?: BigNumberish,
+
+  gasLimit?: BigNumberish,
+  gasPrice?: BigNumberish,
+
+  data?: BytesLike,
+  value?: BigNumberish,
+
   sender?: AccountAddress;
   sender_public_key?: HexString;
   sequence_number?: U64;

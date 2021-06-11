@@ -10,14 +10,15 @@ import {
   shallowCopy,
 } from '@ethersproject/properties';
 import { ConnectionInfo, fetchJson } from '@ethersproject/web';
-import { Bytes, isBytes } from '@ethersproject/bytes';
+import { Bytes, isBytes, hexlify, hexValue } from '@ethersproject/bytes';
 import { getNetwork, Network, Networkish } from '../networks';
 import { version } from '../version';
 import { BaseProvider, CONSTANTS, Event, RPC_ACTION } from './base-provider';
 // eslint-disable-next-line import/order
-import { AccountAddress, ChainId, TransactionRequest } from '../types';
+import { ChainId, TransactionRequest } from '../types';
 import { Signer } from '../abstract-signer';
 import { Provider } from '../abstract-provider';
+import { checkProperties } from '../utils/properties';
 
 const logger = new Logger(version);
 
@@ -125,14 +126,14 @@ const _constructorGuard = {};
 
 export class JsonRpcSigner extends Signer {
   // eslint-disable-next-line no-use-before-define
-  readonly provider: JsonrpcProvider;
+  readonly provider: JsonRpcProvider;
   _index?: number;
   _address?: string;
 
   // eslint-disable-next-line no-use-before-define
   constructor(
     constructorGuard: any,
-    provider: JsonrpcProvider,
+    provider: JsonRpcProvider,
     addressOrIndex?: string | number
   ) {
     logger.checkNew(new.target, JsonRpcSigner);
@@ -191,20 +192,71 @@ export class JsonRpcSigner extends Signer {
       return Promise.resolve(this._address);
     }
 
-    return this.provider.listAccounts().then((accounts) => {
-      // eslint-disable-next-line no-underscore-dangle
+    return this.provider.send("stc_accounts", []).then((accounts) => {
       if (accounts.length <= this._index) {
-        // eslint-disable-next-line no-underscore-dangle
-        logger.throwError(
-          `unknown account #${this._index}`,
-          Logger.errors.UNSUPPORTED_OPERATION,
-          {
-            operation: 'getAddress',
-          }
-        );
+        logger.throwError("unknown account #" + this._index, Logger.errors.UNSUPPORTED_OPERATION, {
+          operation: "getAddress"
+        });
       }
-      // eslint-disable-next-line no-underscore-dangle
-      return accounts[this._index];
+      return this.provider.formatter.address(accounts[this._index])
+    });
+  }
+
+  sendUncheckedTransaction(transaction: Deferrable<TransactionRequest>): Promise<string> {
+    logger.debug('sendUncheckedTransaction', transaction);
+    transaction = shallowCopy(transaction);
+
+    const fromAddress = this.getAddress().then((address) => {
+      if (address) { address = address.toLowerCase(); }
+      return address;
+    });
+    logger.debug(fromAddress)
+    // The JSON-RPC for eth_sendTransaction uses 90000 gas; if the user
+    // wishes to use this, it is easy to specify explicitly, otherwise
+    // we look it up for them.
+    // if (transaction.gasLimit == null) {
+    //   const estimate = shallowCopy(transaction);
+    //   estimate.from = fromAddress;
+    //   transaction.gasLimit = this.provider.estimateGas(estimate);
+    // }
+
+    return resolveProperties({
+      tx: resolveProperties(transaction),
+      sender: fromAddress
+    }).then(({ tx, sender }) => {
+      if (tx.from != null) {
+        if (tx.from.toLowerCase() !== sender) {
+          logger.throwArgumentError("from address mismatch", "transaction", transaction);
+        }
+      } else {
+        tx.from = sender;
+      }
+
+      const hexTx = (<any>this.provider.constructor).hexlifyTransaction(tx, { from: true });
+      logger.debug(hexTx);
+      return this.provider.send("stc_sendTransaction", [hexTx]).then((hash) => {
+        return hash;
+      }, (error) => {
+        if (error.responseText) {
+          // See: JsonRpcProvider.sendTransaction (@TODO: Expose a ._throwError??)
+          if (error.responseText.indexOf("insufficient funds") >= 0) {
+            logger.throwError("insufficient funds", Logger.errors.INSUFFICIENT_FUNDS, {
+              transaction: tx
+            });
+          }
+          if (error.responseText.indexOf("nonce too low") >= 0) {
+            logger.throwError("nonce has already been used", Logger.errors.NONCE_EXPIRED, {
+              transaction: tx
+            });
+          }
+          if (error.responseText.indexOf("replacement transaction underpriced") >= 0) {
+            logger.throwError("replacement fee too low", Logger.errors.REPLACEMENT_UNDERPRICED, {
+              transaction: tx
+            });
+          }
+        }
+        throw error;
+      });
     });
   }
 
@@ -307,14 +359,17 @@ export class JsonRpcSigner extends Signer {
 //   }
 // }
 
-export class JsonrpcProvider extends BaseProvider {
+const allowedTransactionKeys: { [key: string]: boolean } = {
+  chainId: true, data: true, gasLimit: true, gasPrice: true, nonce: true, to: true, value: true
+}
+export class JsonRpcProvider extends BaseProvider {
   readonly connection: ConnectionInfo;
 
   _pendingFilter: Promise<number>;
   _nextId: number;
 
   constructor(url?: ConnectionInfo | string, network?: Networkish) {
-    logger.checkNew(new.target, JsonrpcProvider);
+    logger.checkNew(new.target, JsonRpcProvider);
 
     let networkOrReady: Networkish | Promise<Network> = network;
 
@@ -372,7 +427,7 @@ export class JsonrpcProvider extends BaseProvider {
         const chainInfo = await this.perform(RPC_ACTION.getChainInfo, null);
         chainId = chainInfo.chain_id;
         // eslint-disable-next-line no-empty
-      } catch (error) {}
+      } catch (error) { }
     }
 
     if (chainId != null) {
@@ -407,15 +462,6 @@ export class JsonrpcProvider extends BaseProvider {
   // getUncheckedSigner(addressOrIndex?: string | number): UncheckedJsonRpcSigner {
   //   return this.getSigner(addressOrIndex).connectUnchecked();
   // }
-
-  listAccounts(): Promise<Array<string>> {
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    return this.send('account.list', []).then(
-      (accounts: Array<{ address: AccountAddress }>) => {
-        return accounts.map(({ address }) => this.formatter.address(address));
-      }
-    );
-  }
 
   async getNowSeconds(): Promise<number> {
     const nodeInfo = await this.perform(RPC_ACTION.getNodeInfo, null);
@@ -642,51 +688,40 @@ export class JsonrpcProvider extends BaseProvider {
     super._stopEvent(event);
   }
 
-  // // Convert an ethers.js transaction into a JSON-RPC transaction
-  // //  - gasLimit => gas
-  // //  - All values hexlified
-  // //  - All numeric values zero-striped
-  // //  - All addresses are lowercased
-  // // NOTE: This allows a TransactionRequest, but all values should be resolved
-  // //       before this is called
-  // // @TODO: This will likely be removed in future versions and prepareRequest
-  // //        will be the preferred method for this.
-  // static hexlifyTransaction(
-  //   transaction: TransactionRequest,
-  //   allowExtra?: { [key: string]: boolean }
-  // ): { [key: string]: string } {
-  //   // Check only allowed properties are given
-  //   const allowed = shallowCopy(allowedTransactionKeys);
-  //   if (allowExtra) {
-  //     for (const key in allowExtra) {
-  //       if (allowExtra[key]) {
-  //         allowed[key] = true;
-  //       }
-  //     }
-  //   }
-  //   checkProperties(transaction, allowed);
-  //
-  //   const result: { [key: string]: string } = {};
-  //
-  //   // Some nodes (INFURA ropsten; INFURA mainnet is fine) do not like leading zeros.
-  //   ['gasLimit', 'gasPrice', 'nonce', 'value'].forEach(function (key) {
-  //     if ((<any>transaction)[key] == null) {
-  //       return;
-  //     }
-  //     const value = hexValue((<any>transaction)[key]);
-  //     if (key === 'gasLimit') {
-  //       key = 'gas';
-  //     }
-  //     result[key] = value;
-  //   });
-  //
-  //   ['from', 'to', 'data'].forEach(function (key) {
-  //     if ((<any>transaction)[key] == null) {
-  //       return;
-  //     }
-  //     result[key] = hexlify((<any>transaction)[key]);
-  //   });
-  //
-  //   return result;
-  // }
+  // Convert an ethers.js transaction into a JSON-RPC transaction
+  //  - gasLimit => gas
+  //  - All values hexlified
+  //  - All numeric values zero-striped
+  //  - All addresses are lowercased
+  // NOTE: This allows a TransactionRequest, but all values should be resolved
+  //       before this is called
+  // @TODO: This will likely be removed in future versions and prepareRequest
+  //        will be the preferred method for this.
+  static hexlifyTransaction(transaction: TransactionRequest, allowExtra?: { [key: string]: boolean }): { [key: string]: string } {
+    // Check only allowed properties are given
+    const allowed = shallowCopy(allowedTransactionKeys);
+    if (allowExtra) {
+      for (const key in allowExtra) {
+        if (allowExtra[key]) { allowed[key] = true; }
+      }
+    }
+    checkProperties(transaction, allowed);
+
+    const result: { [key: string]: string } = {};
+
+    // Some nodes (INFURA ropsten; INFURA mainnet is fine) do not like leading zeros.
+    ["gasLimit", "gasPrice", "nonce", "value"].forEach(function (key) {
+      if ((<any>transaction)[key] == null) { return; }
+      const value = hexValue((<any>transaction)[key]);
+      if (key === "gasLimit") { key = "gas"; }
+      result[key] = value;
+    });
+
+    ["from", "to", "data"].forEach(function (key) {
+      if ((<any>transaction)[key] == null) { return; }
+      result[key] = hexlify((<any>transaction)[key]);
+    });
+
+    return result;
+  }
 }

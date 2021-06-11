@@ -2,7 +2,7 @@ import { arrayify } from '@ethersproject/bytes';
 import { addressToSCS, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier, decodeReceiptIdentifier } from '.';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { toHexString } from '../utils/hex';
-import { JsonrpcProvider } from '../providers/jsonrpc-provider';
+import { JsonRpcProvider } from '../providers/jsonrpc-provider';
 import { encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction } from "../utils/tx";
 
 test("encoding address", () => {
@@ -54,7 +54,7 @@ test("encoding SignedUserTransaction hex", async () => {
 
   const nodeUrl = 'http://localhost:9850'
 
-  const provider = new JsonrpcProvider(nodeUrl);
+  const provider = new JsonRpcProvider(nodeUrl);
 
   const senderSequenceNumber = await provider.getSequenceNumber(senderAddressHex)
 
