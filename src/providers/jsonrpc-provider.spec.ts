@@ -78,131 +78,131 @@ describe('jsonrpc-provider', () => {
     let balances = await provider.getBalances('0x1');
   });
 
-  // test('txn sign using sender password and submit', async () => {
-  //   const signer = await provider.getSigner();
-  //   const password = ''; // put password into the quotes
-  //   await signer.unlock(password);
-  //   const txnRequest = {
-  //     script: {
-  //       code: '0x1::TransferScripts::peer_to_peer',
-  //       type_args: ['0x1::STC::STC'],
-  //       args: [
-  //         '0xc13b50bdb12e3fdd03c4e3b05e34926a',
-  //         'x""',
-  //         '100000u128',
-  //       ],
-  //     },
-  //   };
-  //   const txnOutput = await provider.dryRun(txnRequest);
+  test('txn sign using sender password and submit', async () => {
+    const signer = await provider.getSigner();
+    const password = ''; // put password into the quotes
+    await signer.unlock(password);
+    const txnRequest = {
+      script: {
+        code: '0x1::TransferScripts::peer_to_peer',
+        type_args: ['0x1::STC::STC'],
+        args: [
+          '0xc13b50bdb12e3fdd03c4e3b05e34926a',
+          'x""',
+          '100000u128',
+        ],
+      },
+    };
+    const txnOutput = await provider.dryRun(txnRequest);
 
-  //   const balanceBefore = await provider.getBalance(
-  //     '0xc13b50bdb12e3fdd03c4e3b05e34926a'
-  //   );
+    const balanceBefore = await provider.getBalance(
+      '0xc13b50bdb12e3fdd03c4e3b05e34926a'
+    );
 
-  //   const txn = await signer.sendTransaction(txnRequest);
-  //   const txnInfo = await txn.wait(1);
-  //   const balance = await provider.getBalance(
-  //     '0xc13b50bdb12e3fdd03c4e3b05e34926a'
-  //   );
-  //   if (balanceBefore !== undefined) {
-  //     // @ts-ignore
-  //     const diff = balance - balanceBefore;
-  //     expect(diff).toBe(100000);
-  //   } else {
-  //     expect(balance).toBe(100000);
-  //   }
-  // }, 10000);
+    const txn = await signer.sendTransaction(txnRequest);
+    const txnInfo = await txn.wait(1);
+    const balance = await provider.getBalance(
+      '0xc13b50bdb12e3fdd03c4e3b05e34926a'
+    );
+    if (balanceBefore !== undefined) {
+      // @ts-ignore
+      const diff = balance - balanceBefore;
+      expect(diff).toBe(100000);
+    } else {
+      expect(balance).toBe(100000);
+    }
+  }, 10000);
 
-  // test('txn sign using sender privateKey and submit(timeout in 2 minutes)', async () => {
-  //   // privateKey is generated in starcoin console using command:
-  //   // starcoin% account export <ADDRESS> -p <PASSWORD>
-  //   const senderPrivateKeyHex =
-  //     '0xe424e16db235e3f3b9ef2475516c51d4c15aa5287ceb364213698bd551eab4f2';
+  test('txn sign using sender privateKey and submit(timeout in 2 minutes)', async () => {
+    // privateKey is generated in starcoin console using command:
+    // starcoin% account export <ADDRESS> -p <PASSWORD>
+    const senderPrivateKeyHex =
+      '0xe424e16db235e3f3b9ef2475516c51d4c15aa5287ceb364213698bd551eab4f2';
 
-  //   const senderPublicKeyHex =
-  //     '0x704148879e1341243f754d62fa5228529ccb207be6bd3af20b2c5422f6f234d8';
+    const senderPublicKeyHex =
+      '0x704148879e1341243f754d62fa5228529ccb207be6bd3af20b2c5422f6f234d8';
 
-  //   const senderAddressHex = '0x319ccfe5fc73a2cdae11c40f31ca1b61';
+    const senderAddressHex = '0x319ccfe5fc73a2cdae11c40f31ca1b61';
 
-  //   const senderSequenceNumber = await provider.getSequenceNumber(
-  //     senderAddressHex
-  //   );
+    const senderSequenceNumber = await provider.getSequenceNumber(
+      senderAddressHex
+    );
 
-  //   // const receiverAddressHex = '0x84d6de1c82bea949966fd13e7896e381';
-  //   // const receiverAuthKeyHex = 'd9bddf7607b58be4331c888116e2365f84d6de1c82bea949966fd13e7896e381';
-  //   const receiver = '0x84d6de1c82bea949966fd13e7896e381'
-  //   let receiverAddressHex = ''
-  //   let receiverAuthKeyHex = ''
-  //   if (receiver.slice(0, 3) === 'stc') {
-  //     const receiptIdentifier = ReceiptIdentifier.decode(receiver)
-  //     receiverAddressHex = addressFromSCS(receiptIdentifier.accountAddress)
-  //     receiverAuthKeyHex = receiptIdentifier.authKey.hex()
-  //   } else {
-  //     receiverAddressHex = receiver
-  //     receiverAuthKeyHex = ''
-  //   }
+    // const receiverAddressHex = '0x84d6de1c82bea949966fd13e7896e381';
+    // const receiverAuthKeyHex = 'd9bddf7607b58be4331c888116e2365f84d6de1c82bea949966fd13e7896e381';
+    const receiver = '0x84d6de1c82bea949966fd13e7896e381'
+    let receiverAddressHex = ''
+    let receiverAuthKeyHex = ''
+    if (receiver.slice(0, 3) === 'stc') {
+      const receiptIdentifier = ReceiptIdentifier.decode(receiver)
+      receiverAddressHex = addressFromSCS(receiptIdentifier.accountAddress)
+      receiverAuthKeyHex = receiptIdentifier.authKey.hex()
+    } else {
+      receiverAddressHex = receiver
+      receiverAuthKeyHex = ''
+    }
 
-  //   const amount = 1024;
-  //   const sendAmountString = `${amount.toString()}u128`
-  //   const txnRequest = {
-  //     chain_id: chainId,
-  //     gas_unit_price: 1,
-  //     sender: senderAddressHex,
-  //     sender_public_key: senderPublicKeyHex,
-  //     sequence_number: senderSequenceNumber,
-  //     max_gas_amount: 10000000,
-  //     script: {
-  //       code: '0x1::TransferScripts::peer_to_peer',
-  //       type_args: ['0x1::STC::STC'],
-  //       args: [receiverAddressHex, `x"${receiverAuthKeyHex}"`, sendAmountString],
-  //     },
-  //   }
-  //   console.log({ txnRequest })
-  //   const txnOutput = await provider.dryRun(txnRequest)
-  //   console.log({ txnOutput })
+    const amount = 1024;
+    const sendAmountString = `${amount.toString()}u128`
+    const txnRequest = {
+      chain_id: chainId,
+      gas_unit_price: 1,
+      sender: senderAddressHex,
+      sender_public_key: senderPublicKeyHex,
+      sequence_number: senderSequenceNumber,
+      max_gas_amount: 10000000,
+      script: {
+        code: '0x1::TransferScripts::peer_to_peer',
+        type_args: ['0x1::STC::STC'],
+        args: [receiverAddressHex, `x"${receiverAuthKeyHex}"`, sendAmountString],
+      },
+    }
+    console.log({ txnRequest })
+    const txnOutput = await provider.dryRun(txnRequest)
+    console.log({ txnOutput })
 
-  //   // TODO: generate maxGasAmount from contract.dry_run -> gas_used
-  //   const maxGasAmount = 10000000;
+    // TODO: generate maxGasAmount from contract.dry_run -> gas_used
+    const maxGasAmount = 10000000;
 
-  //   // because the time system in dev network is relatively static,
-  //   // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
-  //   const nowSeconds = await provider.getNowSeconds();
-  //   // expired after 12 hours since Unix Epoch
-  //   const expirationTimestampSecs = nowSeconds + 43200;
+    // because the time system in dev network is relatively static,
+    // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
+    const nowSeconds = await provider.getNowSeconds();
+    // expired after 12 hours since Unix Epoch
+    const expirationTimestampSecs = nowSeconds + 43200;
 
-  //   const rawUserTransaction = generateRawUserTransaction(
-  //     senderAddressHex,
-  //     receiver,
-  //     amount,
-  //     maxGasAmount,
-  //     senderSequenceNumber,
-  //     expirationTimestampSecs,
-  //     chainId
-  //   );
-  //   console.log({ rawUserTransaction });
+    const rawUserTransaction = generateRawUserTransaction(
+      senderAddressHex,
+      receiver,
+      amount,
+      maxGasAmount,
+      senderSequenceNumber,
+      expirationTimestampSecs,
+      chainId
+    );
+    console.log({ rawUserTransaction });
 
-  //   const signedUserTransactionHex = await signRawUserTransaction(
-  //     senderPrivateKeyHex,
-  //     rawUserTransaction
-  //   );
+    const signedUserTransactionHex = await signRawUserTransaction(
+      senderPrivateKeyHex,
+      rawUserTransaction
+    );
 
-  //   console.log({ signedUserTransactionHex });
+    console.log({ signedUserTransactionHex });
 
-  //   const balanceBefore = await provider.getBalance(receiverAddressHex);
-  //   const txn = await provider.sendTransaction(signedUserTransactionHex);
-  //   console.log({ txn })
+    const balanceBefore = await provider.getBalance(receiverAddressHex);
+    const txn = await provider.sendTransaction(signedUserTransactionHex);
+    console.log({ txn })
 
-  //   const txnInfo = await txn.wait(1);
-  //   console.log({ txnInfo })
-  //   const balance = await provider.getBalance(receiverAddressHex);
-  //   if (balanceBefore !== undefined) {
-  //     // @ts-ignore
-  //     const diff = balance - balanceBefore;
-  //     expect(diff).toBe(amount);
-  //   } else {
-  //     expect(balance).toBe(amount);
-  //   }
-  // }, 120000);
+    const txnInfo = await txn.wait(1);
+    console.log({ txnInfo })
+    const balance = await provider.getBalance(receiverAddressHex);
+    if (balanceBefore !== undefined) {
+      // @ts-ignore
+      const diff = balance - balanceBefore;
+      expect(diff).toBe(amount);
+    } else {
+      expect(balance).toBe(amount);
+    }
+  }, 120000);
 
   test('Sign String Message', async () => {
     const signerAddress = '0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
