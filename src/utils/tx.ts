@@ -57,63 +57,17 @@ export function encodePackage(
 // Step 1: generate RawUserTransaction
 export function generateRawUserTransaction(
   senderAddress: HexString,
-  receiverInfo: string,
-  amount: U128,
+  payload: starcoin_types.TransactionPayload,
   maxGasAmount: U64,
   senderSequenceNumber: U64,
   expirationTimestampSecs: U64,
   chainId: U8
 ): starcoin_types.RawUserTransaction {
 
-  // Step 1-1: generate payload hex of ScriptFunction
-
-  let receiverAddress
-  let receiverAuthKeyBytes
-  if (receiverInfo.slice(0, 3) === 'stc') {
-    const receiptIdentifier = starcoin_types.ReceiptIdentifier.decode(receiverInfo)
-    receiverAddress = addressFromSCS(receiptIdentifier.accountAddress);
-    if (receiptIdentifier.authKey) {
-      receiverAuthKeyBytes = (() => {
-        const se = new BcsSerializer();
-        receiptIdentifier.authKey.serialize(se);
-        return se.getBytes();
-      })();
-    } else {
-      receiverAuthKeyBytes = Buffer.from('00', 'hex')
-    }
-  } else {
-    receiverAddress = receiverInfo
-    receiverAuthKeyBytes = Buffer.from('00', 'hex')
-  }
-
-
-  const functionId = '0x1::TransferScripts::peer_to_peer'
-
-  const address = '0x1';
-  const module = 'STC';
-  const name = 'STC';
-  const type_params = [];
-  const tyArgs = [{ Struct: { address, module, name, type_params } }]
-
-  // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
-  const amountSCSHex = (function () {
-    const se = new BcsSerializer();
-    se.serializeU128(BigInt(amount));
-    return hexlify(se.getBytes());
-  })();
-
-  const args = [
-    arrayify(receiverAddress),
-    receiverAuthKeyBytes,
-    arrayify(amountSCSHex)
-  ]
-
-  const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
-
   // Step 1-2: generate RawUserTransaction
   const sender = addressToSCS(senderAddress)
   const sequence_number = BigInt(senderSequenceNumber)
-  const payload = scriptFunction
+
   const max_gas_amount = BigInt(maxGasAmount)
   const gas_unit_price = BigInt(1)
   const gas_token_code = '0x1::STC::STC'

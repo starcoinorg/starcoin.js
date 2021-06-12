@@ -1,4 +1,4 @@
-import { arrayify } from '@ethersproject/bytes';
+import { arrayify, hexlify } from '@ethersproject/bytes';
 import { addressToSCS, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier, decodeReceiptIdentifier } from '.';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { toHexString } from '../utils/hex';
@@ -46,26 +46,23 @@ test("decoding txn payload", () => {
   expect(scriptFunction.args.length).toBe(3);
 });
 
-test("encoding SignedUserTransaction hex", async () => {
+test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async () => {
 
-  const senderPrivateKeyHex = '0x83c7829c68e1ad81ced10f69d11ea741f7f18c7a5f059215e8a965362a5ae25e'
+  const senderPrivateKeyHex = '0x...'
 
-  const senderAddressHex = '0x49624992dd72da077ee19d0be210406a'
+  const senderAddressHex = '0x0a6cd5d8711d88258adac029ffa6a3e4'
 
-  const nodeUrl = 'http://localhost:9850'
+  const nodeUrl = 'https://main-seed.starcoin.org'
 
   const provider = new JsonRpcProvider(nodeUrl);
 
   const senderSequenceNumber = await provider.getSequenceNumber(senderAddressHex)
 
-  const receiverAddressHex = '0x621500bf2b4aad17a690cb24f9a225c6'
-
-  const amount = 1000000000
-
+  console.log({ senderSequenceNumber })
   // TODO: generate maxGasAmount from contract.dry_run -> gas_used
-  const maxGasAmount = 124191
+  const maxGasAmount = 10000000
 
-  const chainId = 254
+  const chainId = 1
 
   // because the time system in dev network is relatively static, 
   // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
@@ -73,10 +70,63 @@ test("encoding SignedUserTransaction hex", async () => {
   // expired after 12 hours since Unix Epoch
   const expirationTimestampSecs = nowSeconds + 43200
 
+  const functionId = '0x1::DaoVoteScripts::cast_vote'
+
+  const tyArgs = [
+    { Struct: { address: '0x1', module: 'STC', name: 'STC', type_params: [] } },
+    { Struct: { address: '0x1', module: 'UpgradeModuleDaoProposal', name: 'UpgradeModuleV2', type_params: [] } }
+  ]
+
+  const proposerAdressHex = '0xb2aa52f94db4516c5beecef363af850a'
+  const proposalId = 0
+  const agree = true
+  const votes = 10000000
+
+  // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
+  const proposalIdSCSHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeU64(proposalId);
+    return hexlify(se.getBytes());
+  })();
+  console.log({ proposalIdSCSHex });
+
+  // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
+  const agreeSCSHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeBool(agree);
+    return hexlify(se.getBytes());
+  })();
+
+  console.log({ agreeSCSHex });
+  console.log(arrayify(agreeSCSHex));
+
+  // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
+  const votesSCSHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeU128(BigInt(votes));
+    return hexlify(se.getBytes());
+  })();
+
+  console.log({ votesSCSHex });
+  console.log(arrayify(votesSCSHex));
+
+  const args = [
+    arrayify(proposerAdressHex),
+    arrayify(proposalIdSCSHex),
+    arrayify(agreeSCSHex),
+    arrayify(votesSCSHex)
+  ]
+
+  const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
+
+  const scriptFunctionSCSHex = (function () {
+    const se = new BcsSerializer();
+    scriptFunction.serialize(se);
+    return hexlify(se.getBytes());
+  })();
   const rawUserTransaction = generateRawUserTransaction(
     senderAddressHex,
-    receiverAddressHex,
-    amount,
+    scriptFunction,
     maxGasAmount,
     senderSequenceNumber,
     expirationTimestampSecs,
@@ -88,6 +138,90 @@ test("encoding SignedUserTransaction hex", async () => {
     rawUserTransaction
   );
 
+  console.log({ hex })
+
+  const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
+
+  expect(signedUserTransactionDecoded.raw_txn.sender).toBe(senderAddressHex);
+});
+
+test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", async () => {
+
+  const senderPrivateKeyHex = '0x...'
+
+  const senderAddressHex = '0x0a6cd5d8711d88258adac029ffa6a3e4'
+
+  const nodeUrl = 'https://main-seed.starcoin.org'
+
+  const provider = new JsonRpcProvider(nodeUrl);
+
+  const senderSequenceNumber = await provider.getSequenceNumber(senderAddressHex)
+
+  // TODO: generate maxGasAmount from contract.dry_run -> gas_used
+  const maxGasAmount = 10000000
+
+  const chainId = 1
+
+  // because the time system in dev network is relatively static, 
+  // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
+  const nowSeconds = await provider.getNowSeconds()
+  // expired after 12 hours since Unix Epoch
+  const expirationTimestampSecs = nowSeconds + 43200
+
+  const receiver = '0xd365E954D0Db53CCe197229db866C29F'
+  const amount = 10000000
+  // Step 1-1: generate payload hex of ScriptFunction
+  let receiverAddressHex
+  let receiverAuthKeyHex
+  let receiverAuthKeyBytes
+  if (receiver.slice(0, 3) === 'stc') {
+    const receiptIdentifierView = decodeReceiptIdentifier(receiver)
+    receiverAddressHex = receiptIdentifierView.accountAddress
+    receiverAddressHex = receiptIdentifierView.authKey
+    if (receiverAuthKeyHex) {
+      receiverAuthKeyBytes = Buffer.from(receiverAuthKeyHex, 'hex')
+    } else {
+      receiverAuthKeyBytes = Buffer.from('00', 'hex')
+    }
+  } else {
+    receiverAddressHex = receiver
+    receiverAuthKeyBytes = Buffer.from('00', 'hex')
+  }
+
+  const functionId = '0x1::TransferScripts::peer_to_peer'
+
+  const tyArgs = [{ Struct: { address: '0x1', module: 'STC', name: 'STC', type_params: [] } }]
+
+  // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
+  const amountSCSHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeU128(BigInt(amount));
+    return hexlify(se.getBytes());
+  })();
+
+  const args = [
+    arrayify(receiverAddressHex),
+    receiverAuthKeyBytes,
+    arrayify(amountSCSHex)
+  ]
+
+  const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
+
+  const rawUserTransaction = generateRawUserTransaction(
+    senderAddressHex,
+    scriptFunction,
+    maxGasAmount,
+    senderSequenceNumber,
+    expirationTimestampSecs,
+    chainId
+  );
+
+  const hex = await signRawUserTransaction(
+    senderPrivateKeyHex,
+    rawUserTransaction
+  );
+
+  console.log({ hex })
   const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
 
   expect(signedUserTransactionDecoded.raw_txn.sender).toBe(senderAddressHex);
