@@ -58,7 +58,6 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
 
   const senderSequenceNumber = await provider.getSequenceNumber(senderAddressHex)
 
-  console.log({ senderSequenceNumber })
   // TODO: generate maxGasAmount from contract.dry_run -> gas_used
   const maxGasAmount = 10000000
 
@@ -88,7 +87,6 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
     se.serializeU64(proposalId);
     return hexlify(se.getBytes());
   })();
-  console.log({ proposalIdSCSHex });
 
   // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
   const agreeSCSHex = (function () {
@@ -97,18 +95,12 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
     return hexlify(se.getBytes());
   })();
 
-  console.log({ agreeSCSHex });
-  console.log(arrayify(agreeSCSHex));
-
   // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
   const votesSCSHex = (function () {
     const se = new BcsSerializer();
     se.serializeU128(BigInt(votes));
     return hexlify(se.getBytes());
   })();
-
-  console.log({ votesSCSHex });
-  console.log(arrayify(votesSCSHex));
 
   const args = [
     arrayify(proposerAdressHex),
@@ -119,11 +111,6 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
 
   const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
 
-  const scriptFunctionSCSHex = (function () {
-    const se = new BcsSerializer();
-    scriptFunction.serialize(se);
-    return hexlify(se.getBytes());
-  })();
   const rawUserTransaction = generateRawUserTransaction(
     senderAddressHex,
     scriptFunction,
