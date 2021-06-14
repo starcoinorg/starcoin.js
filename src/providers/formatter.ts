@@ -2,12 +2,12 @@ import { BigNumber } from '@ethersproject/bignumber';
 import {
   BytesLike,
   hexDataLength,
-  hexStripZeros,
   hexValue,
   isHexString
 } from '@ethersproject/bytes';
 import { Logger } from '@ethersproject/logger';
 import { shallowCopy } from '@ethersproject/properties';
+import { addHexPrefix } from 'ethereumjs-util';
 
 import {
   TransactionAuthenticator,
@@ -30,7 +30,7 @@ import {
   TransactionEventView,
   TransactionInfoView, TransactionOutput,
   TransactionResponse, TransactionWriteAction,
-  RawUserTransactionView,SignedUserTransactionView
+  RawUserTransactionView, SignedUserTransactionView
 
 } from '../types';
 import { version } from '../version';
@@ -161,7 +161,7 @@ export class Formatter {
     const txnBlockInfo = {
       block_hash: Formatter.allowNull(hash),
       block_number: Formatter.allowNull(u64),
-      transaction_hash: Formatter.allowNull(hash, ),
+      transaction_hash: Formatter.allowNull(hash,),
       transaction_index: Formatter.allowNull(number)
     };
 
@@ -368,7 +368,7 @@ export class Formatter {
     if (typeof number === 'number') {
       return number.toString();
     }
-    throw new Error(`invalid bigint: ${  number}`);
+    throw new Error(`invalid bigint: ${number}`);
   }
 
   static bigint(number: any): number | bigint {
@@ -377,14 +377,14 @@ export class Formatter {
       if (bn > Number.MAX_SAFE_INTEGER) {
         return bn;
       }
-        // eslint-disable-next-line radix
-        return Number.parseInt(number);
+      // eslint-disable-next-line radix
+      return Number.parseInt(number);
 
     }
     if (typeof number === 'number') {
       return number;
     }
-    throw new TypeError(`invalid bigint: ${  number}`);
+    throw new TypeError(`invalid bigint: ${number}`);
   }
 
   // Strict! Used on input.
@@ -406,13 +406,13 @@ export class Formatter {
         return false;
       }
     }
-    throw new Error(`invalid boolean - ${  value}`);
+    throw new Error(`invalid boolean - ${value}`);
   }
 
   hex(value: any, strict?: boolean): string {
     if (typeof value === 'string') {
       if (!strict && value.slice(0, 2) !== '0x') {
-        value = `0x${  value}`;
+        value = `0x${value}`;
       }
       if (isHexString(value)) {
         return value.toLowerCase();
@@ -424,7 +424,7 @@ export class Formatter {
   data(value: any, strict?: boolean): string {
     const result = this.hex(value, strict);
     if (result.length % 2 !== 0) {
-      throw new Error(`invalid data; odd-length - ${  value}`);
+      throw new Error(`invalid data; odd-length - ${value}`);
     }
     return result;
   }
@@ -439,7 +439,7 @@ export class Formatter {
     if (hexDataLength(result) !== 16) {
       return logger.throwArgumentError('invalid address', 'value', value);
     }
-    return hexStripZeros(value);
+    return addHexPrefix(value);
   }
 
   // Strict! Used on input.
@@ -669,7 +669,7 @@ export class Formatter {
 
   // if value is null-ish, nullValue is returned
   static allowNull(format: FormatFunc, nullValue?: any): FormatFunc {
-    return function(value: any) {
+    return function (value: any) {
       if (value == undefined) {
         return nullValue;
       }
@@ -679,7 +679,7 @@ export class Formatter {
 
   // If value is false-ish, replaceValue is returned
   static allowFalsish(format: FormatFunc, replaceValue: any): FormatFunc {
-    return function(value: any) {
+    return function (value: any) {
       if (!value) {
         return replaceValue;
       }
@@ -689,14 +689,14 @@ export class Formatter {
 
   // Requires an Array satisfying check
   static arrayOf(format: FormatFunc): FormatFunc {
-    return function(array: any): Array<any> {
+    return function (array: any): Array<any> {
       if (!Array.isArray(array)) {
         throw new TypeError('not an array');
       }
 
       const result: any = [];
 
-      array.forEach(function(value) {
+      array.forEach(function (value) {
         result.push(format(value));
       });
 
