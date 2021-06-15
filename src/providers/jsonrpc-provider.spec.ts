@@ -1,7 +1,9 @@
 import { JsonRpcProvider } from '.';
-import { generateRawUserTransaction, signRawUserTransaction } from '../utils/tx';
+import { arrayify, hexlify } from '@ethersproject/bytes';
+import { BcsSerializer } from '../lib/runtime/bcs';
+import { encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction } from '../utils/tx';
 import { ReceiptIdentifier } from '../lib/runtime/starcoin_types';
-import { addressFromSCS } from '../encoding';
+import { addressFromSCS, decodeReceiptIdentifier } from '../encoding';
 
 describe('jsonrpc-provider', () => {
   // let provider = new JsonRpcProvider("http://39.102.41.156:9850", undefined);
@@ -131,18 +133,26 @@ describe('jsonrpc-provider', () => {
     // const receiverAddressHex = '0x84d6de1c82bea949966fd13e7896e381';
     // const receiverAuthKeyHex = 'd9bddf7607b58be4331c888116e2365f84d6de1c82bea949966fd13e7896e381';
     const receiver = '0x84d6de1c82bea949966fd13e7896e381'
-    let receiverAddressHex = ''
-    let receiverAuthKeyHex = ''
-    if (receiver.slice(0, 3) === 'stc') {
-      const receiptIdentifier = ReceiptIdentifier.decode(receiver)
-      receiverAddressHex = addressFromSCS(receiptIdentifier.accountAddress)
-      receiverAuthKeyHex = receiptIdentifier.authKey.hex()
-    } else {
-      receiverAddressHex = receiver
-      receiverAuthKeyHex = ''
-    }
 
     const amount = 1024;
+    // Step 1-1: generate payload hex of ScriptFunction
+    let receiverAddressHex
+    let receiverAuthKeyHex
+    let receiverAuthKeyBytes
+    if (receiver.slice(0, 3) === 'stc') {
+      const receiptIdentifierView = decodeReceiptIdentifier(receiver)
+      receiverAddressHex = receiptIdentifierView.accountAddress
+      receiverAddressHex = receiptIdentifierView.authKey
+      if (receiverAuthKeyHex) {
+        receiverAuthKeyBytes = Buffer.from(receiverAuthKeyHex, 'hex')
+      } else {
+        receiverAuthKeyBytes = Buffer.from('00', 'hex')
+      }
+    } else {
+      receiverAddressHex = receiver
+      receiverAuthKeyBytes = Buffer.from('00', 'hex')
+    }
+
     const sendAmountString = `${amount.toString()}u128`
     const txnRequest = {
       chain_id: chainId,
@@ -157,9 +167,7 @@ describe('jsonrpc-provider', () => {
         args: [receiverAddressHex, `x"${receiverAuthKeyHex}"`, sendAmountString],
       },
     }
-    console.log({ txnRequest })
     const txnOutput = await provider.dryRun(txnRequest)
-    console.log({ txnOutput })
 
     // TODO: generate maxGasAmount from contract.dry_run -> gas_used
     const maxGasAmount = 10000000;
@@ -170,30 +178,43 @@ describe('jsonrpc-provider', () => {
     // expired after 12 hours since Unix Epoch
     const expirationTimestampSecs = nowSeconds + 43200;
 
+    const functionId = '0x1::TransferScripts::peer_to_peer'
+
+    const tyArgs = [{ Struct: { address: '0x1', module: 'STC', name: 'STC', type_params: [] } }]
+
+    // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
+    const amountSCSHex = (function () {
+      const se = new BcsSerializer();
+      se.serializeU128(BigInt(amount));
+      return hexlify(se.getBytes());
+    })();
+
+    const args = [
+      arrayify(receiverAddressHex),
+      receiverAuthKeyBytes,
+      arrayify(amountSCSHex)
+    ]
+
+    const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
+
     const rawUserTransaction = generateRawUserTransaction(
       senderAddressHex,
-      receiver,
-      amount,
+      scriptFunction,
       maxGasAmount,
       senderSequenceNumber,
       expirationTimestampSecs,
       chainId
     );
-    console.log({ rawUserTransaction });
 
     const signedUserTransactionHex = await signRawUserTransaction(
       senderPrivateKeyHex,
       rawUserTransaction
     );
 
-    console.log({ signedUserTransactionHex });
-
     const balanceBefore = await provider.getBalance(receiverAddressHex);
     const txn = await provider.sendTransaction(signedUserTransactionHex);
-    console.log({ txn })
 
     const txnInfo = await txn.wait(1);
-    console.log({ txnInfo })
     const balance = await provider.getBalance(receiverAddressHex);
     if (balanceBefore !== undefined) {
       // @ts-ignore
