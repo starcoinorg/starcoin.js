@@ -4,7 +4,7 @@ import { arrayify, hexlify } from '@ethersproject/bytes';
 import { bytes } from '../lib/runtime/serde';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { BcsSerializer } from '../lib/runtime/bcs';
-import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U } from '../types';
+import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U8 } from '../types';
 import { addressToSCS, addressFromSCS, typeTagToSCS } from '../encoding';
 import { createRawUserTransactionHasher } from "../crypto_hash";
 
