@@ -1,9 +1,10 @@
+import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { addressToSCS, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier, decodeReceiptIdentifier } from '.';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { toHexString } from '../utils/hex';
 import { JsonRpcProvider } from '../providers/jsonrpc-provider';
-import { encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction } from "../utils/tx";
+import { encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags } from "../utils/tx";
 
 test("encoding address", () => {
   expect(addressToSCS("0x1").value.length).toBe(16);
@@ -14,12 +15,8 @@ test("encoding TransactionPayload->ScriptFunction hex", () => {
 
   const functionId = '0x1::TransferScripts::peer_to_peer'
 
-  const address = '0x1';
-  // const address = '0x00000000000000000000000000000001';  // works too
-  const module = 'STC';
-  const name = 'STC';
-  const type_params = [];
-  const tyArgs = [{ Struct: { address, module, name, type_params } }]
+  const strTypeArgs = ['0x1::STC::STC']
+  const tyArgs = encodeStructTypeTags(strTypeArgs)
 
   const args = [
     arrayify('0x1df9157f14b0041eed18dcc56520d829'),
@@ -56,7 +53,7 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
 
   const provider = new JsonRpcProvider(nodeUrl);
 
-  const senderSequenceNumber = await provider.getSequenceNumber(senderAddressHex)
+  // const senderSequenceNumber = await provider.getSequenceNumber(senderAddressHex)
 
   // TODO: generate maxGasAmount from contract.dry_run -> gas_used
   const maxGasAmount = 10000000
@@ -65,21 +62,21 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
 
   // because the time system in dev network is relatively static, 
   // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
-  const nowSeconds = await provider.getNowSeconds()
+  // const nowSeconds = await provider.getNowSeconds()
   // expired after 12 hours since Unix Epoch
-  const expirationTimestampSecs = nowSeconds + 43200
+  // const expirationTimestampSecs = nowSeconds + 43200
 
-  const functionId = '0x1::DaoVoteScripts::cast_vote'
-
-  const tyArgs = [
-    { Struct: { address: '0x1', module: 'STC', name: 'STC', type_params: [] } },
-    { Struct: { address: '0x1', module: 'UpgradeModuleDaoProposal', name: 'UpgradeModuleV2', type_params: [] } }
-  ]
-
-  const proposerAdressHex = '0xb2aa52f94db4516c5beecef363af850a'
-  const proposalId = 0
-  const agree = true
-  const votes = 10000000
+  const sendAmount = 0.01;
+  const config = { creator: "0xb2aa52f94db4516c5beecef363af850a", id: 1, type_args_1: "0x1::OnChainConfigDao::OnChainConfigUpdate<0x1::TransactionPublishOption::TransactionPublishOption, d::e::f>" };
+  const functionId = '0x1::DaoVoteScripts::cast_vote';
+  const strTypeArgs = ['0x1::STC::STC', config.type_args_1]
+  const tyArgs = encodeStructTypeTags(strTypeArgs)
+  console.log(tyArgs);
+  const proposerAdressHex = config.creator;
+  const proposalId = config.id;
+  const agree = true; // yes: true; no: false
+  const votes = sendAmount * 1000000000; // sendAmount * 1e9
+  // console.log('vote: ', votes.toString());
 
   // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
   const proposalIdSCSHex = (function () {
@@ -87,49 +84,56 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
     se.serializeU64(proposalId);
     return hexlify(se.getBytes());
   })();
-
   // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
   const agreeSCSHex = (function () {
     const se = new BcsSerializer();
     se.serializeBool(agree);
     return hexlify(se.getBytes());
   })();
-
   // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
   const votesSCSHex = (function () {
     const se = new BcsSerializer();
-    se.serializeU128(BigInt(votes));
+    se.serializeU128(votes);
     return hexlify(se.getBytes());
   })();
-
   const args = [
     arrayify(proposerAdressHex),
     arrayify(proposalIdSCSHex),
     arrayify(agreeSCSHex),
-    arrayify(votesSCSHex)
-  ]
+    arrayify(votesSCSHex),
+  ];
+  console.log({ args });
 
   const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
 
-  const rawUserTransaction = generateRawUserTransaction(
-    senderAddressHex,
-    scriptFunction,
-    maxGasAmount,
-    senderSequenceNumber,
-    expirationTimestampSecs,
-    chainId
-  );
+  console.log(scriptFunction);
 
-  const hex = await signRawUserTransaction(
-    senderPrivateKeyHex,
-    rawUserTransaction
-  );
+  const payloadInHex = (function () {
+    const se = new BcsSerializer();
+    scriptFunction.serialize(se);
+    return hexlify(se.getBytes());
+  })();
+  console.log(payloadInHex);
 
-  console.log({ hex })
+  // const rawUserTransaction = generateRawUserTransaction(
+  //   senderAddressHex,
+  //   scriptFunction,
+  //   maxGasAmount,
+  //   senderSequenceNumber,
+  //   expirationTimestampSecs,
+  //   chainId
+  // );
 
-  const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
+  // const hex = await signRawUserTransaction(
+  //   senderPrivateKeyHex,
+  //   rawUserTransaction
+  // );
 
-  expect(signedUserTransactionDecoded.raw_txn.sender).toBe(senderAddressHex);
+  // console.log({ hex })
+
+  // const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
+
+  // expect(signedUserTransactionDecoded.raw_txn.sender).toBe(senderAddressHex);
 });
 
 test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", async () => {
@@ -177,7 +181,8 @@ test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", a
 
   const functionId = '0x1::TransferScripts::peer_to_peer'
 
-  const tyArgs = [{ Struct: { address: '0x1', module: 'STC', name: 'STC', type_params: [] } }]
+  const strTypeArgs = ['0x1::STC::STC']
+  const tyArgs = encodeStructTypeTags(strTypeArgs)
 
   // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
   const amountSCSHex = (function () {
@@ -299,3 +304,22 @@ test("encode && decode receipt identifier", () => {
   })();
 
 });
+
+test("encode struct type args: send stc", () => {
+  const strTypeArgs = ['0x1::STC::STC']
+  const structTypeTags = encodeStructTypeTags(strTypeArgs)
+  console.log(strTypeArgs)
+  console.log(JSON.stringify(structTypeTags, undefined, 2))
+  expect(structTypeTags.length).toBe(1)
+});
+
+test("encode struct type args: vote", () => {
+  const strTypeArgs = ['0x1::STC::STC', '0x1::OnChainConfigDao::OnChainConfigUpdate<0x1::TransactionPublishOption::TransactionPublishOption>']
+  const structTypeTags = encodeStructTypeTags(strTypeArgs)
+  console.log(strTypeArgs)
+  console.log(JSON.stringify(structTypeTags, undefined, 2))
+  expect(structTypeTags.length).toBe(2)
+  expect(structTypeTags[1]['Struct'].type_params.length).toBe(1)
+});
+
+

@@ -4,7 +4,7 @@ import { arrayify, hexlify } from '@ethersproject/bytes';
 import { bytes } from '../lib/runtime/serde';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { BcsSerializer } from '../lib/runtime/bcs';
-import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U8 } from '../types';
+import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U } from '../types';
 import { addressToSCS, addressFromSCS, typeTagToSCS } from '../encoding';
 import { createRawUserTransactionHasher } from "../crypto_hash";
 
@@ -147,4 +147,67 @@ export async function signRawUserTransaction(
   const hex = getSignedUserTransactionHex(signedUserTransaction)
 
   return hex
+}
+
+function encodeStructTypeTag(
+  str: string
+): TypeTag {
+  const arr = str.split('<');
+  const arr1 = arr[0].split('::');
+  const address = arr1[0];
+  const module = arr1[1];
+  const name = arr1[2];
+
+  const params = arr[1] ? arr[1].replace('>', '').split(',') : [];
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const type_params: TypeTag[] = [];
+  if (params.length > 0) {
+    params.forEach((param: string) => {
+      type_params.push(encodeStructTypeTag(param));
+    });
+  }
+
+  const result: TypeTag = {
+    Struct: {
+      address,
+      module,
+      name,
+      type_params,
+    },
+  }
+  return result
+}
+
+/**
+ * while generate ScriptFunction, we need to encode a string array:
+[
+  'address1::module1::name1<address2::module2::name2>'
+]
+
+into a TypeTag array:
+
+[
+  {
+    "Struct": {
+      "address": "address1",
+      "module": "module1",
+      "name": "name1",
+      "type_params": [
+        {
+          "Struct": {
+            "address": "address2",
+            "module": "module2",
+            "name": "name2",
+            "type_params": []
+          }
+        }
+      ]
+    }
+  }
+]
+ */
+export function encodeStructTypeTags(
+  typeArgsString: string[]
+): TypeTag[] {
+  return typeArgsString.map((str) => encodeStructTypeTag(str))
 }

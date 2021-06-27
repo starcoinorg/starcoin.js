@@ -1,7 +1,7 @@
 import { JsonRpcProvider } from '.';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { BcsSerializer } from '../lib/runtime/bcs';
-import { encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction } from '../utils/tx';
+import { encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags } from '../utils/tx';
 import { ReceiptIdentifier } from '../lib/runtime/starcoin_types';
 import { addressFromSCS, decodeReceiptIdentifier } from '../encoding';
 
@@ -142,7 +142,7 @@ describe('jsonrpc-provider', () => {
     if (receiver.slice(0, 3) === 'stc') {
       const receiptIdentifierView = decodeReceiptIdentifier(receiver)
       receiverAddressHex = receiptIdentifierView.accountAddress
-      receiverAddressHex = receiptIdentifierView.authKey
+      receiverAuthKeyHex = receiptIdentifierView.authKey
       if (receiverAuthKeyHex) {
         receiverAuthKeyBytes = Buffer.from(receiverAuthKeyHex, 'hex')
       } else {
@@ -153,7 +153,7 @@ describe('jsonrpc-provider', () => {
       receiverAuthKeyBytes = Buffer.from('00', 'hex')
     }
 
-    const sendAmountString = `${amount.toString()}u128`
+    const sendAmountString = `${ amount.toString() }u128`
     const txnRequest = {
       chain_id: chainId,
       gas_unit_price: 1,
@@ -164,7 +164,7 @@ describe('jsonrpc-provider', () => {
       script: {
         code: '0x1::TransferScripts::peer_to_peer',
         type_args: ['0x1::STC::STC'],
-        args: [receiverAddressHex, `x"${receiverAuthKeyHex}"`, sendAmountString],
+        args: [receiverAddressHex, `x"${ receiverAuthKeyHex }"`, sendAmountString],
       },
     }
     const txnOutput = await provider.dryRun(txnRequest)
@@ -180,7 +180,8 @@ describe('jsonrpc-provider', () => {
 
     const functionId = '0x1::TransferScripts::peer_to_peer'
 
-    const tyArgs = [{ Struct: { address: '0x1', module: 'STC', name: 'STC', type_params: [] } }]
+    const strTypeArgs = ['0x1::STC::STC']
+    const tyArgs = encodeStructTypeTags(strTypeArgs)
 
     // Multiple BcsSerializers should be used in different closures, otherwise, the latter will be contaminated by the former.
     const amountSCSHex = (function () {
@@ -200,7 +201,7 @@ describe('jsonrpc-provider', () => {
     const rawUserTransaction = generateRawUserTransaction(
       senderAddressHex,
       scriptFunction,
-      maxGasAmount,
+      gas_used,
       senderSequenceNumber,
       expirationTimestampSecs,
       chainId
