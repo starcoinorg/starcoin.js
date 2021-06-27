@@ -47,8 +47,8 @@ export function decodeSignedUserTransaction(
 ): SignedUserTransactionView {
   const bytes = arrayify(data);
   const scsData = (function () {
-    const se = new BcsDeserializer(bytes);
-    return starcoin_types.SignedUserTransaction.deserialize(se);
+    const de = new BcsDeserializer(bytes);
+    return starcoin_types.SignedUserTransaction.deserialize(de);
   })();
 
   let authenticator;
