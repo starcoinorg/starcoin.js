@@ -1,12 +1,13 @@
 import * as ed from '@starcoin/stc-ed25519';
 import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
 import { arrayify, hexlify } from '@ethersproject/bytes';
-import { bytes } from '../lib/runtime/serde';
+import {bytes, Deserializer, Optional, Seq, Serializer} from '../lib/runtime/serde';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U8 } from '../types';
 import { addressToSCS, addressFromSCS, typeTagToSCS } from '../encoding';
-import { createRawUserTransactionHasher } from "../crypto_hash";
+import { createRawUserTransactionHasher} from "../crypto_hash";
+import {AccountAddress, Helpers, Module, ScriptFunction} from "../lib/runtime/starcoin_types";
 
 export function encodeTransactionScript(
   code: bytes,
@@ -57,7 +58,7 @@ export function encodePackage(
 // Step 1: generate RawUserTransaction
 export function generateRawUserTransaction(
   senderAddress: HexString,
-  payload: starcoin_types.TransactionPayload,
+  payload: starcoin_types.TransactionPayloadVariantPackage,
   maxGasAmount: U64,
   senderSequenceNumber: U64,
   expirationTimestampSecs: U64,
@@ -178,34 +179,31 @@ function encodeStructTypeTag(
   return result
 }
 
-/**
- * while generate ScriptFunction, we need to encode a string array:
-[
-  'address1::module1::name1<address2::module2::name2>'
-]
+// Step 1: generate RawUserTransaction
+export function generateRawUserTransactionForPackage(
+  senderAddress: HexString,
+  payload: starcoin_types.Package,
+  maxGasAmount: U64,
+  senderSequenceNumber: U64,
+  expirationTimestampSecs: U64,
+  chainId: U8
+): starcoin_types.RawUserTransaction {
 
-into a TypeTag array:
+  // Step 1-2: generate RawUserTransaction
+  const sender = addressToSCS(senderAddress)
+  const sequence_number = BigInt(senderSequenceNumber)
 
-[
-  {
-    "Struct": {
-      "address": "address1",
-      "module": "module1",
-      "name": "name1",
-      "type_params": [
-        {
-          "Struct": {
-            "address": "address2",
-            "module": "module2",
-            "name": "name2",
-            "type_params": []
-          }
-        }
-      ]
-    }
-  }
-]
- */
+  const max_gas_amount = BigInt(maxGasAmount)
+  const gas_unit_price = BigInt(1)
+  const gas_token_code = '0x1::STC::STC'
+  const expiration_timestamp_secs = BigInt(expirationTimestampSecs)
+  const chain_id = new starcoin_types.ChainId(chainId)
+
+  const rawUserTransaction = new starcoin_types.RawUserTransaction(sender, sequence_number, payload, max_gas_amount, gas_unit_price, gas_token_code, expiration_timestamp_secs, chain_id)
+
+  return rawUserTransaction
+}
+
 export function encodeStructTypeTags(
   typeArgsString: string[]
 ): TypeTag[] {
