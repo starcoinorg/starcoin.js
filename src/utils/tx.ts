@@ -58,7 +58,7 @@ export function encodePackage(
 // Step 1: generate RawUserTransaction
 export function generateRawUserTransaction(
   senderAddress: HexString,
-  payload: starcoin_types.TransactionPayloadVariantPackage,
+  payload: starcoin_types.TransactionPayload,
   maxGasAmount: U64,
   senderSequenceNumber: U64,
   expirationTimestampSecs: U64,
