@@ -9,10 +9,10 @@ import * as starcoin_types from "../lib/runtime/starcoin_types";
 describe('jsonrpc-provider', () => {
   // let provider = new JsonRpcProvider("http://39.102.41.156:9850", undefined);
 
-  // const nodeUrl = 'http://localhost:9850';
-  // const chainId = 254;
-  const nodeUrl = 'https://barnard.seed.starcoin.org';
-  const chainId = 251;
+  const nodeUrl = 'http://localhost:9851';
+  const chainId = 254;
+  // const nodeUrl = 'https://barnard.seed.starcoin.org';
+  // const chainId = 251;
 
 
   const provider = new JsonRpcProvider(nodeUrl);
@@ -202,7 +202,7 @@ describe('jsonrpc-provider', () => {
     const rawUserTransaction = generateRawUserTransaction(
       senderAddressHex,
       scriptFunction,
-      gas_used,
+      maxGasAmount,
       senderSequenceNumber,
       expirationTimestampSecs,
       chainId
@@ -252,7 +252,6 @@ describe('jsonrpc-provider', () => {
       '0xc51dada886afe59d4651f36b56f3c4a1a84da53dfbddf396d81a5b36ab5cdc265aa1559ad3185b714cb8b62583c4172833026820e6cf264a02f0e3ebd424301a80a15c3e2381c0419a91477805a3c5d60131d353eb29313a786584d4565fb203'
     );
   }, 10000);
-});
 
 test('deployPackage', async () => {
   // privateKey is generated in starcoin console using command:
