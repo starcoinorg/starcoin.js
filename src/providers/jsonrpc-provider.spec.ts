@@ -201,7 +201,7 @@ describe('jsonrpc-provider', () => {
     const rawUserTransaction = generateRawUserTransaction(
       senderAddressHex,
       scriptFunction,
-      gas_used,
+      maxGasAmount,
       senderSequenceNumber,
       expirationTimestampSecs,
       chainId
