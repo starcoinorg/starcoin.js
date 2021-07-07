@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file, as of versi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2021-07-07
+- add utils.sign.encodeTransactionAuthenticator/decodeTransactionAuthenticator
+    
+- add 2 test cases
+    * `yarn test:unit src/utils/sign.spec.ts --testNamePattern="encode and decode"`
+    * `yarn test:unit src/utils/sign.spec.ts --testNamePattern="sign and verify"`
+
+- support `Personal Sign` in [starmask-test-dapp](https://github.com/starcoinorg/starmask-test-dapp)
+
 ## [1.3.0] - 2021-06-27
 - add utils.tx.encodeStructTypeTags
 
