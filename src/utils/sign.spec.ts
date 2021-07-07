@@ -1,10 +1,8 @@
-import * as ed from '@starcoin/stc-ed25519';
 import { arrayify, hexlify } from '@ethersproject/bytes';
-import { encodeTransactionAuthenticator, decodeTransactionAuthenticator } from "./sign";
+import { encodeTransactionAuthenticator, decodeTransactionAuthenticator, signPersonalMessage, verifyPersonalMessage } from "./sign";
 import { publicKeyToAddress } from "../encoding";
 
-// const exampleMessage = 'helloworld'
-const exampleMessage = 'Example `personal_sign` message 中文 1'
+const exampleMessage = 'Example `personal_sign` message 中文'
 const msgBytes = new Uint8Array(Buffer.from(exampleMessage, 'utf8'))
 // const msgHex = Buffer.from(exampleMessage, 'utf8').toString('hex')
 const publicKey = '0x32ed52d319694aebc5b52e00836e2f7c7d2c7c7791270ede450d21dbc90cbfa1'
@@ -14,7 +12,7 @@ const publicKeyBytes = arrayify(publicKey)
 const privateKeyBytes = arrayify(privateKey)
 
 test('encode and decode transactionAuthenticator', async () => {
-  const transactionAuthenticatorHex = encodeTransactionAuthenticator(publicKeyBytes, msgBytes)
+  const transactionAuthenticatorHex = encodeTransactionAuthenticator(msgBytes, publicKeyBytes)
   // console.log({ transactionAuthenticatorHex })
 
   const transactionAuthenticator = decodeTransactionAuthenticator(transactionAuthenticatorHex)
@@ -36,11 +34,9 @@ test('encode and decode transactionAuthenticator', async () => {
 
 test('sign and verify', () => {
   (async () => {
-    const transactionAuthenticatorHex = encodeTransactionAuthenticator(publicKeyBytes, msgBytes)
-    // console.log({ transactionAuthenticatorHex })
-    const signature = await ed.sign(transactionAuthenticatorHex, privateKeyBytes);
-    const isSigned = await ed.verify(signature, transactionAuthenticatorHex, publicKeyBytes);
+    const signature = await signPersonalMessage(msgBytes, privateKeyBytes);
     // console.log({ signature })
+    const isSigned = await verifyPersonalMessage(signature, msgBytes, publicKeyBytes);
     expect(isSigned).toBe(true);
   })();
 })
