@@ -1,13 +1,15 @@
 import * as ed from '@starcoin/stc-ed25519';
-import { arrayify, hexlify } from '@ethersproject/bytes';
+import { stripHexPrefix } from 'ethereumjs-util';
+import { arrayify, hexlify, BytesLike } from '@ethersproject/bytes';
 import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
 import { createSigningMessageHasher } from "../crypto_hash";
 import {
-  Ed25519PublicKey, Ed25519Signature, TransactionAuthenticator, TransactionAuthenticatorVariantEd25519,
-  SignedMessage, SigningMessage
+  Ed25519PublicKey, Ed25519Signature, TransactionAuthenticator,
+  TransactionAuthenticatorVariantEd25519, TransactionAuthenticatorVariantMultiEd25519,
+  SignedMessage, SigningMessage, AccountAddress
 } from '../lib/runtime/starcoin_types';
 import { bytes } from '../lib/runtime/serde/types';
-import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, addressToSCS } from "../encoding";
+import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, addressToSCS, addressFromSCS } from "../encoding";
 
 export function encodeTransactionAuthenticatorEd25519(signatureBytes: bytes, publicKeyBytes: bytes): TransactionAuthenticatorVariantEd25519 {
   const ed25519PublicKey = new Ed25519PublicKey(publicKeyBytes)
@@ -16,11 +18,9 @@ export function encodeTransactionAuthenticatorEd25519(signatureBytes: bytes, pub
   return authenticatorEd25519;
 }
 
-async function getSignatureBytes(
+function getEd25519SignMsgBytes(
   signingMessage: SigningMessage,
-  privateKeyBytes: bytes,
-): Promise<bytes> {
-
+): bytes {
   const hasher = createSigningMessageHasher();
   const hashSeedBytes = hasher.get_salt();
 
@@ -37,6 +37,16 @@ async function getSignatureBytes(
     return tmp;
   })(hashSeedBytes, signingMessageBytes);
 
+  return msgBytes;
+}
+
+async function getSignatureBytes(
+  signingMessage: SigningMessage,
+  privateKeyBytes: bytes,
+): Promise<bytes> {
+
+  const msgBytes = getEd25519SignMsgBytes(signingMessage)
+
   const signatureBytes = await ed.sign(msgBytes, privateKeyBytes)
 
   return signatureBytes
@@ -51,13 +61,8 @@ export async function generateSignedMessage(rawMsgBytes: bytes, privateKeyBytes:
   const signingMessage = new SigningMessage(rawMsgBytes);
 
   const signatureBytes = await getSignatureBytes(signingMessage, privateKeyBytes)
-  console.log({ signatureBytes })
-  console.log('signatureHex', hexlify(signatureBytes))
-  const transactionAuthenticatorEd25519 = encodeTransactionAuthenticatorEd25519(signatureBytes, publicKeyBytes);
-  console.log({ transactionAuthenticatorEd25519 })
-  console.log('public_key', transactionAuthenticatorEd25519.public_key)
-  console.log('signature', transactionAuthenticatorEd25519.signature)
 
+  const transactionAuthenticatorEd25519 = encodeTransactionAuthenticatorEd25519(signatureBytes, publicKeyBytes);
 
   const signedMessage = new SignedMessage(accountAddress, signingMessage, transactionAuthenticatorEd25519)
 
@@ -74,7 +79,85 @@ export async function encodeSignedMessage(msgBytes: bytes, privateKeyBytes: byte
   return Promise.resolve(signedMessageHex);
 }
 
-// export function verifyPersonalMessage(signature: string, msgBytes: bytes, publicKeyBytes: bytes): Promise<boolean> {
-//   const transactionAuthenticatorHex = encodeTransactionAuthenticator(msgBytes, publicKeyBytes)
-//   return ed.verify(signature, transactionAuthenticatorHex, publicKeyBytes);
-// }
+export function decodeSignedMessage(
+  data: BytesLike
+): SignedMessage {
+  const dataBytes = arrayify(data);
+  const scsData = (function () {
+    const de = new BcsDeserializer(dataBytes);
+    return SignedMessage.deserialize(de);
+  })();
+
+  return scsData;
+
+  // let authenticator;
+  // if (
+  //   scsData.authenticator instanceof TransactionAuthenticatorVariantEd25519
+  // ) {
+  //   const publicKey = hexlify(scsData.authenticator.public_key.value);
+  //   const signature = hexlify(scsData.authenticator.signature.value);
+  //   authenticator = { Ed25519: { public_key: publicKey, signature } };
+  // } else {
+  //   const auth = scsData.authenticator as TransactionAuthenticatorVariantMultiEd25519;
+  //   const publicKey = hexlify(auth.public_key.value);
+  //   const signature = hexlify(auth.signature.value);
+  //   authenticator = { MultiEd25519: { public_key: publicKey, signature } };
+  // }
+  // const rawTxn = scsData.raw_txn;
+  // const payload = (function () {
+  //   const se = new BcsSerializer();
+  //   rawTxn.payload.serialize(se);
+  //   return hexlify(se.getBytes());
+  // })();
+  // return {
+  //   transaction_hash: createUserTransactionHasher().crypto_hash(bytes),
+  //   raw_txn: {
+  //     sender: addressFromSCS(rawTxn.sender),
+  //     sequence_number: rawTxn.sequence_number,
+  //     payload,
+  //     max_gas_amount: rawTxn.max_gas_amount,
+  //     gas_unit_price: rawTxn.gas_unit_price,
+  //     gas_token_code: rawTxn.gas_token_code,
+  //     expiration_timestamp_secs: rawTxn.expiration_timestamp_secs,
+  //     chain_id: rawTxn.chain_id.id,
+  //   },
+  //   authenticator,
+  // };
+}
+
+export async function recoverSignedMessageAddress(signedMessageHex: string): Promise<string> {
+  const signedMessage = decodeSignedMessage(signedMessageHex)
+
+  // const rawMessageBytes = signedMessage.message.message
+  // const rawMessageHex = hexlify(rawMessageBytes)
+  // const rawMessage = Buffer.from(stripHexPrefix(rawMessageHex), 'hex').toString('utf8')
+  let address
+
+  if (signedMessage.authenticator instanceof TransactionAuthenticatorVariantEd25519) {
+    const signatureBytes = signedMessage.authenticator.signature.value;
+    const msgBytes = getEd25519SignMsgBytes(signedMessage.message);
+
+    const publicKeyBytes = signedMessage.authenticator.public_key.value;
+    address = publicKeyToAddress(hexlify(publicKeyBytes));
+
+    const isSigned = await ed.verify(signatureBytes, msgBytes, publicKeyBytes);
+    if (!isSigned) {
+      throw new Error('Failed verify signature and message')
+    }
+
+    const isOk = checkAccount(publicKeyBytes, signedMessage.account)
+
+    if (!isOk) {
+      throw new Error('Failed: address are not match')
+    }
+  }
+  return Promise.resolve(address)
+}
+
+function checkAccount(publicKeyBytes: bytes, accountAddress: AccountAddress): boolean {
+  const address = publicKeyToAddress(hexlify(publicKeyBytes));
+  if (address === addressFromSCS(accountAddress)) {
+    return true;
+  }
+  return false;
+}
