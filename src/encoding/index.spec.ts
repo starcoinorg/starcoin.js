@@ -1,10 +1,16 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
-import { addressToSCS, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier, decodeReceiptIdentifier } from '.';
+import {
+  addressToSCS, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey,
+  publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier,
+  decodeReceiptIdentifier, encodeSignedMessage
+} from '.';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { toHexString } from '../utils/hex';
 import { JsonRpcProvider } from '../providers/jsonrpc-provider';
-import { encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags } from "../utils/tx";
+import {
+  encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags
+} from "../utils/tx";
 
 test("encoding address", () => {
   expect(addressToSCS("0x1").value.length).toBe(16);
