@@ -1,8 +1,8 @@
 import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
-import { createHash } from "../crypto_hash";
-
 import * as ed from '@starcoin/stc-ed25519';
+import { sha3_256 } from 'js-sha3';
+import { createUserTransactionHasher } from "../crypto_hash";
 import { BcsDeserializer, BcsSerializer } from '../lib/runtime/bcs';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import * as serde from '../lib/runtime/serde';
@@ -15,10 +15,7 @@ import {
   ReceiptIdentifierView,
 } from '../types';
 import { fromHexString, toHexString } from '../utils/hex';
-import { createUserTransactionHasher } from '../crypto_hash';
 import { Deserializer } from '../lib/runtime/serde';
-
-const sha3_256 = require('js-sha3').sha3_256;
 
 export interface SerdeSerializable {
   serialize(serializer: serde.Serializer): void;
@@ -155,7 +152,7 @@ export function decodeTransactionPayload(
     };
   }
 
-  throw new TypeError(`cannot decode bcs data ${bcsTxnPayload}`);
+  throw new TypeError(`cannot decode bcs data ${ bcsTxnPayload }`);
 }
 
 export function addressToSCS(
@@ -197,7 +194,7 @@ export function typeTagToSCS(ty: TypeTag): starcoin_types.TypeTag {
   if ('Struct' in ty) {
     return new starcoin_types.TypeTagVariantStruct(structTagToSCS(ty.Struct));
   }
-  throw new Error(`invalid type tag: ${ty}`);
+  throw new Error(`invalid type tag: ${ ty }`);
 }
 
 export function structTagToSCS(data: StructTag): starcoin_types.StructTag {
@@ -250,7 +247,7 @@ export function typeTagFromSCS(bcs_data: starcoin_types.TypeTag): TypeTag {
       Vector: typeTagFromSCS(bcs_data.value),
     };
   }
-  throw new TypeError(`invalid bcs type tag: ${bcs_data}`);
+  throw new TypeError(`invalid bcs type tag: ${ bcs_data }`);
 }
 
 export async function privateKeyToPublicKey(privateKey: string): Promise<string> {

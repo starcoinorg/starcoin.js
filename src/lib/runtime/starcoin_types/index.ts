@@ -1518,3 +1518,39 @@ export class ReceiptIdentifier {
     return new ReceiptIdentifier(accountAddress, authKey)
   }
 }
+
+export class SigningMessage {
+
+  constructor(public message: bytes) {
+  }
+
+  public serialize(serializer: Serializer): void {
+    serializer.serializeBytes(this.message);
+  }
+
+  static deserialize(deserializer: Deserializer): SigningMessage {
+    const message = deserializer.deserializeBytes();
+    return new SigningMessage(message);
+  }
+
+}
+
+export class SignedMessage {
+
+  constructor(public account: AccountAddress, public message: SigningMessage, public authenticator: TransactionAuthenticator) {
+  }
+
+  public serialize(serializer: Serializer): void {
+    this.account.serialize(serializer);
+    this.message.serialize(serializer);
+    this.authenticator.serialize(serializer);
+  }
+
+  static deserialize(deserializer: Deserializer): SignedMessage {
+    const account = AccountAddress.deserialize(deserializer);
+    const message = SigningMessage.deserialize(deserializer);
+    const authenticator = TransactionAuthenticator.deserialize(deserializer);
+    return new SignedMessage(account, message, authenticator);
+  }
+
+}

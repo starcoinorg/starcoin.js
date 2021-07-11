@@ -48,3 +48,7 @@ export function createUserTransactionHasher(): CryptoHash {
 export function createRawUserTransactionHasher(): CryptoHash {
   return createHash("RawUserTransaction");
 }
+
+export function createSigningMessageHasher(): CryptoHash {
+  return createHash("SigningMessage");
+}
