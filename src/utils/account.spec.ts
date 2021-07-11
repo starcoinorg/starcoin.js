@@ -2,7 +2,7 @@ import { stripHexPrefix } from 'ethereumjs-util';
 import { generatePrivateKey, generateAccount, showAccount } from "./account";
 
 test('show account', async () => {
-  const privateKey = '4715fd6f1caa3bc06da311526b31598beb5a5301a871640550f06963b5edaf20';
+  const privateKey = '0x4715fd6f1caa3bc06da311526b31598beb5a5301a871640550f06963b5edaf20';
   const accountInfo = await showAccount(privateKey)
   console.log('accountInfo', accountInfo);
   expect(accountInfo.privateKey).toBe(privateKey);
