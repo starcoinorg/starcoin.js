@@ -6,9 +6,9 @@ import { createSigningMessageHasher } from "../crypto_hash";
 import {
   Ed25519PublicKey, Ed25519Signature, TransactionAuthenticator,
   TransactionAuthenticatorVariantEd25519, TransactionAuthenticatorVariantMultiEd25519,
-  SignedMessage, SigningMessage, AccountAddress
+  SignedMessage, SigningMessage, AccountAddress, ChainId
 } from '../lib/runtime/starcoin_types';
-import { bytes } from '../lib/runtime/serde/types';
+import { bytes, uint8 } from '../lib/runtime/serde/types';
 import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, addressToSCS, addressFromSCS } from "../encoding";
 
 export function encodeTransactionAuthenticatorEd25519(signatureBytes: bytes, publicKeyBytes: bytes): TransactionAuthenticatorVariantEd25519 {
@@ -49,7 +49,7 @@ async function getSignatureBytes(
   return signatureBytes
 }
 
-export async function generateSignedMessage(rawMsgBytes: bytes, privateKeyBytes: bytes): Promise<SignedMessage> {
+export async function generateSignedMessage(rawMsgBytes: bytes, privateKeyBytes: bytes, id: uint8): Promise<SignedMessage> {
   const privateKeyHex = hexlify(privateKeyBytes)
   const publicKeyHex = await ed.getPublicKey(stripHexPrefix(privateKeyHex));
   const publicKeyBytes = arrayify(addHexPrefix(publicKeyHex))
@@ -58,12 +58,18 @@ export async function generateSignedMessage(rawMsgBytes: bytes, privateKeyBytes:
   const signingMessage = new SigningMessage(rawMsgBytes);
   const signatureBytes = await getSignatureBytes(signingMessage, stripHexPrefix(privateKeyHex))
   const transactionAuthenticatorEd25519 = encodeTransactionAuthenticatorEd25519(signatureBytes, publicKeyBytes);
-  const signedMessage = new SignedMessage(accountAddress, signingMessage, transactionAuthenticatorEd25519)
+  const chainId = new ChainId(id);
+  console.log('accountAddress', accountAddress, addressFromSCS(accountAddress))
+  console.log('signingMessage', signingMessage, hexlify(signingMessage.message))
+  console.log('transactionAuthenticatorEd25519', transactionAuthenticatorEd25519)
+  console.log('chainId', chainId)
+  const signedMessage = new SignedMessage(accountAddress, signingMessage, transactionAuthenticatorEd25519, chainId)
+  console.log({ signedMessage })
   return Promise.resolve(signedMessage);
 }
 
-export async function encodeSignedMessage(msgBytes: bytes, privateKeyBytes: bytes): Promise<string> {
-  const signedMessage = await generateSignedMessage(msgBytes, privateKeyBytes)
+export async function encodeSignedMessage(msgBytes: bytes, privateKeyBytes: bytes, chainId: uint8): Promise<string> {
+  const signedMessage = await generateSignedMessage(msgBytes, privateKeyBytes, chainId)
   const scsData = (function () {
     const se = new BcsSerializer();
     signedMessage.serialize(se);

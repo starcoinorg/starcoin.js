@@ -1537,20 +1537,22 @@ export class SigningMessage {
 
 export class SignedMessage {
 
-  constructor(public account: AccountAddress, public message: SigningMessage, public authenticator: TransactionAuthenticator) {
+  constructor(public account: AccountAddress, public message: SigningMessage, public authenticator: TransactionAuthenticator, public chain_id: ChainId) {
   }
 
   public serialize(serializer: Serializer): void {
     this.account.serialize(serializer);
     this.message.serialize(serializer);
     this.authenticator.serialize(serializer);
+    this.chain_id.serialize(serializer);
   }
 
   static deserialize(deserializer: Deserializer): SignedMessage {
     const account = AccountAddress.deserialize(deserializer);
     const message = SigningMessage.deserialize(deserializer);
     const authenticator = TransactionAuthenticator.deserialize(deserializer);
-    return new SignedMessage(account, message, authenticator);
+    const chain_id = ChainId.deserialize(deserializer);
+    return new SignedMessage(account, message, authenticator, chain_id);
   }
 
 }

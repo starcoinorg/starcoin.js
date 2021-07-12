@@ -1,17 +1,18 @@
-import { JsonRpcProvider } from '.';
 import { arrayify, hexlify } from '@ethersproject/bytes';
-import { BcsSerializer } from '../lib/runtime/bcs';
+import { addHexPrefix } from 'ethereumjs-util';
+import { JsonRpcProvider } from '.';
+import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
 import { encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags } from '../utils/tx';
-import { ReceiptIdentifier } from '../lib/runtime/starcoin_types';
+import { ReceiptIdentifier, TransactionPayloadVariantPackage } from '../lib/runtime/starcoin_types';
 import { addressFromSCS, decodeReceiptIdentifier } from '../encoding';
 
 describe('jsonrpc-provider', () => {
   // let provider = new JsonRpcProvider("http://39.102.41.156:9850", undefined);
 
-  // const nodeUrl = 'http://localhost:9850';
-  // const chainId = 254;
-  const nodeUrl = 'https://barnard.seed.starcoin.org';
-  const chainId = 251;
+  const nodeUrl = 'http://localhost:9850';
+  const chainId = 254;
+  // const nodeUrl = 'https://barnard.seed.starcoin.org';
+  // const chainId = 251;
 
 
   const provider = new JsonRpcProvider(nodeUrl);
@@ -226,29 +227,88 @@ describe('jsonrpc-provider', () => {
     }
   }, 120000);
 
-  test('Sign String Message', async () => {
-    const signerAddress = '0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-    const unlockPassword = 'your-password';
-    const message = 'foo';
-    const signer = provider.getSigner(signerAddress);
-    await signer.unlock(unlockPassword);
-    const signedMessage = await signer.signMessage(message);
-    expect(signedMessage).toBe(
-      '0xc51dada886afe59d4651f36b56f3c4a1a84da53dfbddf396d81a5b36ab5cdc265aa1559ad3185b714cb8b62583c4172833026820e6cf264a02f0e3ebd424301a80a15c3e2381c0419a91477805a3c5d60131d353eb29313a786584d4565fb203'
+  test('txn sign using sender password and submit', async () => {
+    const signer = await provider.getSigner();
+    const password = ''; // put password into the quotes
+    await signer.unlock(password);
+    const txnRequest = {
+      script: {
+        code: '0x1::TransferScripts::peer_to_peer',
+        type_args: ['0x1::STC::STC'],
+        args: [
+          '0xc13b50bdb12e3fdd03c4e3b05e34926a',
+          'x""',
+          '100000u128',
+        ],
+      },
+    };
+    const txnOutput = await provider.dryRun(txnRequest);
+
+    const balanceBefore = await provider.getBalance(
+      '0xc13b50bdb12e3fdd03c4e3b05e34926a'
     );
+
+    const txn = await signer.sendTransaction(txnRequest);
+    const txnInfo = await txn.wait(1);
+    const balance = await provider.getBalance(
+      '0xc13b50bdb12e3fdd03c4e3b05e34926a'
+    );
+    if (balanceBefore !== undefined) {
+      // @ts-ignore
+      const diff = balance - balanceBefore;
+      expect(diff).toBe(100000);
+    } else {
+      expect(balance).toBe(100000);
+    }
   }, 10000);
 
-  test('Sign Bytes Message', async () => {
-    const signerAddress = '0xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-    const unlockPassword = 'your-password';
-    // const message = new Uint8Array(Buffer.from('foo'))
-    // Bytes here means ArrayLike<number>, check '@ethersproject/bytes'
-    const message = { 0: 102, 1: 111, 2: 111, length: 3 };
-    const signer = provider.getSigner(signerAddress);
-    await signer.unlock(unlockPassword);
-    const signedMessage = await signer.signMessage(message);
-    expect(signedMessage).toBe(
-      '0xc51dada886afe59d4651f36b56f3c4a1a84da53dfbddf396d81a5b36ab5cdc265aa1559ad3185b714cb8b62583c4172833026820e6cf264a02f0e3ebd424301a80a15c3e2381c0419a91477805a3c5d60131d353eb29313a786584d4565fb203'
+  test('deploy contract with blob hex', async () => {
+    // privateKey is generated in starcoin console using command:
+    // starcoin% account export <ADDRESS> -p <PASSWORD>
+    const privateKey = '0x83c7829c68e1ad81ced10f69d11ea741f7f18c7a5f059215e8a965362a5ae25e';
+
+    const address = '0x49624992dd72da077ee19d0be210406a';
+
+    const senderSequenceNumber = await provider.getSequenceNumber(
+      address
     );
-  }, 10000);
+
+    // TODO: generate maxGasAmount from contract.dry_run -> gas_used
+    const maxGasAmount = 10000000;
+
+    // because the time system in dev network is relatively static,
+    // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
+    const nowSeconds = await provider.getNowSeconds();
+    // expired after 12 hours since Unix Epoch
+    const expirationTimestampSecs = nowSeconds + 43200;
+
+    const blobHex = '49624992dd72da077ee19d0be210406a02ab02a11ceb0b0200000009010006020609030f2204310805392807615708b801200ad801050cdd0126000001010102000007000202040100000300010000040201000206040101040107050101040204070801040108090101040203030304030503010c00020c0401080002060c0201060c010b0101080002060c04010b0101090002060c0b0101090003506464074163636f756e7405546f6b656e04696e6974046d696e740b64756d6d795f6669656c640e72656769737465725f746f6b656e0f646f5f6163636570745f746f6b656e0f6465706f7369745f746f5f73656c6649624992dd72da077ee19d0be210406a0000000000000000000000000000000100020105010002000001060e00310338000e003801020102000006080e000a0138020c020e000b02380302008d03a11ceb0b020000000a010006020609030f3a04490c0555310786017a0880022006a002030aa302050ca80238000001010102000007000202040100000300010000040102010400050301000006010400020806010104010907010104020a010202040402050a0b0104010b0c010104020601040104040505050608070508050905010c000101020c04010501080002060c0201060c0208000900010b0101080002060c04010b0101090002060c0b0101090003414243074163636f756e7405546f6b656e04696e69740669735f616263046d696e740d746f6b656e5f616464726573730b64756d6d795f6669656c640e72656769737465725f746f6b656e0f646f5f6163636570745f746f6b656e0d69735f73616d655f746f6b656e0f6465706f7369745f746f5f73656c6649624992dd72da077ee19d0be210406a0000000000000000000000000000000102011200020107010002000001060e00070038000e003801020101000001023802020202000009080e000a0138030c020e000b023804020301000001023805020000';
+
+    const deserializer = new BcsDeserializer(arrayify(addHexPrefix(blobHex)))
+
+    const transactionPayload = TransactionPayloadVariantPackage.load(deserializer)
+
+    const rawUserTransaction = generateRawUserTransaction(
+      address,
+      transactionPayload,
+      maxGasAmount,
+      senderSequenceNumber,
+      expirationTimestampSecs,
+      chainId
+    );
+
+    const signedUserTransactionHex = await signRawUserTransaction(
+      privateKey,
+      rawUserTransaction
+    );
+
+    const txn = await provider.sendTransaction(signedUserTransactionHex);
+
+    const txnInfo = await txn.wait(1);
+
+    // console.log(txnInfo);
+
+    expect(txnInfo.status).toBe('Executed');
+  }, 120000);
+
 });
