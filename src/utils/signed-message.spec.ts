@@ -10,9 +10,9 @@ const msgBytes = new Uint8Array(Buffer.from(exampleMessage, 'utf8'))
 
 test('encode SignedMessage: simple-keyring', async () => {
   // simple-keyring
-  const publicKey = '0xac1752f846525330332044090166a1dd8ce80dd21f27f773465947385b581ac4'
-  const privateKey = '0x5b1f8e95094912a4fe448f62d293157fcf42b81918fa652e95e3dba86c9bef83'
-  const address = '0x12089406b7aff03f226d26e7e66e87a4'
+  const publicKey = '0x32ed52d319694aebc5b52e00836e2f7c7d2c7c7791270ede450d21dbc90cbfa1'
+  const privateKey = '0x587737ebefb4961d377a3ab2f9ceb37b1fa96eb862dfaf954a4a1a99535dfec0'
+  const address = '0xd7f20befd34b9f1ab8aeae98b82a5a51'
   const privateKeyBytes = arrayify(privateKey)
   const signedMessageHex = await encodeSignedMessage(msgBytes, privateKeyBytes, chainId);
   console.log({ chainId, exampleMessage, privateKey, publicKey, address, signedMessageHex })
