@@ -111,6 +111,7 @@ export async function recoverSignedMessageAddress(signedMessageHex: string): Pro
   return Promise.resolve(address)
 }
 
+// TODO: check onchain authkey using chain_id
 function checkAccount(publicKeyBytes: bytes, accountAddress: AccountAddress): boolean {
   const address = publicKeyToAddress(hexlify(publicKeyBytes));
   if (address === addressFromSCS(accountAddress)) {
