@@ -59,12 +59,7 @@ export async function generateSignedMessage(rawMsgBytes: bytes, privateKeyBytes:
   const signatureBytes = await getSignatureBytes(signingMessage, stripHexPrefix(privateKeyHex))
   const transactionAuthenticatorEd25519 = encodeTransactionAuthenticatorEd25519(signatureBytes, publicKeyBytes);
   const chainId = new ChainId(id);
-  console.log('accountAddress', accountAddress, addressFromSCS(accountAddress))
-  console.log('signingMessage', signingMessage, hexlify(signingMessage.message))
-  console.log('transactionAuthenticatorEd25519', transactionAuthenticatorEd25519)
-  console.log('chainId', chainId)
   const signedMessage = new SignedMessage(accountAddress, signingMessage, transactionAuthenticatorEd25519, chainId)
-  console.log({ signedMessage })
   return Promise.resolve(signedMessage);
 }
 
