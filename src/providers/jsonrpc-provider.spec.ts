@@ -9,10 +9,10 @@ import { addressFromSCS, decodeTransactionPayload, bcsEncode, decodeReceiptIdent
 describe('jsonrpc-provider', () => {
   // let provider = new JsonRpcProvider("http://39.102.41.156:9850", undefined);
 
-  const nodeUrl = 'http://localhost:9850';
-  const chainId = 254;
-  // const nodeUrl = 'https://barnard.seed.starcoin.org';
-  // const chainId = 251;
+  // const nodeUrl = 'http://localhost:9850';
+  // const chainId = 254;
+  const nodeUrl = 'https://barnard-seed.starcoin.org';
+  const chainId = 251;
 
 
   const provider = new JsonRpcProvider(nodeUrl);
@@ -120,12 +120,12 @@ describe('jsonrpc-provider', () => {
     // privateKey is generated in starcoin console using command:
     // starcoin% account export <ADDRESS> -p <PASSWORD>
     const senderPrivateKeyHex =
-      '0xe424e16db235e3f3b9ef2475516c51d4c15aa5287ceb364213698bd551eab4f2';
+      '0xc81df69c93660dd47a1d5e8801396432a054d8bd02eccf0189f94fb69249be82';
 
     const senderPublicKeyHex =
-      '0x704148879e1341243f754d62fa5228529ccb207be6bd3af20b2c5422f6f234d8';
+      '0xc51dada886afe59d4651f36b56f3c4a1a84da53dfbddf396d81a5b36ab5cdc26';
 
-    const senderAddressHex = '0x319ccfe5fc73a2cdae11c40f31ca1b61';
+    const senderAddressHex = '0x3f19d5422824f47e6c021978cee98f35';
 
     const senderSequenceNumber = await provider.getSequenceNumber(
       senderAddressHex
@@ -133,7 +133,7 @@ describe('jsonrpc-provider', () => {
 
     // const receiverAddressHex = '0x84d6de1c82bea949966fd13e7896e381';
     // const receiverAuthKeyHex = 'd9bddf7607b58be4331c888116e2365f84d6de1c82bea949966fd13e7896e381';
-    const receiver = '0x84d6de1c82bea949966fd13e7896e381'
+    const receiver = '0x46ece7c1e39fb6943059565e2621b312'
 
     const amount = 1024;
     // Step 1-1: generate payload hex of ScriptFunction
@@ -154,24 +154,24 @@ describe('jsonrpc-provider', () => {
       receiverAuthKeyBytes = Buffer.from('00', 'hex')
     }
 
-    const sendAmountString = `${ amount.toString() }u128`
-    const txnRequest = {
-      chain_id: chainId,
-      gas_unit_price: 1,
-      sender: senderAddressHex,
-      sender_public_key: senderPublicKeyHex,
-      sequence_number: senderSequenceNumber,
-      max_gas_amount: 10000000,
-      script: {
-        code: '0x1::TransferScripts::peer_to_peer',
-        type_args: ['0x1::STC::STC'],
-        args: [receiverAddressHex, `x"${ receiverAuthKeyHex }"`, sendAmountString],
-      },
-    }
-    const txnOutput = await provider.dryRun(txnRequest)
+    // const sendAmountString = `${ amount.toString() }u128`
+    // const txnRequest = {
+    //   chain_id: chainId,
+    //   gas_unit_price: 1,
+    //   sender: senderAddressHex,
+    //   sender_public_key: senderPublicKeyHex,
+    //   sequence_number: senderSequenceNumber,
+    //   max_gas_amount: 10000000,
+    //   script: {
+    //     code: '0x1::TransferScripts::peer_to_peer',
+    //     type_args: ['0x1::STC::STC'],
+    //     args: [receiverAddressHex, `x"${ receiverAuthKeyHex }"`, sendAmountString],
+    //   },
+    // }
+    // const txnOutput = await provider.dryRun(txnRequest)
 
     // TODO: generate maxGasAmount from contract.dry_run -> gas_used
-    const maxGasAmount = 10000000;
+    let maxGasAmount = 10000000n;
 
     // because the time system in dev network is relatively static,
     // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
@@ -199,7 +199,8 @@ describe('jsonrpc-provider', () => {
 
     const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
 
-    const rawUserTransaction = generateRawUserTransaction(
+    console.log({ scriptFunction })
+    let rawUserTransaction = generateRawUserTransaction(
       senderAddressHex,
       scriptFunction,
       maxGasAmount,
@@ -207,6 +208,35 @@ describe('jsonrpc-provider', () => {
       expirationTimestampSecs,
       chainId
     );
+    console.log({ rawUserTransaction })
+
+    const rawUserTransactionBytes = (function () {
+      const se = new BcsSerializer();
+      rawUserTransaction.serialize(se);
+      return se.getBytes();
+    })();
+
+    const rawUserTransactionHex = hexlify(rawUserTransactionBytes)
+    console.log({ rawUserTransactionHex })
+
+    const dryRunRawResult = await provider.dryRunRaw(
+      rawUserTransactionHex,
+      senderPublicKeyHex
+    );
+    console.log({ dryRunRawResult })
+    if (dryRunRawResult.status === 'Executed') {
+      console.log(dryRunRawResult.gas_used, typeof dryRunRawResult.gas_used)
+      maxGasAmount = BigInt(Math.ceil(<number>dryRunRawResult.gas_used * 3))
+      rawUserTransaction = generateRawUserTransaction(
+        senderAddressHex,
+        scriptFunction,
+        maxGasAmount,
+        senderSequenceNumber,
+        expirationTimestampSecs,
+        chainId
+      );
+      console.log({ rawUserTransaction })
+    }
 
     const signedUserTransactionHex = await signRawUserTransaction(
       senderPrivateKeyHex,
@@ -225,6 +255,7 @@ describe('jsonrpc-provider', () => {
     } else {
       expect(balance).toBe(amount);
     }
+    expect(maxGasAmount).toBeLessThan(10000000n);
   }, 120000);
 
   test('deploy contract with blob hex', async () => {

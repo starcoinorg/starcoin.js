@@ -517,6 +517,8 @@ export class JsonRpcProvider extends BaseProvider {
         return ['txpool.gas_price', []];
       case RPC_ACTION.dryRun:
         return ['contract.dry_run', [params.transaction]];
+      case RPC_ACTION.dryRunRaw:
+        return ['contract.dry_run_raw', [params.rawUserTransactionHex, params.publicKeyHex]];
       // case 'getBalance':
       //   return [
       //     'eth_getBalance',
@@ -591,7 +593,7 @@ export class JsonRpcProvider extends BaseProvider {
 
     if (args === undefined) {
       logger.throwError(
-        `${method} not implemented`,
+        `${ method } not implemented`,
         Logger.errors.NOT_IMPLEMENTED,
         { operation: method }
       );
