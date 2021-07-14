@@ -45,6 +45,19 @@ test('encode SignedMessage: hd-keyring', async () => {
   }
 })
 
+test('decode SignedMessage', async () => {
+  const signedMessageHex = '0x024f69ff412b2c1bb1dd394d79554f30264578616d706c652060706572736f6e616c5f7369676e60206d65737361676520e4b8ade69687002006898c96a2abfa44ba4d5db6f9f3751595bb868eaac01c8f3c6bb4424ee882a640eabc37378028c905b47a52c3b74645b31e539cc1a27d24d4a2c09af62c6b3d1cbc4a235f702ec4878e286a06a9b87a55dfdd8e051f6422cc92981c975d18f805fe';
+  console.log({ signedMessageHex })
+
+  try {
+    const recoverAddress = await recoverSignedMessageAddress(signedMessageHex);
+    console.log({ recoverAddress })
+    expect(recoverAddress).toBe(signedMessageHex.substr(0, 34));
+  } catch (error) {
+    console.log(error)
+  }
+})
+
 test('testMultiEd25519', async () => {
   const signedMessageHex = '0x0000000000000000000000000a550c180a68656c6c6f776f726c640141b9c6ee1630ef3e711144a648db06bbb2284f7274cfbee53ffcee503cc1a49200aef3f4a4b8eca1dfc343361bf8e436bd42de9259c04b8314eb8e2054dd6e82ab014492176b2470347af23b292fbc7362f169abfde1d13ed8298eb92ad5296a48341d34c14eb5b5e1bebcc0ab371bbb6ff5fb24eb933cb15f76521e018c8ad431140440000000';
   // console.log({ exampleMessage, privateKey, publicKey, address, signedMessageHex })
