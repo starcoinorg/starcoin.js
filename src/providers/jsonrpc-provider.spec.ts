@@ -9,10 +9,10 @@ import { addressFromSCS, decodeTransactionPayload, bcsEncode, decodeReceiptIdent
 describe('jsonrpc-provider', () => {
   // let provider = new JsonRpcProvider("http://39.102.41.156:9850", undefined);
 
-  // const nodeUrl = 'http://localhost:9850';
-  // const chainId = 254;
-  const nodeUrl = 'https://barnard-seed.starcoin.org';
-  const chainId = 251;
+  const nodeUrl = 'http://localhost:9850';
+  const chainId = 254;
+  // const nodeUrl = 'https://barnard-seed.starcoin.org';
+  // const chainId = 251;
 
 
   const provider = new JsonRpcProvider(nodeUrl);
@@ -120,12 +120,12 @@ describe('jsonrpc-provider', () => {
     // privateKey is generated in starcoin console using command:
     // starcoin% account export <ADDRESS> -p <PASSWORD>
     const senderPrivateKeyHex =
-      '0xc81df69c93660dd47a1d5e8801396432a054d8bd02eccf0189f94fb69249be82';
+      '0x2bc8181071dc81eddf8756fedfadfb9a99141196dc1ef7a8f4254b1dea4d928a';
 
     const senderPublicKeyHex =
-      '0xc51dada886afe59d4651f36b56f3c4a1a84da53dfbddf396d81a5b36ab5cdc26';
+      '0x06898c96a2abfa44ba4d5db6f9f3751595bb868eaac01c8f3c6bb4424ee882a6';
 
-    const senderAddressHex = '0x3f19d5422824f47e6c021978cee98f35';
+    const senderAddressHex = '0x024f69FF412b2C1Bb1dD394d79554F30';
 
     const senderSequenceNumber = await provider.getSequenceNumber(
       senderAddressHex
@@ -133,7 +133,7 @@ describe('jsonrpc-provider', () => {
 
     // const receiverAddressHex = '0x84d6de1c82bea949966fd13e7896e381';
     // const receiverAuthKeyHex = 'd9bddf7607b58be4331c888116e2365f84d6de1c82bea949966fd13e7896e381';
-    const receiver = '0x46ece7c1e39fb6943059565e2621b312'
+    const receiver = '0x49624992dD72Da077ee19D0be210406A'
 
     const amount = 1024;
     // Step 1-1: generate payload hex of ScriptFunction
