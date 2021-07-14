@@ -211,6 +211,9 @@ export class JsonRpcSigner extends Signer {
       return address;
     });
     logger.debug(fromAddress)
+    // Since contract.dry_run_raw need publicKey, so we can not do it here.
+    // we can only do estimateGas in the StarMask -> MetaMaskController -> newUnapprovedTransaction
+
     // The JSON-RPC for eth_sendTransaction uses 90000 gas; if the user
     // wishes to use this, it is easy to specify explicitly, otherwise
     // we look it up for them.
@@ -517,6 +520,8 @@ export class JsonRpcProvider extends BaseProvider {
         return ['txpool.gas_price', []];
       case RPC_ACTION.dryRun:
         return ['contract.dry_run', [params.transaction]];
+      case RPC_ACTION.dryRunRaw:
+        return ['contract.dry_run_raw', [params.rawUserTransactionHex, params.publicKeyHex]];
       // case 'getBalance':
       //   return [
       //     'eth_getBalance',
@@ -591,7 +596,7 @@ export class JsonRpcProvider extends BaseProvider {
 
     if (args === undefined) {
       logger.throwError(
-        `${method} not implemented`,
+        `${ method } not implemented`,
         Logger.errors.NOT_IMPLEMENTED,
         { operation: method }
       );

@@ -155,6 +155,21 @@ export function decodeTransactionPayload(
   throw new TypeError(`cannot decode bcs data ${ bcsTxnPayload }`);
 }
 
+export function packageHexToTransactionPayload(
+  packageHex: string
+): starcoin_types.TransactionPayload {
+  const deserializer = new BcsDeserializer(arrayify(addHexPrefix(packageHex)))
+  const transactionPayload = starcoin_types.TransactionPayloadVariantPackage.load(deserializer)
+  return transactionPayload
+}
+
+export function packageHexToTransactionPayloadHex(
+  packageHex: string
+): string {
+  const transactionPayload = packageHexToTransactionPayload(packageHex)
+  return bcsEncode(transactionPayload)
+}
+
 export function addressToSCS(
   addr: AccountAddress
 ): starcoin_types.AccountAddress {

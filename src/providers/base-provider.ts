@@ -217,6 +217,7 @@ export const RPC_ACTION = {
   getAccountState: 'getAccountState',
   getGasPrice: 'getGasPrice',
   dryRun: 'dryRun',
+  dryRunRaw: 'dryRunRaw',
 };
 
 let defaultFormatter: Formatter;
@@ -303,11 +304,11 @@ export abstract class BaseProvider extends Provider {
 
       // Squash any "unhandled promise" errors; that do not need to be handled
       // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
-      network.catch((error) => {});
+      network.catch((error) => { });
 
       // Trigger initial network setting (async)
       // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
-      this._ready().catch((error) => {});
+      this._ready().catch((error) => { });
     } else {
       const knownNetwork = getNetwork(network);
       if (knownNetwork) {
@@ -334,7 +335,7 @@ export abstract class BaseProvider extends Provider {
         try {
           network = await this._networkPromise;
           // eslint-disable-next-line no-empty
-        } catch (error) {}
+        } catch (error) { }
       }
 
       // Try the Provider's network detection (this MUST throw if it cannot)
@@ -924,7 +925,7 @@ export abstract class BaseProvider extends Provider {
       // another story), so setting an emitted value forces us to
       // wait even if the node returns null for the receipt
       if (confirmations !== 0) {
-        this._emitted[`t:${tx.transaction_hash}`] = 'pending';
+        this._emitted[`t:${ tx.transaction_hash }`] = 'pending';
       }
 
       const receipt = await this.waitForTransaction(
@@ -936,7 +937,7 @@ export abstract class BaseProvider extends Provider {
       }
 
       // No longer pending, allow the polling loop to garbage collect this
-      this._emitted[`t:${tx.transaction_hash}`] = receipt.block_number;
+      this._emitted[`t:${ tx.transaction_hash }`] = receipt.block_number;
 
       result.block_hash = receipt.block_hash;
       result.block_number = receipt.block_number;
@@ -1016,7 +1017,7 @@ export abstract class BaseProvider extends Provider {
       return moduleId;
     }
 
-    return `${moduleId.address}::${moduleId.name}`;
+    return `${ moduleId.address }::${ moduleId.name }`;
   }
 
   private async _getFilter(filter: Filter | Promise<Filter>): Promise<Filter> {
@@ -1067,6 +1068,16 @@ export abstract class BaseProvider extends Provider {
     return this.formatter.transactionOutput(resp);
   }
 
+  async dryRunRaw(
+    rawUserTransactionHex: string,
+    publicKeyHex: string
+  ): Promise<TransactionOutput> {
+    await this.getNetwork();
+    const params = { rawUserTransactionHex, publicKeyHex }
+    const resp = await this.perform(RPC_ACTION.dryRunRaw, params);
+    return this.formatter.transactionOutput(resp);
+  }
+
   private async _getBlock(
     blockHashOrBlockNumber: number | string | Promise<number | string>,
     includeTransactions?: boolean
@@ -1109,7 +1120,7 @@ export abstract class BaseProvider extends Provider {
           // not exist. If we did see it though, perhaps from a log, we know
           // it exists, and this node is just not caught up yet.
           if (params.blockHash != null) {
-            if (this._emitted[`b:${params.blockHash}`] == null) {
+            if (this._emitted[`b:${ params.blockHash }`] == null) {
               return null;
             }
           }
@@ -1179,7 +1190,7 @@ export abstract class BaseProvider extends Provider {
         );
 
         if (result == null) {
-          if (this._emitted[`t:${transactionHash}`] == null) {
+          if (this._emitted[`t:${ transactionHash }`] == null) {
             return null;
           }
           return undefined;
@@ -1227,7 +1238,7 @@ export abstract class BaseProvider extends Provider {
         );
 
         if (result === null) {
-          if (this._emitted[`t:${transactionHash}`] === null) {
+          if (this._emitted[`t:${ transactionHash }`] === null) {
             return null;
           }
           return undefined;
