@@ -210,13 +210,7 @@ describe('jsonrpc-provider', () => {
     );
     console.log({ rawUserTransaction })
 
-    const rawUserTransactionBytes = (function () {
-      const se = new BcsSerializer();
-      rawUserTransaction.serialize(se);
-      return se.getBytes();
-    })();
-
-    const rawUserTransactionHex = hexlify(rawUserTransactionBytes)
+    const rawUserTransactionHex = bcsEncode(rawUserTransaction)
     console.log({ rawUserTransactionHex })
 
     const dryRunRawResult = await provider.dryRunRaw(

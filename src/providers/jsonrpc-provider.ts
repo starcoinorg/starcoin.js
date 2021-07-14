@@ -211,6 +211,9 @@ export class JsonRpcSigner extends Signer {
       return address;
     });
     logger.debug(fromAddress)
+    // Since contract.dry_run_raw need publicKey, so we can not do it here.
+    // we can only do estimateGas in the StarMask -> MetaMaskController -> newUnapprovedTransaction
+
     // The JSON-RPC for eth_sendTransaction uses 90000 gas; if the user
     // wishes to use this, it is easy to specify explicitly, otherwise
     // we look it up for them.
