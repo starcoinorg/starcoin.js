@@ -25,6 +25,7 @@
   "types": "dist/index.d.ts",
   "main": "dist/starcoin.js",
   "module": "dist/starcoin.module.js",
+  "umd:main": "./dist/starcoin.umd.js",
   "files": [
     "dist",
     "LICENSE",
@@ -74,7 +75,7 @@
     "typescript": "^4.0.3"
   },
   "scripts": {
-    "build": "microbundle -o dist/ --sourcemap false --compress false -f modern,es,cjs",
+    "build": "microbundle -o dist/ --sourcemap false --compress false -f modern,es,cjs && microbundle -o dist/ -f umd",
     "dev": "microbundle watch -o dist/ --sourcemap false --compress false -f modern,es,cjs",
     "test": "yarn test:coverage",
     "test:unit": "jest",
