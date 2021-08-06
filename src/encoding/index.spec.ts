@@ -70,7 +70,8 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
   // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
   // const nowSeconds = await provider.getNowSeconds()
   // expired after 12 hours since Unix Epoch
-  // const expirationTimestampSecs = nowSeconds + 43200
+  // const expiredSecs = 43200
+  // const expirationTimestampSecs = nowSeconds + expiredSecs
 
   const sendAmount = 0.01;
   const config = { creator: "0xb2aa52f94db4516c5beecef363af850a", id: 1, type_args_1: "0x1::OnChainConfigDao::OnChainConfigUpdate<0x1::TransactionPublishOption::TransactionPublishOption, d::e::f>" };
@@ -163,7 +164,8 @@ test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", a
   // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
   const nowSeconds = await provider.getNowSeconds()
   // expired after 12 hours since Unix Epoch
-  const expirationTimestampSecs = nowSeconds + 43200
+  const expiredSecs = 43200
+  const expirationTimestampSecs = nowSeconds + expiredSecs
 
   const receiver = '0xd365E954D0Db53CCe197229db866C29F'
   const amount = 10000000
