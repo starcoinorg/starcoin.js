@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.4.7] - 2021-08-13
 - support '_' and '-' character in module and function name
 
+## [1.4.4] - 2021-08-07
+- support optional expiredSecs in txParams, default value is 43200(12hours)
+
 ## [1.4.3] - 2021-07-14
 - add test case for deploy contract using blob hex
     * `yarn test:unit src/providers/jsonrpc-provider.spec.ts --testNamePattern="deploy contract"`
