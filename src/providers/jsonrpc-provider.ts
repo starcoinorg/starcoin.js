@@ -235,7 +235,7 @@ export class JsonRpcSigner extends Signer {
         tx.from = sender;
       }
 
-      const hexTx = (<any>this.provider.constructor).hexlifyTransaction(tx, { from: true });
+      const hexTx = (<any>this.provider.constructor).hexlifyTransaction(tx, { from: true, expiredSecs: true });
       logger.debug(hexTx);
       return this.provider.send("stc_sendTransaction", [hexTx]).then((hash) => {
         return hash;
@@ -715,7 +715,7 @@ export class JsonRpcProvider extends BaseProvider {
     const result: { [key: string]: string } = {};
 
     // Some nodes (INFURA ropsten; INFURA mainnet is fine) do not like leading zeros.
-    ["gasLimit", "gasPrice", "nonce", "value"].forEach(function (key) {
+    ["gasLimit", "gasPrice", "nonce", "value", "expiredSecs"].forEach(function (key) {
       if ((<any>transaction)[key] == null) { return; }
       const value = hexValue((<any>transaction)[key]);
       if (key === "gasLimit") { key = "gas"; }
