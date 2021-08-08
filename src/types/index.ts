@@ -38,7 +38,7 @@ export type TypeTag =
   | { Struct: StructTag };
 
 export function formatStructTag(structTag: StructTag): string {
-  let s = `${structTag.address}::${structTag.module}::${structTag.name}`;
+  let s = `${ structTag.address }::${ structTag.module }::${ structTag.name }`;
 
   if (structTag.type_params && structTag.type_params.length > 0) {
     s = s.concat('<');
@@ -60,7 +60,7 @@ export function formatTypeTag(typeTag: TypeTag): string {
     if (typeTag.Vector !== undefined) {
       // @ts-ignore
       let subTypeTag: TypeTag = typeTag.Vector;
-      return `vector<${formatTypeTag(subTypeTag)}>`;
+      return `vector<${ formatTypeTag(subTypeTag) }>`;
     }
 
     // @ts-ignore
@@ -317,6 +317,7 @@ export interface TransactionRequest {
 
   data?: BytesLike,
   value?: BigNumberish,
+  expiredSecs?: U64;
 
   sender?: AccountAddress;
   sender_public_key?: HexString;
@@ -350,7 +351,7 @@ export interface CallRequest {
 
 export function formatFunctionId(functionId: FunctionId): string {
   if (typeof functionId !== 'string') {
-    return `${functionId.address}::${functionId.module}::${functionId.functionName}`;
+    return `${ functionId.address }::${ functionId.module }::${ functionId.functionName }`;
   } else {
     return functionId;
   }
@@ -364,7 +365,7 @@ export function parseFunctionId(
   } else {
     const parts = functionId.split('::', 3);
     if (parts.length !== 3) {
-      throw new Error(`cannot parse ${functionId} into FunctionId`);
+      throw new Error(`cannot parse ${ functionId } into FunctionId`);
     }
     return {
       address: parts[0],
