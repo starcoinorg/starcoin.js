@@ -320,10 +320,10 @@ function nextToken(s: string): [Token, number] | undefined {
 
 
   // parse name token.
-  if (alphabetical(head) || head === '_') {
+  if (alphabetical(head) || ['-','_'].includes(head)) {
     let r = '';
     for (let i = 0; i < s.length; i++) {
-      if (alphanumerical(s[i]) || s[i] === '_') {
+      if (alphanumerical(s[i]) || ['-','_'].includes(s[i])) {
         r = r.concat(s[i]);
       } else {
         break;
