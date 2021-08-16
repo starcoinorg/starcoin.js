@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as ed from '@starcoin/stc-ed25519';
 import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
 import { arrayify, hexlify } from '@ethersproject/bytes';
@@ -7,6 +8,7 @@ import { BcsSerializer } from '../lib/runtime/bcs';
 import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U8 } from '../types';
 import { addressToSCS, addressFromSCS, typeTagToSCS } from '../encoding';
 import { createRawUserTransactionHasher } from "../crypto_hash";
+import { JsonRpcProvider } from '../providers/jsonrpc-provider';
 
 export function encodeTransactionScript(
   code: bytes,
@@ -24,7 +26,7 @@ export function encodeTransactionScript(
 export function encodeScriptFunction(functionId: FunctionId,
   tyArgs: TypeTag[],
   args: bytes[]): starcoin_types.TransactionPayloadVariantScriptFunction {
-  let funcId = parseFunctionId(functionId);
+  const funcId = parseFunctionId(functionId);
   const scriptFunction = new starcoin_types.ScriptFunction(
     new starcoin_types.ModuleId(addressToSCS(funcId.address), new starcoin_types.Identifier(funcId.module)),
     new starcoin_types.Identifier(funcId.functionName),
@@ -210,4 +212,83 @@ export function encodeStructTypeTags(
   typeArgsString: string[]
 ): TypeTag[] {
   return typeArgsString.map((str) => encodeStructTypeTag(str))
+}
+
+function serializeWithType(
+  value: any,
+  type: any
+): bytes {
+  if (type === 'Address') return arrayify(value);
+
+  const se = new BcsSerializer();
+
+  if (type && type.Vector === 'U8') {
+    if (!value) {
+      return Buffer.from('')
+    }
+    se.serializeStr(value);
+    const hex = hexlify(se.getBytes());
+    return arrayify(hex);
+  }
+
+  if (type && type.Vector && Array.isArray(value)) {
+    se.serializeLen(value.length);
+    value.forEach((sub) => {
+      const innerSE = new BcsSerializer();
+
+      // array of string: vector<vector<u8>>
+      if (type.Vector.Vector === 'U8') {
+        innerSE.serializeStr(sub);
+      } else if (type.Vector) {
+        // array of other types: vector<u8>
+        se[`serialize${ type.Vector }`](sub);
+      }
+
+      const hexedStr = hexlify(innerSE.getBytes());
+      // array of string:  vector<vector<u8>>
+      if (type.Vector.Vector === 'U8') {
+        se.serializeLen(hexedStr.length / 2 - 1);
+        se.serializeStr(sub);
+      }
+    });
+    return arrayify(hexlify(se.getBytes()));
+  }
+
+  // For normal data type
+  if (type) {
+    se[`serialize${ type }`](value);
+    const hex = hexlify(se.getBytes());
+    return arrayify(hex);
+  }
+
+  return value;
+}
+
+export function encodeScriptFunctionArgs(
+  argsType: any[],
+  args: any[]
+): bytes[] {
+  return args.map((value, index) => serializeWithType(value, argsType[index].type_tag))
+}
+
+export async function encodeScriptFunctionByResolve(
+  functionId: FunctionId,
+  typeArgs: string[],
+  args: any[],
+  nodeUrl: string): Promise<starcoin_types.TransactionPayloadVariantScriptFunction> {
+  const tyArgs = encodeStructTypeTags(typeArgs)
+
+  const provider = new JsonRpcProvider(nodeUrl);
+  const { args: argsType } = await provider.send(
+    'contract.resolve_function',
+    [functionId]
+  );
+  // Remove the first Signer type
+  if (argsType[0] && argsType[0].type_tag === 'Signer') {
+    argsType.shift();
+  }
+
+  const argsBytes = encodeScriptFunctionArgs(argsType, args)
+
+  return encodeScriptFunction(functionId, tyArgs, argsBytes);
 }

@@ -1,15 +1,16 @@
-import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
+import { BigNumber } from '@ethersproject/bignumber';
 import {
   addressToSCS, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey,
   publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier,
-  decodeReceiptIdentifier, encodeSignedMessage
+  decodeReceiptIdentifier
 } from '.';
-import { BcsSerializer } from '../lib/runtime/bcs';
+import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
+import { TransactionArgumentVariantU128 } from '../lib/runtime/starcoin_types';
 import { toHexString } from '../utils/hex';
 import { JsonRpcProvider } from '../providers/jsonrpc-provider';
 import {
-  encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags
+  encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags, encodeScriptFunctionByResolve
 } from "../utils/tx";
 
 test("encoding address", () => {
@@ -17,7 +18,7 @@ test("encoding address", () => {
   expect(addressToSCS("0x01").value.length).toBe(16);
 });
 
-test("encoding TransactionPayload->ScriptFunction hex", () => {
+test("encodeScriptFunction hex", async () => {
 
   const functionId = '0x1::TransferScripts::peer_to_peer'
 
@@ -29,7 +30,7 @@ test("encoding TransactionPayload->ScriptFunction hex", () => {
     Buffer.from(''),
     arrayify('0x0060d743dd500b000000000000000000')
   ]
-
+  console.log({ args })
   const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
 
   const se = new BcsSerializer();
@@ -38,7 +39,28 @@ test("encoding TransactionPayload->ScriptFunction hex", () => {
 
   const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
   expect(payloadInHex).toBe(hexExpected);
-});
+}, 10000);
+
+
+test("encodeScriptFunctionByResolve hex", async () => {
+
+  const functionId = '0x1::TransferScripts::peer_to_peer'
+  const typeArgs = ['0x1::STC::STC']
+  const args = [
+    '0x1df9157f14b0041eed18dcc56520d829',
+    '',
+    3185136000000000,
+  ]
+  const nodeUrl = 'https://halley-seed.starcoin.org'
+  const scriptFunction = await encodeScriptFunctionByResolve(functionId, typeArgs, args, nodeUrl);
+
+  const se = new BcsSerializer();
+  scriptFunction.serialize(se);
+  const payloadInHex = toHexString(se.getBytes());
+
+  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
+  expect(payloadInHex).toBe(hexExpected);
+}, 10000);
 
 test("decoding txn payload", () => {
   const payloadInHex = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
@@ -141,7 +163,7 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
   // const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
 
   // expect(signedUserTransactionDecoded.raw_txn.sender).toBe(senderAddressHex);
-});
+}, 10000);
 
 test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", async () => {
 
