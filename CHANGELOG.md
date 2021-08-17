@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.5.0] - 2021-08-26
 - support contract.call_v2 method in rpc actions
 
+## [1.4.9] - 2021-08-18
+- add utils.tx.encodeScriptFunctionByResolve
+
 ## [1.4.7] - 2021-08-13
 - support '_' and '-' character in module and function name
 
