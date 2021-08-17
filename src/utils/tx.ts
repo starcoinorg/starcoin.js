@@ -2,13 +2,14 @@
 import * as ed from '@starcoin/stc-ed25519';
 import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
 import { arrayify, hexlify } from '@ethersproject/bytes';
-import { bytes } from '../lib/runtime/serde';
+import { bytes, Seq, uint8 } from '../lib/runtime/serde';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U8 } from '../types';
 import { addressToSCS, addressFromSCS, typeTagToSCS } from '../encoding';
 import { createRawUserTransactionHasher } from "../crypto_hash";
 import { JsonRpcProvider } from '../providers/jsonrpc-provider';
+import { fromHexString } from './hex';
 
 export function encodeTransactionScript(
   code: bytes,
@@ -226,7 +227,13 @@ function serializeWithType(
     if (!value) {
       return Buffer.from('')
     }
-    se.serializeStr(value);
+    const valueBytes = fromHexString(value);
+    const { length } = valueBytes;
+    const list: Seq<uint8> = [];
+    for (let i = 0; i < length; i++) {
+      list.push(valueBytes[i]);
+    }
+    starcoin_types.Helpers.serializeVectorU8(list, se);
     const hex = hexlify(se.getBytes());
     return arrayify(hex);
   }
@@ -234,24 +241,16 @@ function serializeWithType(
   if (type && type.Vector && Array.isArray(value)) {
     se.serializeLen(value.length);
     value.forEach((sub) => {
-      const innerSE = new BcsSerializer();
-
       // array of string: vector<vector<u8>>
       if (type.Vector.Vector === 'U8') {
-        innerSE.serializeStr(sub);
+        se.serializeBytes(fromHexString(sub))
       } else if (type.Vector) {
         // array of other types: vector<u8>
         se[`serialize${ type.Vector }`](sub);
       }
-
-      const hexedStr = hexlify(innerSE.getBytes());
-      // array of string:  vector<vector<u8>>
-      if (type.Vector.Vector === 'U8') {
-        se.serializeLen(hexedStr.length / 2 - 1);
-        se.serializeStr(sub);
-      }
     });
-    return arrayify(hexlify(se.getBytes()));
+    const hex = hexlify(se.getBytes());
+    return arrayify(hex);
   }
 
   // For normal data type

@@ -62,6 +62,34 @@ test("encodeScriptFunctionByResolve hex", async () => {
   expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 
+test("encodeScriptFunctionByResolve2", async () => {
+
+  const record = {
+    airDropId: 1629183961184,
+    ownerAddress: '0x3f19d5422824f47e6c021978cee98f35',
+    root: '0x95897dd6c2fb94d0543dc745471c12910eff0e9b886686c79e251038cb1b4d02',
+    address: '0x3f19d5422824f47e6c021978cee98f35',
+    idx: 0,
+    amount: 1000000000,
+    proof: [
+      '0x8e942cfc78768a015a18657d8da260ce16744136cea62a9dd17159a9f0dc5110'
+    ],
+  }
+  const functionId = '0xb987F1aB0D7879b2aB421b98f96eFb44::MerkleDistributorScript::claim_script'
+  const typeArgs = ['0x1::STC::STC']
+  const args = [record.ownerAddress, record.airDropId, record.root, record.idx, record.amount, record.proof]
+
+  const nodeUrl = 'https://halley-seed.starcoin.org'
+  const scriptFunction = await encodeScriptFunctionByResolve(functionId, typeArgs, args, nodeUrl);
+
+  const se = new BcsSerializer();
+  scriptFunction.serialize(se);
+  const payloadInHex = toHexString(se.getBytes());
+  // console.log({ payloadInHex })
+  const hexExpected = "0x02b987f1ab0d7879b2ab421b98f96efb44174d65726b6c654469737472696275746f725363726970740c636c61696d5f73637269707401070000000000000000000000000000000103535443035354430006103f19d5422824f47e6c021978cee98f35086068ee527b010000212095897dd6c2fb94d0543dc745471c12910eff0e9b886686c79e251038cb1b4d020800000000000000001000ca9a3b0000000000000000000000002201208e942cfc78768a015a18657d8da260ce16744136cea62a9dd17159a9f0dc5110";
+  expect(payloadInHex).toBe(hexExpected);
+}, 10000);
+
 test("decoding txn payload", () => {
   const payloadInHex = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
   const txnPayload = decodeTransactionPayload(payloadInHex);
