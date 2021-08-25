@@ -9,10 +9,12 @@ import { addressFromSCS, decodeTransactionPayload, bcsEncode, decodeReceiptIdent
 describe('jsonrpc-provider', () => {
   // let provider = new JsonRpcProvider("http://39.102.41.156:9850", undefined);
 
-  const nodeUrl = 'http://localhost:9850';
-  const chainId = 254;
+  // const nodeUrl = 'http://localhost:9850';
+  // const chainId = 254;
   // const nodeUrl = 'https://barnard-seed.starcoin.org';
   // const chainId = 251;
+  const nodeUrl = 'https://main-seed.starcoin.org';
+  const chainId = 1;
 
 
   const provider = new JsonRpcProvider(nodeUrl);
@@ -58,6 +60,15 @@ describe('jsonrpc-provider', () => {
       function_id: '0x1::Account::balance',
       type_args: ['0x1::STC::STC'],
       args: ['0x1'],
+    });
+    console.log(JSON.stringify(values, undefined, 2));
+  });
+
+  test('call contract v2', async () => {
+    const values = await provider.callV2({
+      function_id: '0x1::Token::scaling_factor',
+      type_args: ['0x1::STC::STC'],
+      args: [],
     });
     console.log(JSON.stringify(values, undefined, 2));
   });

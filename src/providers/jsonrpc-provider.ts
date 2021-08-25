@@ -566,6 +566,8 @@ export class JsonRpcProvider extends BaseProvider {
         return ['state.get_account_state_set', [params.address]];
       case RPC_ACTION.call:
         return ['contract.call', [params.request]];
+      case RPC_ACTION.callV2:
+        return ['contract.call_v2', [params.request]];
 
       // case 'estimateGas': {
       //   const hexlifyTransaction = getStatic<
