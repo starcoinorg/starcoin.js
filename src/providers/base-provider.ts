@@ -212,6 +212,7 @@ export const RPC_ACTION = {
   getEventsOfTransaction: 'getEventsOfTransaction',
   getEvents: 'getEvents',
   call: 'call',
+  callV2: 'callV2',
   getCode: 'getCode',
   getResource: 'getResource',
   getAccountState: 'getAccountState',
@@ -1055,6 +1056,21 @@ export abstract class BaseProvider extends Provider {
     // eslint-disable-next-line no-return-await
     const rets = await this.perform(RPC_ACTION.call, params);
     return rets.map((v) => this.formatter.moveValue(v));
+  }
+
+  async callV2(
+    request: CallRequest | Promise<CallRequest>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    blockTag?: BlockTag | Promise<BlockTag>
+  ): Promise<Array<MoveValue>> {
+    await this.getNetwork();
+    const params = await resolveProperties({
+      request,
+    });
+    params.request.function_id = formatFunctionId(params.request.function_id);
+    // eslint-disable-next-line no-return-await
+    const rets = await this.perform(RPC_ACTION.callV2, params);
+    return rets.map((v) => v);
   }
 
   async dryRun(
