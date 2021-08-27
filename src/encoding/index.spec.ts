@@ -3,7 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import {
   addressToSCS, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey,
   publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier,
-  decodeReceiptIdentifier
+  decodeReceiptIdentifier, bytesToString, stringToBytes
 } from '.';
 import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
 import { TransactionArgumentVariantU128 } from '../lib/runtime/starcoin_types';
@@ -113,7 +113,7 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
 
   // TODO: generate maxGasAmount from contract.dry_run -> gas_used
   const maxGasAmount = 10000000
-
+  const gasUnitPrice = 1
   const chainId = 1
 
   // because the time system in dev network is relatively static, 
@@ -176,6 +176,7 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
   //   senderAddressHex,
   //   scriptFunction,
   //   maxGasAmount,
+  //   gasUnitPrice,
   //   senderSequenceNumber,
   //   expirationTimestampSecs,
   //   chainId
@@ -207,6 +208,7 @@ test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", a
 
   // TODO: generate maxGasAmount from contract.dry_run -> gas_used
   const maxGasAmount = 10000000
+  const gasUnitPrice = 1
 
   const chainId = 1
 
@@ -261,6 +263,7 @@ test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", a
     senderAddressHex,
     scriptFunction,
     maxGasAmount,
+    gasUnitPrice,
     senderSequenceNumber,
     expirationTimestampSecs,
     chainId
@@ -380,4 +383,10 @@ test("encode struct type args: vote", () => {
   expect(structTypeTags[1]['Struct'].type_params.length).toBe(1)
 });
 
-
+test('encoe/decode string', () => {
+  const imageUrl = 'ipfs://QmSPcvcXgdtHHiVTAAarzTeubk5X3iWymPAoKBfiRFjPMY'
+  const imageBytes = stringToBytes(imageUrl)
+  const imageHex = hexlify(imageBytes)
+  expect(imageHex).toBe('0x697066733a2f2f516d5350637663586764744848695654414161727a546575626b3558336957796d50416f4b42666952466a504d59')
+  expect(bytesToString(imageBytes)).toBe(imageUrl)
+});

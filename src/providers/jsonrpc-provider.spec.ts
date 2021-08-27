@@ -183,7 +183,7 @@ describe('jsonrpc-provider', () => {
 
     // TODO: generate maxGasAmount from contract.dry_run -> gas_used
     let maxGasAmount = 10000000n;
-
+    const gasUnitPrice = 1;
     // because the time system in dev network is relatively static,
     // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
     const nowSeconds = await provider.getNowSeconds();
@@ -216,6 +216,7 @@ describe('jsonrpc-provider', () => {
       senderAddressHex,
       scriptFunction,
       maxGasAmount,
+      gasUnitPrice,
       senderSequenceNumber,
       expirationTimestampSecs,
       chainId
@@ -237,6 +238,7 @@ describe('jsonrpc-provider', () => {
         senderAddressHex,
         scriptFunction,
         maxGasAmount,
+        gasUnitPrice,
         senderSequenceNumber,
         expirationTimestampSecs,
         chainId
@@ -277,7 +279,7 @@ describe('jsonrpc-provider', () => {
 
     // TODO: generate maxGasAmount from contract.dry_run -> gas_used
     const maxGasAmount = 10000000;
-
+    const gasUnitPrice = 1;
     // because the time system in dev network is relatively static,
     // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
     const nowSeconds = await provider.getNowSeconds();
@@ -299,6 +301,7 @@ describe('jsonrpc-provider', () => {
       address,
       transactionPayload,
       maxGasAmount,
+      gasUnitPrice,
       senderSequenceNumber,
       expirationTimestampSecs,
       chainId

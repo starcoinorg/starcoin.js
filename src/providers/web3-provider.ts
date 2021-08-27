@@ -35,7 +35,9 @@ function buildWeb3LegacyFetcher(provider: ExternalProvider, sendFunc: Web3Legacy
 
         return new Promise((resolve, reject) => {
             sendFunc(request, function (error, result) {
-                if (error) { return reject(error); }
+                if (error) {
+                    return reject(error);
+                }
 
                 if (result.error) {
                     const error = new Error(result.error.message);

@@ -62,6 +62,7 @@ export function generateRawUserTransaction(
   senderAddress: HexString,
   payload: starcoin_types.TransactionPayload,
   maxGasAmount: U64,
+  gasUnitPrice: U64,
   senderSequenceNumber: U64,
   expirationTimestampSecs: U64,
   chainId: U8
@@ -72,7 +73,7 @@ export function generateRawUserTransaction(
   const sequence_number = BigInt(senderSequenceNumber)
 
   const max_gas_amount = BigInt(maxGasAmount)
-  const gas_unit_price = BigInt(1)
+  const gas_unit_price = BigInt(gasUnitPrice)
   const gas_token_code = '0x1::STC::STC'
   const expiration_timestamp_secs = BigInt(expirationTimestampSecs)
   const chain_id = new starcoin_types.ChainId(chainId)
