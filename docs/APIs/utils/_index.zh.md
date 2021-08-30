@@ -3,6 +3,13 @@ title: utils
 weight: 9
 ---
 
+### utils.tx.encodeScriptFunctionArgs(argsType, args) => bytes[]
+
+| Param | Type | Desc |
+|-------|------|------|
+|argsType| any[] | |
+|args| any[] | |
+
 ### utils.tx.signRawUserTransaction(senderPrivateKey,rawUserTransaction) => `Promise<string>`
 
 用私钥签名一个RawUserTransaction, 返回transaction的hash, 提供给Restful API `txpool.submit_hex_transaction`使用
