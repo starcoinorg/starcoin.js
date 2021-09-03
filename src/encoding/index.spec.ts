@@ -22,14 +22,13 @@ test("encoding address", () => {
 
 test("encodeScriptFunction hex", async () => {
 
-  const functionId = '0x1::TransferScripts::peer_to_peer'
+  const functionId = '0x1::TransferScripts::peer_to_peer_v2'
 
   const strTypeArgs = ['0x1::STC::STC']
   const tyArgs = encodeStructTypeTags(strTypeArgs)
 
   const args = [
     arrayify('0x1df9157f14b0041eed18dcc56520d829'),
-    Buffer.from(''),
     arrayify('0x0060d743dd500b000000000000000000')
   ]
   console.log({ args })
@@ -39,28 +38,72 @@ test("encodeScriptFunction hex", async () => {
   scriptFunction.serialize(se);
   const payloadInHex = toHexString(se.getBytes());
 
-  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
+  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f763201070000000000000000000000000000000103535443035354430002101df9157f14b0041eed18dcc56520d829100060d743dd500b000000000000000000";
   expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 
 
 test("encodeScriptFunctionByResolve hex", async () => {
-
-  const functionId = '0x1::TransferScripts::peer_to_peer'
+  // request:
+  // curl --location --request POST 'https://barnard-seed.starcoin.org' \
+  //      --header 'Content-Type: application/json' \
+  //      --data-raw '{
+  //       "id":101, 
+  //       "jsonrpc":"2.0", 
+  //       "method":"contract.resolve_function", 
+  //       "params":["0x1::TransferScripts::peer_to_peer_v2"]
+  //      }'
+  // response:
+  // {
+  //   "jsonrpc": "2.0",
+  //   "result": {
+  //       "name": "peer_to_peer_v2",
+  //       "module_name": {
+  //           "address": "0x00000000000000000000000000000001",
+  //           "name": "TransferScripts"
+  //       },
+  //       "doc": "",
+  //       "ty_args": [
+  //           {
+  //               "name": "T0",
+  //               "abilities": 4
+  //           }
+  //       ],
+  //       "args": [
+  //           {
+  //               "name": "p0",
+  //               "type_tag": "Signer",
+  //               "doc": ""
+  //           },
+  //           {
+  //               "name": "p1",
+  //               "type_tag": "Address",
+  //               "doc": ""
+  //           },
+  //           {
+  //               "name": "p2",
+  //               "type_tag": "U128",
+  //               "doc": ""
+  //           }
+  //       ]
+  //   },
+  //   "id": 101
+  // }
+  const functionId = '0x1::TransferScripts::peer_to_peer_v2'
   const typeArgs = ['0x1::STC::STC']
   const args = [
     '0x1df9157f14b0041eed18dcc56520d829',
-    '',
     3185136000000000,
   ]
-  const nodeUrl = 'https://halley-seed.starcoin.org'
+  const nodeUrl = 'https://barnard-seed.starcoin.org'
   const scriptFunction = await encodeScriptFunctionByResolve(functionId, typeArgs, args, nodeUrl);
 
   const se = new BcsSerializer();
   scriptFunction.serialize(se);
   const payloadInHex = toHexString(se.getBytes());
+  console.log(payloadInHex)
 
-  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
+  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f763201070000000000000000000000000000000103535443035354430002101df9157f14b0041eed18dcc56520d829100060d743dd500b000000000000000000";
   expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 
