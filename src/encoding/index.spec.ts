@@ -1,5 +1,7 @@
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { BigNumber } from '@ethersproject/bignumber';
+import * as fs from "fs";
+import path from "path";
 import {
   addressToSCS, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey,
   publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier,
@@ -383,10 +385,36 @@ test("encode struct type args: vote", () => {
   expect(structTypeTags[1]['Struct'].type_params.length).toBe(1)
 });
 
-test('encoe/decode string', () => {
+test('decode string', () => {
+  const imageHex = '0x53746172636f696e47656e657369734e4654'
+  const imageBytes = arrayify(imageHex)
+  const imageName = bytesToString(imageBytes)
+  console.log({ imageName })
+  // expect(imageName).toBe(imageUrl)
+});
+
+test('encode/decode string', () => {
   const imageUrl = 'ipfs://QmSPcvcXgdtHHiVTAAarzTeubk5X3iWymPAoKBfiRFjPMY'
   const imageBytes = stringToBytes(imageUrl)
   const imageHex = hexlify(imageBytes)
   expect(imageHex).toBe('0x697066733a2f2f516d5350637663586764744848695654414161727a546575626b3558336957796d50416f4b42666952466a504d59')
   expect(bytesToString(imageBytes)).toBe(imageUrl)
+});
+
+
+test('encode/decode data:image/png;base64', () => {
+  const buffer = fs.readFileSync(
+    path.join(__dirname, "data", "image_png_base64.txt")
+  );
+  const imageData = buffer.toString()
+  // console.log({ imageData })
+  const imageBytes = stringToBytes(imageData)
+  const imageHex = hexlify(imageBytes)
+  // console.log({ imageHex })
+  const buffer2 = fs.readFileSync(
+    path.join(__dirname, "data", "imageHex.txt")
+  );
+  const imageHexExpected = buffer2.toString()
+  expect(imageHex).toBe(imageHexExpected)
+  expect(bytesToString(imageBytes)).toBe(imageData)
 });
