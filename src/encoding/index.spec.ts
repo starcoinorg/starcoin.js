@@ -44,52 +44,7 @@ test("encodeScriptFunction hex", async () => {
 }, 10000);
 
 
-test("encodeScriptFunctionByResolve hex", async () => {
-  // request:
-  // curl --location --request POST 'https://barnard-seed.starcoin.org' \
-  //      --header 'Content-Type: application/json' \
-  //      --data-raw '{
-  //       "id":101, 
-  //       "jsonrpc":"2.0", 
-  //       "method":"contract.resolve_function", 
-  //       "params":["0x1::TransferScripts::peer_to_peer_v2"]
-  //      }'
-  // response:
-  // {
-  //   "jsonrpc": "2.0",
-  //   "result": {
-  //       "name": "peer_to_peer_v2",
-  //       "module_name": {
-  //           "address": "0x00000000000000000000000000000001",
-  //           "name": "TransferScripts"
-  //       },
-  //       "doc": "",
-  //       "ty_args": [
-  //           {
-  //               "name": "T0",
-  //               "abilities": 4
-  //           }
-  //       ],
-  //       "args": [
-  //           {
-  //               "name": "p0",
-  //               "type_tag": "Signer",
-  //               "doc": ""
-  //           },
-  //           {
-  //               "name": "p1",
-  //               "type_tag": "Address",
-  //               "doc": ""
-  //           },
-  //           {
-  //               "name": "p2",
-  //               "type_tag": "U128",
-  //               "doc": ""
-  //           }
-  //       ]
-  //   },
-  //   "id": 101
-  // }
+test("encodeScriptFunctionByResolve", async () => {
   const functionId = '0x1::TransferScripts::peer_to_peer_v2'
   const typeArgs = ['0x1::STC::STC']
   const args = [
@@ -132,6 +87,35 @@ test("encodeScriptFunctionByResolve2", async () => {
   const payloadInHex = toHexString(se.getBytes());
   // console.log({ payloadInHex })
   const hexExpected = "0x02b987f1ab0d7879b2ab421b98f96efb44174d65726b6c654469737472696275746f725363726970740c636c61696d5f73637269707401070000000000000000000000000000000103535443035354430006103f19d5422824f47e6c021978cee98f35086068ee527b010000212095897dd6c2fb94d0543dc745471c12910eff0e9b886686c79e251038cb1b4d020800000000000000001000ca9a3b0000000000000000000000002201208e942cfc78768a015a18657d8da260ce16744136cea62a9dd17159a9f0dc5110";
+  expect(payloadInHex).toBe(hexExpected);
+}, 10000);
+
+
+test("encodeScriptFunctionByResolve3", async () => {
+  const nft = {
+    name: 'mytestnft',
+    image: 'ipfs:://QmSPcvcXgdtHHiVTAAarzTeubk5X3iWymPAoKBfiRFjPMY',
+    description: 'mytestnftdescription',
+  }
+  const functionId = '0x2c5bd5fb513108d4557107e09c51656c::SimpleNFTScripts::mint_with_image'
+  const tyArgs = []
+  // the following 2 args[] both should be work
+  // const args = [hexlify(stringToBytes(nft.name)), hexlify(stringToBytes(nft.image)), hexlify(stringToBytes(nft.description))]
+  const args = [nft.name, nft.image, nft.description]
+
+  const nodeUrl = 'https://barnard-seed.starcoin.org'
+  // console.log({ functionId, tyArgs, args, nodeUrl })
+
+  const scriptFunction = await encodeScriptFunctionByResolve(functionId, tyArgs, args, nodeUrl)
+
+  const payloadInHex = (function () {
+    const se = new BcsSerializer()
+    scriptFunction.serialize(se)
+    return hexlify(se.getBytes())
+  })()
+  // console.log({ payloadInHex })
+
+  const hexExpected = "0x022c5bd5fb513108d4557107e09c51656c1053696d706c654e4654536372697074730f6d696e745f776974685f696d61676500030a096d79746573746e66743736697066733a3a2f2f516d5350637663586764744848695654414161727a546575626b3558336957796d50416f4b42666952466a504d5915146d79746573746e66746465736372697074696f6e";
   expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 

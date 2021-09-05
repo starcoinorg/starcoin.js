@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as ed from '@starcoin/stc-ed25519';
 import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
-import { arrayify, hexlify } from '@ethersproject/bytes';
+import { arrayify, hexlify, isHexString } from '@ethersproject/bytes';
 import { bytes, Seq, uint8 } from '../lib/runtime/serde';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { BcsSerializer } from '../lib/runtime/bcs';
@@ -228,7 +228,7 @@ function serializeWithType(
     if (!value) {
       return Buffer.from('')
     }
-    const valueBytes = fromHexString(value);
+    const valueBytes = isHexString(addHexPrefix(value)) ? fromHexString(value) : new Uint8Array(Buffer.from(value))
     const { length } = valueBytes;
     const list: Seq<uint8> = [];
     for (let i = 0; i < length; i++) {
