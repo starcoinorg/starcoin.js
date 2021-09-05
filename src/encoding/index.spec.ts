@@ -1,4 +1,5 @@
-import { arrayify, hexlify } from '@ethersproject/bytes';
+import { arrayify, hexlify, isHexString } from '@ethersproject/bytes';
+import { addHexPrefix } from 'ethereumjs-util';
 import { BigNumber } from '@ethersproject/bignumber';
 import * as fs from "fs";
 import path from "path";
@@ -108,7 +109,6 @@ test("encodeScriptFunctionByResolve hex", async () => {
 }, 10000);
 
 test("encodeScriptFunctionByResolve2", async () => {
-
   const record = {
     airDropId: 1629183961184,
     ownerAddress: '0x3f19d5422824f47e6c021978cee98f35',
@@ -431,17 +431,17 @@ test("encode struct type args: vote", () => {
 test('decode string', () => {
   const imageHex = '0x53746172636f696e47656e657369734e4654'
   const imageBytes = arrayify(imageHex)
-  const imageName = bytesToString(imageBytes)
-  console.log({ imageName })
-  // expect(imageName).toBe(imageUrl)
+  const imageName = Buffer.from(imageBytes).toString()
+  // console.log({ imageName })
+  expect(imageName).toBe('StarcoinGenesisNFT')
 });
 
 test('encode/decode string', () => {
   const imageUrl = 'ipfs://QmSPcvcXgdtHHiVTAAarzTeubk5X3iWymPAoKBfiRFjPMY'
-  const imageBytes = stringToBytes(imageUrl)
+  const imageBytes = new Uint8Array(Buffer.from(imageUrl))
   const imageHex = hexlify(imageBytes)
   expect(imageHex).toBe('0x697066733a2f2f516d5350637663586764744848695654414161727a546575626b3558336957796d50416f4b42666952466a504d59')
-  expect(bytesToString(imageBytes)).toBe(imageUrl)
+  expect(Buffer.from(imageBytes).toString()).toBe(imageUrl)
 });
 
 
@@ -451,7 +451,7 @@ test('encode/decode data:image/png;base64', () => {
   );
   const imageData = buffer.toString()
   // console.log({ imageData })
-  const imageBytes = stringToBytes(imageData)
+  const imageBytes = new Uint8Array(Buffer.from(imageData))
   const imageHex = hexlify(imageBytes)
   // console.log({ imageHex })
   const buffer2 = fs.readFileSync(
@@ -459,5 +459,5 @@ test('encode/decode data:image/png;base64', () => {
   );
   const imageHexExpected = buffer2.toString()
   expect(imageHex).toBe(imageHexExpected)
-  expect(bytesToString(imageBytes)).toBe(imageData)
+  expect(Buffer.from(imageBytes).toString()).toBe(imageData)
 });

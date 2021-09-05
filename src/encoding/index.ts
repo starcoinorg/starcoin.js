@@ -357,6 +357,8 @@ export function publicKeyToReceiptIdentifier(publicKey: string): string {
 //
 // }
 
+// Deprecated
+// stringToBytes(str) can be replaced with: new Uint8Array(Buffer.from(str))
 export function stringToBytes(str: string): BytesLike {
   let bytes = new Array();
   let len, c;
@@ -382,6 +384,8 @@ export function stringToBytes(str: string): BytesLike {
   return bytes;
 }
 
+// Deprecated
+// bytesToString(arr) can be replaced with: Buffer.from(arr).toString()
 export function bytesToString(arr: BytesLike): string {
   if (typeof arr === 'string') {
     return arr;
