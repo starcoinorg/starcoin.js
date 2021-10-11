@@ -395,6 +395,18 @@ test("encode && decode receipt identifier", () => {
 
 });
 
+test("decode receipt identifier", () => {
+  const address = "1603d10ce8649663e4e5a757a8681833";
+  const authKey = "93dcc435cfca2dcf3bf44e9948f1f6a98e66a1f1b114a4b8a37ea16e12beeb6d";
+  const encodedStr = 'stc1pzcpazr8gvjtx8e895at6s6qcxwfae3p4el9zmnem738fjj83765cue4p7xc3ff9c5dl2zmsjhm4k63mmwta'
+
+  const receiptIdentifier = decodeReceiptIdentifier(encodedStr)
+  // console.log('address', receiptIdentifier.accountAddress)
+  // console.log('authkey', receiptIdentifier.authKey)
+  expect(receiptIdentifier.accountAddress).toBe(address)
+  expect(receiptIdentifier.authKey).toBe(authKey)
+});
+
 test("encode struct type args: send stc", () => {
   const strTypeArgs = ['0x1::STC::STC']
   const structTypeTags = encodeStructTypeTags(strTypeArgs)
