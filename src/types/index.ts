@@ -1,5 +1,6 @@
 import { BigNumberish } from "@ethersproject/bignumber";
-import { BytesLike } from "@ethersproject/bytes";
+import { concat, BytesLike, arrayify, hexlify } from "@ethersproject/bytes";
+import { privateKeyToPublicKey } from "../encoding";
 import { uint128, uint64, uint8 } from '../lib/runtime/serde';
 
 export type Identifier = string;
@@ -14,6 +15,7 @@ export type I64 = number | BigInt;
 export type BlockNumber = number;
 export type AuthenticationKey = string;
 export type Ed25519PublicKey = string;
+export type Ed25519PrivateKey = string;
 export type Ed25519Signature = string;
 export type MultiEd25519PublicKey = string;
 export type MultiEd25519Signature = string;
