@@ -67,6 +67,17 @@ export async function createMultiSignAccount(originPublicKeys: Array<string>, or
   const x = new MultiEd25519KeyShard(uniquePublicKeys, thresHold, pos_verified_private_keys)
   console.log({ x })
 
+
+
+  console.log(x.privateKeys())
+  console.log(x.publicKey())
+  console.log(x.threshold)
+
+  const pub = x.publicKey()
+  console.log({ pub })
+  console.log(pub.serialize())
+  console.log(hexlify(pub.serialize()))
+
   // const bytes = new Uint8Array(x.serialize());
 
   // const x2 = await MultiEd25519KeyShard.deserialize(bytes)

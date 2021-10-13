@@ -1,4 +1,4 @@
-import { concat, arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
+import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import * as ed from '@starcoin/stc-ed25519';
 import { sha3_256 } from 'js-sha3';

@@ -1,5 +1,5 @@
 import { BigNumberish } from "@ethersproject/bignumber";
-import { BytesLike, arrayify, hexlify } from "@ethersproject/bytes";
+import { BytesLike } from "@ethersproject/bytes";
 import { uint128, uint64, uint8 } from '../lib/runtime/serde';
 
 export type Identifier = string;

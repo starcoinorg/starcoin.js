@@ -1,3 +1,5 @@
+/* eslint-disable max-classes-per-file */
+import { concat, arrayify, hexlify } from '@ethersproject/bytes';
 import {
     U8,
     Ed25519PublicKey,
@@ -32,5 +34,18 @@ export class MultiEd25519PublicKey {
         } else if (num_of_public_keys > MAX_NUM_OF_KEYS) {
             throw new Error(CryptoMaterialError.WrongLengthError)
         }
+    }
+
+    public serialize(): Uint8Array {
+        const arrPub = []
+        this.public_keys.forEach((pub) => {
+            arrPub.push(arrayify(pub))
+        })
+
+        const arrThreshold = new Uint8Array(1);
+        arrThreshold[0] = this.threshold
+
+        const bytes = concat([...arrPub, ...arrThreshold])
+        return bytes;
     }
 }

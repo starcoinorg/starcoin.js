@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 import { concat, arrayify, hexlify } from '@ethersproject/bytes';
 import {
     CryptoMaterialError,
@@ -12,7 +13,7 @@ import { privateKeyToPublicKey } from "../encoding";
 // Part of private keys in the multi-key Ed25519 structure along with the threshold.
 // note: the private keys must be a sequential part of the MultiEd25519PrivateKey
 export class MultiEd25519KeyShard {
-    constructor(public public_keys: Ed25519PublicKey[], public threshold: U8, public private_keys: Record<U8, Ed25519PrivateKey>) {
+    constructor(private public_keys: Ed25519PublicKey[], public threshold: U8, private private_keys: Record<U8, Ed25519PrivateKey>) {
         const num_of_public_keys = public_keys.length;
         const num_of_private_keys = Object.keys(private_keys).length;
         if (threshold === 0 || num_of_private_keys === 0 || num_of_public_keys < threshold) {
@@ -81,15 +82,11 @@ export class MultiEd25519KeyShard {
         return new MultiEd25519KeyShard(public_keys, threshold, pos_verified_private_keys)
     }
 
-    public getThreshold(): U8 {
-        return this.threshold;
-    }
-
-    public getPublicKey(): MultiEd25519PublicKey {
+    public publicKey(): MultiEd25519PublicKey {
         return new MultiEd25519PublicKey(this.public_keys, this.threshold);
     }
 
-    public getPrivateKeys(): Ed25519PrivateKey[] {
+    public privateKeys(): Ed25519PrivateKey[] {
         return Object.values(this.private_keys);
     }
 
