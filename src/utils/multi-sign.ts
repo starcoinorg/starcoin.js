@@ -4,7 +4,8 @@ import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import { hexlify } from '@ethersproject/bytes';
 import { cloneDeep } from 'lodash';
 import { showAccount } from "./account"
-import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier, MultiEd25519KeyShard } from "../encoding";
+import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier } from "../encoding";
+import { MultiEd25519KeyShard } from "../crypto";
 
 /**
  * simillar to this command in the starcoin console:
