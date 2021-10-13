@@ -427,7 +427,7 @@ const MAX_NUM_OF_KEYS = 32
 const BITMAP_NUM_OF_BYTES = 4
 
 /// The length of the Ed25519PrivateKey
-const ED25519_PRIVATE_KEY_LENGTH: U8 = 32;
+const ED25519_PRIVATE_KEY_LENGTH = 32;
 /// The length of the Ed25519PublicKey
 const ED25519_PUBLIC_KEY_LENGTH = 32;
 /// The length of the Ed25519Signature
@@ -447,28 +447,19 @@ export class MultiEd25519KeyShard {
   }
 
   public serialize(): Uint8Array {
-    console.log('serialize')
     const arrHead = new Uint8Array(3);
     arrHead[0] = this.public_keys.length
     arrHead[1] = this.threshold
     arrHead[2] = this.len()
-    console.log(arrHead)
     const arrPub = []
     this.public_keys.forEach((pub) => {
-      console.log(pub)
-      console.log(arrayify(pub))
       arrPub.push(arrayify(pub))
     })
-    console.log({ arrPub })
     const arrPriv = []
     Object.values(this.private_keys).forEach((priv) => {
-      console.log(priv)
-      console.log(arrayify(priv))
       arrPriv.push(arrayify(priv))
     })
-    console.log({ arrPriv })
     const bytes = concat([arrHead, ...arrPub, ...arrPriv])
-    console.log(bytes)
     return bytes;
   }
 
@@ -484,7 +475,6 @@ export class MultiEd25519KeyShard {
 
     const public_key_bytes_len = public_key_len * ED25519_PUBLIC_KEY_LENGTH;
     const private_key_bytes_len = private_key_len * ED25519_PRIVATE_KEY_LENGTH;
-    console.log({ public_key_len, threshold, private_key_len, public_key_bytes_len, private_key_bytes_len })
 
     let i, j
     const public_keys = []
@@ -492,13 +482,11 @@ export class MultiEd25519KeyShard {
       const temp = bytes.slice(i, i + ED25519_PUBLIC_KEY_LENGTH);
       public_keys.push(hexlify(temp))
     }
-    console.log({ public_keys })
     const private_keys = []
     for (i = HEADER_LEN + public_key_bytes_len, j = bytes.length; i < j; i += ED25519_PRIVATE_KEY_LENGTH) {
       const temp = bytes.slice(i, i + ED25519_PUBLIC_KEY_LENGTH);
       private_keys.push(hexlify(temp))
     }
-    console.log({ private_keys })
     const pos_verified_private_keys = {};
     await Promise.all(
       private_keys.map((priv) => {
@@ -513,7 +501,6 @@ export class MultiEd25519KeyShard {
         })
       })
     )
-    console.log({ pos_verified_private_keys })
     return new MultiEd25519KeyShard(public_keys, threshold, pos_verified_private_keys)
   }
 

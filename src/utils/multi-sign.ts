@@ -37,18 +37,13 @@ export async function createMultiSignAccount(originPublicKeys: Array<string>, or
     })
   )
 
-  console.log({ publicKeys });
-  console.log({ pubPrivMap });
-
   // 3. sort all public keys by its bytes in asc order to make sure same public key set always generate same auth key.
   publicKeys.sort((a, b) => {
     return a > b ? 1 : -1
   })
-  console.log({ publicKeys });
 
   // 4. remove repeat public keys, if use add repeat public_key or private key.
   const uniquePublicKeys = publicKeys.filter((v, i, a) => a.indexOf(v) === i)
-  console.log({ uniquePublicKeys, thresHold, pubPrivMap })
 
   // 5. generate pos_verified_private_keys
   const pos_verified_private_keys = {};
@@ -66,24 +61,16 @@ export async function createMultiSignAccount(originPublicKeys: Array<string>, or
     })
   )
 
-  console.log({ pos_verified_private_keys })
+  console.log({ uniquePublicKeys, thresHold, pos_verified_private_keys })
 
   const x = new MultiEd25519KeyShard(uniquePublicKeys, thresHold, pos_verified_private_keys)
   console.log({ x })
 
-  console.log(x.getThreshold())
-  console.log(x.getPublicKeys())
-  console.log(x.getPrivateKeys())
-  console.log(x.len())
-  console.log(x.isEmpty())
+  // const bytes = new Uint8Array(x.serialize());
 
-  const bytes = new Uint8Array(x.serialize());
-  console.log({ bytes })
+  // const x2 = await MultiEd25519KeyShard.deserialize(bytes)
+  // console.log({ x2 })
 
-  const hex = hexlify(bytes);
-  console.log({ hex })
-  const x2 = await MultiEd25519KeyShard.deserialize(bytes)
-  console.log({ x2 })
   const accountInfo = showAccount(originPrivateKeys[0]);
   return accountInfo;
 }
