@@ -270,18 +270,20 @@ export async function privateKeyToPublicKey(privateKey: string): Promise<string>
   return addHexPrefix(publicKey)
 }
 
-export function publicKeyToAuthKey(publicKey: string): string {
+// singleMulti: 0-single, 1-multi
+export function publicKeyToAuthKey(publicKey: string, singleMulti = 0): string {
   const hasher = sha3_256.create()
-  hasher.update(fromHexString(stripHexPrefix(publicKey)))
-  hasher.update(fromHexString("00"))
+  hasher.update(fromHexString(publicKey))
+  hasher.update(fromHexString(hexlify(singleMulti)))
   const hash = hasher.hex()
   return addHexPrefix(hash)
 }
 
-export function publicKeyToAddress(publicKey: string): string {
+// singleMulti: 0-single, 1-multi
+export function publicKeyToAddress(publicKey: string, singleMulti = 0): string {
   const hasher = sha3_256.create()
-  hasher.update(fromHexString(stripHexPrefix(publicKey)))
-  hasher.update(fromHexString("00"))
+  hasher.update(fromHexString(publicKey))
+  hasher.update(fromHexString(hexlify(singleMulti)))
   const hash = hasher.hex()
   const address = hash.slice(hash.length / 2)
   return addHexPrefix(address)
