@@ -86,8 +86,14 @@ export class MultiEd25519KeyShard {
         return new MultiEd25519PublicKey(this.public_keys, this.threshold);
     }
 
+    // should be different for each account, since the private_keys are not the same
     public privateKeys(): Ed25519PrivateKey[] {
         return Object.values(this.private_keys);
+    }
+
+    // should be different for each account, since the private_keys are not the same
+    public privateKey(): Uint8Array {
+        return this.serialize();
     }
 
     public len(): U8 {

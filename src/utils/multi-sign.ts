@@ -1,7 +1,7 @@
 
 import { utils } from '@starcoin/stc-ed25519';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
-import { hexlify } from '@ethersproject/bytes';
+import { hexlify, hexValue, hexZeroPad } from '@ethersproject/bytes';
 import { cloneDeep } from 'lodash';
 import { showAccount } from "./account"
 import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier } from "../encoding";
@@ -73,13 +73,25 @@ export async function createMultiSignAccount(originPublicKeys: Array<string>, or
   console.log(x.publicKey())
   console.log(x.threshold)
 
+  const priv = x.privateKey()
+  console.log('priv', hexlify(priv))
+
   const pub = x.publicKey()
   console.log({ pub })
   console.log(pub.serialize())
   console.log(hexlify(pub.serialize()))
 
-  // const bytes = new Uint8Array(x.serialize());
+  const publicKey = hexlify(pub.serialize())
+  console.log({ publicKey })
 
+  const authKey = publicKeyToAuthKey(publicKey, 1)
+  console.log({ authKey })
+
+  const address = publicKeyToAddress(publicKey, 1)
+  console.log({ address })
+
+  const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address), stripHexPrefix(authKey))
+  console.log({ receiptIdentifier })
   // const x2 = await MultiEd25519KeyShard.deserialize(bytes)
   // console.log({ x2 })
 
