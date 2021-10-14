@@ -1,5 +1,6 @@
 
 import { utils } from '@starcoin/stc-ed25519';
+import { readFileSync, writeFileSync } from 'fs';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import { hexlify, hexValue, hexZeroPad } from '@ethersproject/bytes';
 import { cloneDeep } from 'lodash';
@@ -90,10 +91,20 @@ export async function createMultiSignAccount(originPublicKeys: Array<string>, or
   const address = publicKeyToAddress(publicKey, 1)
   console.log({ address })
 
-  const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address), stripHexPrefix(authKey))
+  // same with Rust, receiptIdentifier do not include authKey
+  const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address))
   console.log({ receiptIdentifier })
   // const x2 = await MultiEd25519KeyShard.deserialize(bytes)
   // console.log({ x2 })
+
+  try {
+    writeFileSync("binaryfile", priv);
+    const rbuf = readFileSync("binaryfile");
+    console.log({ rbuf });
+    console.log(hexlify(rbuf));
+  } catch (error) {
+    console.log(error);
+  }
 
   const accountInfo = showAccount(originPrivateKeys[0]);
   return accountInfo;

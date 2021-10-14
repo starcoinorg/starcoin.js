@@ -44,6 +44,7 @@
     "@starcoin/stc-ed25519": "^0.1.0",
     "bech32": "^2.0.0",
     "ethereumjs-util": "5.1.0",
+    "fs": "^0.0.1-security",
     "is-alphabetical": "^1.0.4",
     "is-alphanumerical": "^1.0.4",
     "is-decimal": "^1.0.4",
