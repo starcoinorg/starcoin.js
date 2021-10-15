@@ -1,11 +1,6 @@
 
-import { utils } from '@starcoin/stc-ed25519';
-import { readFileSync, writeFileSync } from 'fs';
-import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
-import { hexlify, hexValue, hexZeroPad } from '@ethersproject/bytes';
 import { cloneDeep } from 'lodash';
-import { showAccount } from "./account"
-import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier } from "../encoding";
+import { privateKeyToPublicKey } from "../encoding";
 import { MultiEd25519KeyShard } from "../crypto";
 
 /**
@@ -17,7 +12,7 @@ import { MultiEd25519KeyShard } from "../crypto";
  * @param thresHold
  * @returns 
  */
-export async function createMultiSignAccount(originPublicKeys: Array<string>, originPrivateKeys: Array<string>, thresHold: number): Promise<Record<string, string>> {
+export async function createMultiEd25519KeyShard(originPublicKeys: Array<string>, originPrivateKeys: Array<string>, thresHold: number): Promise<MultiEd25519KeyShard> {
   if (originPrivateKeys.length === 0) {
     throw new Error('require at least one private key');
   }
@@ -63,49 +58,6 @@ export async function createMultiSignAccount(originPublicKeys: Array<string>, or
     })
   )
 
-  console.log({ uniquePublicKeys, thresHold, pos_verified_private_keys })
-
-  const x = new MultiEd25519KeyShard(uniquePublicKeys, thresHold, pos_verified_private_keys)
-  console.log({ x })
-
-
-
-  console.log(x.privateKeys())
-  console.log(x.publicKey())
-  console.log(x.threshold)
-
-  const priv = x.privateKey()
-  console.log('priv', hexlify(priv))
-
-  const pub = x.publicKey()
-  console.log({ pub })
-  console.log(pub.serialize())
-  console.log(hexlify(pub.serialize()))
-
-  const publicKey = hexlify(pub.serialize())
-  console.log({ publicKey })
-
-  const authKey = publicKeyToAuthKey(publicKey, 1)
-  console.log({ authKey })
-
-  const address = publicKeyToAddress(publicKey, 1)
-  console.log({ address })
-
-  // same with Rust, receiptIdentifier do not include authKey
-  const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address))
-  console.log({ receiptIdentifier })
-  // const x2 = await MultiEd25519KeyShard.deserialize(bytes)
-  // console.log({ x2 })
-
-  try {
-    writeFileSync("binaryfile", priv);
-    const rbuf = readFileSync("binaryfile");
-    console.log({ rbuf });
-    console.log(hexlify(rbuf));
-  } catch (error) {
-    console.log(error);
-  }
-
-  const accountInfo = showAccount(originPrivateKeys[0]);
-  return accountInfo;
+  const shard = new MultiEd25519KeyShard(uniquePublicKeys, thresHold, pos_verified_private_keys)
+  return shard;
 }

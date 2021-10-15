@@ -1,4 +1,8 @@
-import { createMultiSignAccount } from "./multi-sign";
+
+import { readFileSync, writeFileSync } from 'fs';
+import { hexlify } from '@ethersproject/bytes';
+import { createMultiEd25519KeyShard } from "./multi-sign";
+import { showMultiEd25519Account } from "./account";
 
 test('create multi sign account', async () => {
   // 2-3 multi-sig
@@ -8,8 +12,18 @@ test('create multi sign account', async () => {
   ];
   const privateKeys = ['0x7ea63107b0e214789fdb0d6c6e6b0d8f8b8c0be7398654ddd63f3617282be97b'];
   const thresHold = 2;
-  const accountInfo = await createMultiSignAccount(publicKeys, privateKeys, thresHold)
+  const shard = await createMultiEd25519KeyShard(publicKeys, privateKeys, thresHold)
+  const accountInfo = showMultiEd25519Account(shard)
   console.log('accountInfo', accountInfo);
+  try {
+    writeFileSync("binaryfile", accountInfo.privateKey);
+    const rbuf = readFileSync("binaryfile");
+    console.log({ rbuf });
+    console.log(hexlify(rbuf));
+  } catch (error) {
+    console.log(error);
+  }
+
   const accountNumbers = publicKeys.length + privateKeys.length
   expect(accountNumbers).toBeGreaterThan(thresHold);
 })
