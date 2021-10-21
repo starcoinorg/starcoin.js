@@ -201,26 +201,26 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
   })();
   console.log(payloadInHex);
 
-  // const rawUserTransaction = generateRawUserTransaction(
-  //   senderAddressHex,
-  //   scriptFunction,
-  //   maxGasAmount,
-  //   gasUnitPrice,
-  //   senderSequenceNumber,
-  //   expirationTimestampSecs,
-  //   chainId
-  // );
+  const rawUserTransaction = generateRawUserTransaction(
+    senderAddressHex,
+    scriptFunction,
+    maxGasAmount,
+    gasUnitPrice,
+    senderSequenceNumber,
+    expirationTimestampSecs,
+    chainId
+  );
 
-  // const hex = await signRawUserTransaction(
-  //   senderPrivateKeyHex,
-  //   rawUserTransaction
-  // );
+  const hex = await signRawUserTransaction(
+    senderPrivateKeyHex,
+    rawUserTransaction
+  );
 
-  // console.log({ hex })
+  console.log({ hex })
 
-  // const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
+  const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
 
-  // expect(signedUserTransactionDecoded.raw_txn.sender).toBe(senderAddressHex);
+  expect(signedUserTransactionDecoded.raw_txn.sender).toBe(senderAddressHex);
 }, 10000);
 
 test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", async () => {

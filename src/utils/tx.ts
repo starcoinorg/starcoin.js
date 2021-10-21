@@ -6,7 +6,7 @@ import { bytes, Seq, uint8 } from '../lib/runtime/serde';
 import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { BcsSerializer } from '../lib/runtime/bcs';
 import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U8 } from '../types';
-import { addressToSCS, addressFromSCS, typeTagToSCS } from '../encoding';
+import { addressToSCS, addressFromSCS, typeTagToSCS, bcsEncode } from '../encoding';
 import { createRawUserTransactionHasher } from "../crypto_hash";
 import { JsonRpcProvider } from '../providers/jsonrpc-provider';
 import { fromHexString } from './hex';
@@ -83,7 +83,7 @@ export function generateRawUserTransaction(
   return rawUserTransaction
 }
 
-async function getSignatureHex(
+export async function getSignatureHex(
   rawUserTransaction: starcoin_types.RawUserTransaction,
   senderPrivateKey: HexString,
 ): Promise<string> {
@@ -136,16 +136,26 @@ function getSignedUserTransactionHex(
   return hexlify(se.getBytes());
 }
 
-export async function signRawUserTransaction(
+export async function getSignedUserTransaction(
   senderPrivateKey: HexString,
   rawUserTransaction: starcoin_types.RawUserTransaction
-): Promise<string> {
+): Promise<starcoin_types.SignedUserTransaction> {
 
   // Step 2: generate signature of RawUserTransaction
   const signatureHex = await getSignatureHex(rawUserTransaction, senderPrivateKey)
 
   // Step 3: generate SignedUserTransaction
   const signedUserTransaction = await generateSignedUserTransaction(senderPrivateKey, signatureHex, rawUserTransaction)
+
+  return signedUserTransaction
+}
+
+export async function signRawUserTransaction(
+  senderPrivateKey: HexString,
+  rawUserTransaction: starcoin_types.RawUserTransaction
+): Promise<string> {
+
+  const signedUserTransaction = await getSignedUserTransaction(senderPrivateKey, rawUserTransaction)
 
   // Step 4: get SignedUserTransaction Hex
   const hex = getSignedUserTransactionHex(signedUserTransaction)

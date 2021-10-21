@@ -6,9 +6,16 @@ import {
     ED25519_PUBLIC_KEY_LENGTH,
     ED25519_PRIVATE_KEY_LENGTH,
     MultiEd25519PublicKey,
+    MultiEd25519Signature,
 } from './multi-ed25519';
-import { U8, Ed25519PrivateKey, Ed25519PublicKey, } from '../types';
+import { U8, Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature } from '../types';
 import { privateKeyToPublicKey } from "../encoding";
+import { getSignatureHex } from "../utils/tx";
+
+export class MultiEd25519SignatureShard {
+    constructor(public signature: MultiEd25519Signature, public threshold: U8) {
+    }
+}
 
 // Part of private keys in the multi-key Ed25519 structure along with the threshold.
 // note: the private keys must be a sequential part of the MultiEd25519PrivateKey
@@ -102,5 +109,23 @@ export class MultiEd25519KeyShard {
 
     public isEmpty(): boolean {
         return this.len() === 0;
+    }
+
+    public async sign(data?: any): Promise<MultiEd25519SignatureShard> {
+        console.log('sign')
+        const signatures = await Promise.all(
+            Object.keys(this.private_keys).map((k) => {
+                return getSignatureHex(data, this.private_keys[k]).then((signatureHex) => {
+                    return [signatureHex, Number.parseInt(k, 10)] as [Ed25519Signature, U8]
+                }).catch((error) => {
+                    throw new Error(`invalid private key: ${ error }`)
+                })
+            })
+        )
+        console.log({ signatures })
+        const multiEd25519Signature = new MultiEd25519Signature(signatures)
+        console.log({ multiEd25519Signature })
+        console.log(typeof multiEd25519Signature)
+        return new MultiEd25519SignatureShard(multiEd25519Signature, this.threshold)
     }
 }
