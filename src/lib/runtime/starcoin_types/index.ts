@@ -4,6 +4,27 @@ import { Serializer } from '../serde/serializer';
 import { Deserializer } from '../serde/deserializer';
 import { Optional, Seq, Tuple, ListTuple, unit, bool, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128, float32, float64, char, str, bytes } from '../serde/types';
 
+const CryptoMaterialError = {
+  SerializationError: 'Struct to be signed does not serialize correctly',
+  DeserializationError: 'Key or signature material does not deserialize correctly',
+  ValidationError: 'Key or signature material deserializes, but is otherwise not valid',
+  WrongLengthError: 'Key, threshold or signature material does not have the expected size',
+  CanonicalRepresentationError: 'Part of the signature or key is not canonical resulting to malleability issues',
+  SmallSubgroupError: 'A curve point (i.e., a public key) lies on a small group',
+  PointNotOnCurveError: 'A curve point (i.e., a public key) does not satisfy the curve equation',
+  BitVecError: 'BitVec errors in accountable multi-sig schemes',
+}
+
+const MAX_NUM_OF_KEYS = 32
+const BITMAP_NUM_OF_BYTES = 4
+
+// The length of the Ed25519PrivateKey
+const ED25519_PRIVATE_KEY_LENGTH = 32;
+// The length of the Ed25519PublicKey
+const ED25519_PUBLIC_KEY_LENGTH = 32;
+// The length of the Ed25519Signature
+const ED25519_SIGNATURE_LENGTH = 32;
+
 export class AccessPath {
 
   constructor(public field0: AccountAddress, public field1: DataPath) {
@@ -453,17 +474,31 @@ export class MultiEd25519PrivateKey {
 
 }
 export class MultiEd25519PublicKey {
-
-  constructor(public value: bytes) {
+  constructor(public public_keys: Seq<Ed25519PublicKey>, public threshold: uint8) {
+    const num_of_public_keys = public_keys.length;
+    if (threshold === 0 || num_of_public_keys < threshold) {
+      throw new Error(CryptoMaterialError.ValidationError)
+    } else if (num_of_public_keys > MAX_NUM_OF_KEYS) {
+      throw new Error(CryptoMaterialError.WrongLengthError)
+    }
   }
 
   public serialize(serializer: Serializer): void {
-    serializer.serializeBytes(this.value);
+    serializer.serializeLen(this.public_keys.length);
+    this.public_keys.forEach((pub) => {
+      pub.serialize(serializer)
+    })
+    serializer.serializeU8(this.threshold);
   }
 
   static deserialize(deserializer: Deserializer): MultiEd25519PublicKey {
-    const value = deserializer.deserializeBytes();
-    return new MultiEd25519PublicKey(value);
+    const length = deserializer.deserializeLen();
+    const public_keys: Seq<Ed25519PublicKey> = [];
+    for (let i = 0; i < length; i++) {
+      public_keys.push(Ed25519PublicKey.deserialize(deserializer));
+    }
+    const threshold = deserializer.deserializeU8();
+    return new MultiEd25519PublicKey(public_keys, threshold);
   }
 
 }
