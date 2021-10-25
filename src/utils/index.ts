@@ -6,3 +6,4 @@ export * as properties from './properties';
 export * as signedMessage from "./signed-message";
 export * as multiSign from "./multi-sign";
 export * as tx from "./tx";
+export * as helper from "./helper";
