@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-bitwise */
 
-import { arrayify } from '@ethersproject/bytes';
+import { arrayify, hexlify } from '@ethersproject/bytes';
 import { cloneDeep } from 'lodash';
 import { privateKeyToPublicKey } from "../encoding";
 import { uint8 } from '../lib/runtime/serde/types';
@@ -77,22 +77,21 @@ export async function createMultiEd25519KeyShard(originPublicKeys: Array<string>
 }
 
 
-// export async function signMultiEd25519KeyShard(multiEd25519KeyShard: MultiEd25519KeyShard, data?: any): Promise<MultiEd25519SignatureShard> {
-//   console.log('sign')
-//   const signatures = await Promise.all(
-//     Object.keys(this.private_keys).map((k) => {
-//       return getSignatureHex(data, this.private_keys[k]).then((signatureHex) => {
-//         const signature = new Ed25519Signature(arrayify(signatureHex))
-//         const pos = Number.parseInt(k, 10)
-//         return [signature, pos] as [Ed25519Signature, uint8]
-//       }).catch((error) => {
-//         throw new Error(`invalid private key: ${ error }`)
-//       })
-//     })
-//   )
-//   console.log({ signatures })
-//   const multiEd25519Signature = MultiEd25519Signature.build(signatures)
-//   console.log({ multiEd25519Signature })
-//   console.log(typeof multiEd25519Signature)
-//   return new MultiEd25519SignatureShard(multiEd25519Signature, this.threshold)
-// }
+export async function signMultiEd25519KeyShard(multiEd25519KeyShard: MultiEd25519KeyShard, data?: any): Promise<MultiEd25519SignatureShard> {
+  const signatures = await Promise.all(
+    Object.keys(multiEd25519KeyShard.private_keys).map((k) => {
+      const privateKey = hexlify(multiEd25519KeyShard.private_keys[k].value)
+      return getSignatureHex(data, privateKey).then((signatureHex) => {
+        const signature = new Ed25519Signature(arrayify(signatureHex))
+        const pos = Number.parseInt(k, 10)
+        return [signature, pos] as [Ed25519Signature, uint8]
+      }).catch((error) => {
+        throw new Error(`invalid private key: ${ error }`)
+      })
+    })
+  )
+  console.log({ signatures })
+  const multiEd25519Signature = MultiEd25519Signature.build(signatures)
+  console.log({ multiEd25519Signature })
+  return new MultiEd25519SignatureShard(multiEd25519Signature, this.threshold)
+}

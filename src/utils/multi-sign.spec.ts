@@ -31,11 +31,11 @@ test('MultiEd25519KeyShard-tom', async () => {
   const thresHold = 2;
   const shard = await createMultiEd25519KeyShard(publicKeys, privateKeys, thresHold)
   console.log({ shard })
-  // const hex = '0xbc317a9becacae3e6ddf3c8a9c2efd64000000000000000002000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000210d7f20befd34b9f1ab8aeae98b82a5a511080969800000000000000000000000000809698000000000001000000000000000d3078313a3a5354433a3a5354432e3c6f6100000000fb'
-  // const rtx = bcsDecode(starcoin_types.RawUserTransaction, hex)
-  // console.log({ rtx })
-  // const signatures = await signMultiEd25519KeyShard(shard, rtx)
-  // console.log({ signatures })
+  const hex = '0xbc317a9becacae3e6ddf3c8a9c2efd64000000000000000002000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000210d7f20befd34b9f1ab8aeae98b82a5a511080969800000000000000000000000000809698000000000001000000000000000d3078313a3a5354433a3a5354432e3c6f6100000000fb'
+  const rtx = bcsDecode(starcoin_types.RawUserTransaction, hex)
+  console.log({ rtx })
+  const signatures = await signMultiEd25519KeyShard(shard, rtx)
+  console.log({ signatures })
   const accountInfo = showMultiEd25519Account(shard)
   console.log('accountInfo', accountInfo);
   // try {

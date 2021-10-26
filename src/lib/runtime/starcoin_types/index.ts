@@ -563,7 +563,7 @@ export class MultiEd25519SignatureShard {
 // Part of private keys in the multi-key Ed25519 structure along with the threshold.
 // note: the private keys must be a sequential part of the MultiEd25519PrivateKey
 export class MultiEd25519KeyShard {
-  constructor(private public_keys: Ed25519PublicKey[], public threshold: uint8, private private_keys: Record<uint8, Ed25519PrivateKey>) {
+  constructor(private public_keys: Ed25519PublicKey[], public threshold: uint8, public private_keys: Record<uint8, Ed25519PrivateKey>) {
     const num_of_public_keys = public_keys.length;
     const num_of_private_keys = Object.keys(private_keys).length;
     if (threshold === 0 || num_of_private_keys === 0 || num_of_public_keys < threshold) {
@@ -578,7 +578,6 @@ export class MultiEd25519KeyShard {
     serializer.serializeU8(this.threshold)
     serializer.serializeU8(this.len())
     this.public_keys.forEach((pub) => {
-      console.log({ pub })
       pub.serialize(serializer)
     })
     Object.keys(this.private_keys).forEach((pos) => {
