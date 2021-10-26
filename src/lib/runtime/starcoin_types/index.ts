@@ -1,5 +1,5 @@
 import { bech32 } from 'bech32';
-import { hexlify, arrayify } from '@ethersproject/bytes';
+import { concat, arrayify, hexlify } from '@ethersproject/bytes';
 import { BcsDeserializer, BcsSerializer } from '../bcs';
 import { Serializer } from '../serde/serializer';
 import { Deserializer } from '../serde/deserializer';
@@ -503,6 +503,18 @@ export class MultiEd25519PublicKey {
     return new MultiEd25519PublicKey(public_keys, threshold);
   }
 
+  public into(): Uint8Array {
+    const arrPub = []
+    this.public_keys.forEach((pub) => {
+      arrPub.push(pub.value)
+    })
+
+    const arrThreshold = new Uint8Array(1);
+    arrThreshold[0] = this.threshold
+
+    const bytes = concat([...arrPub, ...arrThreshold])
+    return bytes;
+  }
 }
 
 export class MultiEd25519Signature {
@@ -563,7 +575,7 @@ export class MultiEd25519SignatureShard {
 // Part of private keys in the multi-key Ed25519 structure along with the threshold.
 // note: the private keys must be a sequential part of the MultiEd25519PrivateKey
 export class MultiEd25519KeyShard {
-  constructor(private public_keys: Ed25519PublicKey[], public threshold: uint8, public private_keys: Record<uint8, Ed25519PrivateKey>) {
+  constructor(public public_keys: Seq<Ed25519PublicKey>, public threshold: uint8, public private_keys: Record<uint8, Ed25519PrivateKey>) {
     const num_of_public_keys = public_keys.length;
     const num_of_private_keys = Object.keys(private_keys).length;
     if (threshold === 0 || num_of_private_keys === 0 || num_of_public_keys < threshold) {
@@ -614,9 +626,20 @@ export class MultiEd25519KeyShard {
 
   // should be different for each account, since the private_keys are not the same
   public privateKey(): Uint8Array {
-    const se = new BcsSerializer();
-    this.serialize(se);
-    return se.getBytes();
+    const arrHead = new Uint8Array(3);
+    arrHead[0] = this.public_keys.length
+    arrHead[1] = this.threshold
+    arrHead[2] = this.len()
+    const arrPub = []
+    this.public_keys.forEach((pub) => {
+      arrPub.push(pub.value)
+    })
+    const arrPriv = []
+    Object.values(this.private_keys).forEach((priv) => {
+      arrPriv.push(priv.value)
+    })
+    const bytes = concat([arrHead, ...arrPub, ...arrPriv])
+    return bytes;
   }
 
   public len(): uint8 {
