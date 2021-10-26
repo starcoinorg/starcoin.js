@@ -45,7 +45,7 @@ export function showMultiEd25519Account(shard: MultiEd25519KeyShard): Record<str
 
   const multiEd25519PublicKey = shard.publicKey()
 
-  const publicKey = hexlify(multiEd25519PublicKey.into())
+  const publicKey = hexlify(multiEd25519PublicKey.value())
 
   const authKey = publicKeyToAuthKey(publicKey, accountType.MULTI)
 

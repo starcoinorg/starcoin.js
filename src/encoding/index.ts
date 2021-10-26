@@ -59,8 +59,8 @@ export function decodeSignedUserTransaction(
     authenticator = { Ed25519: { public_key: publicKey, signature } };
   } else {
     const auth = scsData.authenticator as starcoin_types.TransactionAuthenticatorVariantMultiEd25519;
-    const publicKey = hexlify(auth.public_key.value);
-    const signature = hexlify(auth.signature.value);
+    const publicKey = hexlify(auth.public_key.value());
+    const signature = hexlify(auth.signature.value());
     authenticator = { MultiEd25519: { public_key: publicKey, signature } };
   }
   const rawTxn = scsData.raw_txn;

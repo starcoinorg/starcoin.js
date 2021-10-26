@@ -503,7 +503,7 @@ export class MultiEd25519PublicKey {
     return new MultiEd25519PublicKey(public_keys, threshold);
   }
 
-  public into(): Uint8Array {
+  public value(): Uint8Array {
     const arrPub = []
     this.public_keys.forEach((pub) => {
       arrPub.push(pub.value)
@@ -564,8 +564,13 @@ export class MultiEd25519Signature {
     const bitmap = deserializer.deserializeU8();
     return new MultiEd25519Signature(signatures, bitmap);
   }
-}
 
+  public value(): Uint8Array {
+    const se = new BcsSerializer();
+    this.serialize(se);
+    return se.getBytes();
+  }
+}
 
 export class MultiEd25519SignatureShard {
   constructor(public signature: MultiEd25519Signature, public threshold: uint8) {
