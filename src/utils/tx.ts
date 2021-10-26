@@ -8,6 +8,7 @@ import { BcsSerializer } from '../lib/runtime/bcs';
 import { FunctionId, HexString, parseFunctionId, TypeTag, U128, U64, U8 } from '../types';
 import { addressToSCS, addressFromSCS, typeTagToSCS, bcsEncode } from '../encoding';
 import { createRawUserTransactionHasher } from "../crypto_hash";
+// import { MultiEd25519KeyShard } from "../crypto";
 import { JsonRpcProvider } from '../providers/jsonrpc-provider';
 import { fromHexString } from './hex';
 
@@ -162,6 +163,25 @@ export async function signRawUserTransaction(
 
   return hex
 }
+
+
+// export async function signTxn(
+//   accountPrivateKey: MultiEd25519KeyShard,
+//   rawUserTransaction: starcoin_types.RawUserTransaction
+// ): Promise<string> {
+
+//   // TransactionAuthenticator::multi_ed25519(key.public_key(), key.sign(message).into())
+//   const multiEd25519SignatureShard = await accountPrivateKey.sign(rawUserTransaction)
+
+//   const transactionAuthenticatorVariantMultiEd25519 = new starcoin_types.TransactionAuthenticatorVariantMultiEd25519(accountPrivateKey.publicKey(), multiEd25519SignatureShard.signature)
+
+//   // Step 3-2: generate SignedUserTransaction
+//   const signedUserTransaction = new starcoin_types.SignedUserTransaction(rawUserTransaction, transactionAuthenticatorVariantMultiEd25519)
+
+//   // Step 4: get SignedUserTransaction Hex
+//   const hex = getSignedUserTransactionHex(signedUserTransaction)
+//   return hex
+// }
 
 function encodeStructTypeTag(
   str: string

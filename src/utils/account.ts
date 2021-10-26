@@ -2,8 +2,8 @@
 import { utils } from '@starcoin/stc-ed25519';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import { hexlify } from '@ethersproject/bytes';
-import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier } from "../encoding";
-import { MultiEd25519KeyShard } from "../crypto";
+import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier, bcsEncode } from "../encoding";
+import { MultiEd25519KeyShard } from "../lib/runtime/starcoin_types";
 
 export function generatePrivateKey(): string {
   // 32-byte Uint8Array
@@ -43,7 +43,7 @@ export function showMultiEd25519Account(shard: MultiEd25519KeyShard): Record<str
   const privateKey = hexlify(shard.privateKey())
 
   const multiEd25519PublicKey = shard.publicKey()
-  const publicKey = hexlify(multiEd25519PublicKey.serialize())
+  const publicKey = bcsEncode(multiEd25519PublicKey)
 
   const authKey = publicKeyToAuthKey(publicKey, 1)
 

@@ -1,41 +1,20 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-bitwise */
 
+import { arrayify } from '@ethersproject/bytes';
 import { cloneDeep } from 'lodash';
 import { privateKeyToPublicKey } from "../encoding";
-import { MultiEd25519KeyShard } from "../crypto";
+import { uint8 } from '../lib/runtime/serde/types';
+import { getSignatureHex } from "./tx";
+import {
+  MultiEd25519KeyShard,
+  MultiEd25519Signature,
+  MultiEd25519SignatureShard,
+  Ed25519Signature,
+  Ed25519PublicKey,
+  Ed25519PrivateKey,
+} from "../lib/runtime/starcoin_types";
 
-export function dec2bin(dec: number): string {
-  const bin = (dec >>> 0).toString(2)
-  const prefixed = `00000000000000000000000000000000${ bin }`
-  return prefixed.slice(-32);
-}
-
-export function bin2dec(bin: string): number {
-  return Number.parseInt(Number.parseInt(bin, 2).toString(10), 10);
-}
-
-// index from left to right
-export function setBit(n: number, idx: number): number {
-  if (idx > 31 || idx < 0) {
-    throw new Error(`mask: invalid idx at ${ idx }, should be between 0 and 31`)
-  }
-  const mask = 1 << (32 - idx - 1)
-  return n | mask
-}
-
-// index from left to right
-export function isSetBit(n: number, idx: number): boolean {
-  if (idx > 31 || idx < 0) {
-    throw new Error(`mask: invalid idx at ${ idx }, should be between 0 and 31`)
-  }
-  // const mask = 1 << (32 - idx - 1)
-  // let isSet = false
-  // if ((n & mask) !== 0) {
-  //   isSet = true
-  // }
-  // return isSet
-  return ((n >> (32 - idx - 1)) % 2 !== 0)
-}
 
 /**
  * simillar to this command in the starcoin console:
@@ -83,7 +62,7 @@ export async function createMultiEd25519KeyShard(originPublicKeys: Array<string>
       return privateKeyToPublicKey(priv).then((pub) => {
         const idx = uniquePublicKeys.indexOf(pub)
         if (idx > -1) {
-          pos_verified_private_keys[idx] = priv
+          pos_verified_private_keys[idx] = new Ed25519PrivateKey(arrayify(priv))
         }
         return pub;
       }).catch((error) => {
@@ -92,6 +71,28 @@ export async function createMultiEd25519KeyShard(originPublicKeys: Array<string>
     })
   )
 
-  const shard = new MultiEd25519KeyShard(uniquePublicKeys, thresHold, pos_verified_private_keys)
+  const public_keys = uniquePublicKeys.map((pub) => new Ed25519PublicKey(arrayify(pub)))
+  const shard = new MultiEd25519KeyShard(public_keys, thresHold, pos_verified_private_keys)
   return shard;
 }
+
+
+// export async function signMultiEd25519KeyShard(multiEd25519KeyShard: MultiEd25519KeyShard, data?: any): Promise<MultiEd25519SignatureShard> {
+//   console.log('sign')
+//   const signatures = await Promise.all(
+//     Object.keys(this.private_keys).map((k) => {
+//       return getSignatureHex(data, this.private_keys[k]).then((signatureHex) => {
+//         const signature = new Ed25519Signature(arrayify(signatureHex))
+//         const pos = Number.parseInt(k, 10)
+//         return [signature, pos] as [Ed25519Signature, uint8]
+//       }).catch((error) => {
+//         throw new Error(`invalid private key: ${ error }`)
+//       })
+//     })
+//   )
+//   console.log({ signatures })
+//   const multiEd25519Signature = MultiEd25519Signature.build(signatures)
+//   console.log({ multiEd25519Signature })
+//   console.log(typeof multiEd25519Signature)
+//   return new MultiEd25519SignatureShard(multiEd25519Signature, this.threshold)
+// }

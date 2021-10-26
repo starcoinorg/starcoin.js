@@ -1,8 +1,10 @@
 import { bech32 } from 'bech32';
+import { hexlify, arrayify } from '@ethersproject/bytes';
 import { BcsDeserializer, BcsSerializer } from '../bcs';
 import { Serializer } from '../serde/serializer';
 import { Deserializer } from '../serde/deserializer';
 import { Optional, Seq, Tuple, ListTuple, unit, bool, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128, float32, float64, char, str, bytes } from '../serde/types';
+import { dec2bin, bin2dec, setBit, isSetBit } from "../../../utils/helper";
 
 const CryptoMaterialError = {
   SerializationError: 'Struct to be signed does not serialize correctly',
@@ -502,21 +504,131 @@ export class MultiEd25519PublicKey {
   }
 
 }
-export class MultiEd25519Signature {
 
-  constructor(public value: bytes) {
+export class MultiEd25519Signature {
+  // 0b00010000000000000000000000000001(268435457), the 3rd and 31st positions are set.
+  constructor(public signatures: Seq<Ed25519Signature>, public bitmap: uint8) {
+  }
+
+  static build(origin_signatures: [Ed25519Signature, uint8][]): MultiEd25519Signature {
+    const num_of_sigs = origin_signatures.length;
+    if (num_of_sigs === 0 || num_of_sigs > MAX_NUM_OF_KEYS) {
+      throw new Error(CryptoMaterialError.ValidationError)
+    }
+    const sorted_signatures = origin_signatures
+    sorted_signatures.sort((a, b) => {
+      return a[1] > b[1] ? 1 : -1
+    })
+    const sigs = []
+    let bitmap = 0b00000000000000000000000000000000
+    sorted_signatures.forEach((k, v) => {
+      console.log(k, v)
+      if (k[1] >= MAX_NUM_OF_KEYS) {
+        throw new Error(`${ CryptoMaterialError.BitVecError }: Signature index is out of range`)
+      } else if (isSetBit(bitmap, k[1])) {
+        throw new Error(`${ CryptoMaterialError.BitVecError }: Duplicate signature index`)
+      } else {
+        sigs.push(k[0])
+        bitmap = setBit(bitmap, k[1])
+      }
+    })
+    return new MultiEd25519Signature(sigs, bitmap);
   }
 
   public serialize(serializer: Serializer): void {
-    serializer.serializeBytes(this.value);
+    serializer.serializeLen(this.signatures.length);
+    this.signatures.forEach((signature) => {
+      signature.serialize(serializer)
+    })
+    serializer.serializeU8(this.bitmap);
   }
 
   static deserialize(deserializer: Deserializer): MultiEd25519Signature {
-    const value = deserializer.deserializeBytes();
-    return new MultiEd25519Signature(value);
+    const length = deserializer.deserializeLen();
+    const signatures: Seq<Ed25519Signature> = [];
+    for (let i = 0; i < length; i++) {
+      signatures.push(Ed25519Signature.deserialize(deserializer));
+    }
+    const bitmap = deserializer.deserializeU8();
+    return new MultiEd25519Signature(signatures, bitmap);
+  }
+}
+
+
+export class MultiEd25519SignatureShard {
+  constructor(public signature: MultiEd25519Signature, public threshold: uint8) {
+  }
+}
+
+// Part of private keys in the multi-key Ed25519 structure along with the threshold.
+// note: the private keys must be a sequential part of the MultiEd25519PrivateKey
+export class MultiEd25519KeyShard {
+  constructor(private public_keys: Ed25519PublicKey[], public threshold: uint8, private private_keys: Record<uint8, Ed25519PrivateKey>) {
+    const num_of_public_keys = public_keys.length;
+    const num_of_private_keys = Object.keys(private_keys).length;
+    if (threshold === 0 || num_of_private_keys === 0 || num_of_public_keys < threshold) {
+      throw new Error(CryptoMaterialError.ValidationError)
+    } else if (num_of_private_keys > MAX_NUM_OF_KEYS || num_of_public_keys > MAX_NUM_OF_KEYS) {
+      throw new Error(CryptoMaterialError.WrongLengthError)
+    }
   }
 
+  public serialize(serializer: Serializer): void {
+    serializer.serializeU8(this.public_keys.length)
+    serializer.serializeU8(this.threshold)
+    serializer.serializeU8(this.len())
+    this.public_keys.forEach((pub) => {
+      console.log({ pub })
+      pub.serialize(serializer)
+    })
+    Object.keys(this.private_keys).forEach((pos) => {
+      serializer.serializeU8(Number.parseInt(pos, 10))
+      this.private_keys[pos].serialize(serializer)
+    })
+  }
+
+  static deserialize(deserializer: Deserializer): MultiEd25519KeyShard {
+    const publicKeysLen = deserializer.deserializeU8();
+    const threshold = deserializer.deserializeU8();
+    const privateKeysLen = deserializer.deserializeU8();
+    const public_keys: Seq<Ed25519PublicKey> = [];
+    for (let i = 0; i < publicKeysLen; i++) {
+      public_keys.push(Ed25519PublicKey.deserialize(deserializer));
+    }
+    const private_keys: Record<uint8, Ed25519PrivateKey> = [];
+    for (let i = 0; i < privateKeysLen; i++) {
+      const pos = deserializer.deserializeU8()
+      const privateKey = Ed25519PrivateKey.deserialize(deserializer)
+      public_keys[pos] = privateKey
+    }
+    return new MultiEd25519KeyShard(public_keys, threshold, private_keys);
+  }
+
+  public publicKey(): MultiEd25519PublicKey {
+    return new MultiEd25519PublicKey(this.public_keys, this.threshold);
+  }
+
+  // should be different for each account, since the private_keys are not the same
+  public privateKeys(): Ed25519PrivateKey[] {
+    return Object.values(this.private_keys);
+  }
+
+  // should be different for each account, since the private_keys are not the same
+  public privateKey(): Uint8Array {
+    const se = new BcsSerializer();
+    this.serialize(se);
+    return se.getBytes();
+  }
+
+  public len(): uint8 {
+    return Object.values(this.private_keys).length;
+  }
+
+  public isEmpty(): boolean {
+    return this.len() === 0;
+  }
 }
+
 export class Package {
 
   constructor(public package_address: AccountAddress, public modules: Seq<Module>, public init_script: Optional<ScriptFunction>) {
@@ -563,7 +675,6 @@ export class RawUserTransaction {
     const chain_id = ChainId.deserialize(deserializer);
     return new RawUserTransaction(sender, sequence_number, payload, max_gas_amount, gas_unit_price, gas_token_code, expiration_timestamp_secs, chain_id);
   }
-
 }
 export class Script {
 
