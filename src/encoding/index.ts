@@ -13,6 +13,7 @@ import {
   TransactionPayload,
   TypeTag,
   ReceiptIdentifierView,
+  accountType,
 } from '../types';
 import { fromHexString, toHexString } from '../utils/hex';
 import { Deserializer } from '../lib/runtime/serde';
@@ -271,7 +272,7 @@ export async function privateKeyToPublicKey(privateKey: string): Promise<string>
 }
 
 // singleMulti: 0-single, 1-multi
-export function publicKeyToAuthKey(publicKey: string, singleMulti = 0): string {
+export function publicKeyToAuthKey(publicKey: string, singleMulti = accountType.SINGLE): string {
   const hasher = sha3_256.create()
   hasher.update(fromHexString(publicKey))
   hasher.update(fromHexString(hexlify(singleMulti)))
@@ -280,7 +281,7 @@ export function publicKeyToAuthKey(publicKey: string, singleMulti = 0): string {
 }
 
 // singleMulti: 0-single, 1-multi
-export function publicKeyToAddress(publicKey: string, singleMulti = 0): string {
+export function publicKeyToAddress(publicKey: string, singleMulti = accountType.SINGLE): string {
   const hasher = sha3_256.create()
   hasher.update(fromHexString(publicKey))
   hasher.update(fromHexString(hexlify(singleMulti)))

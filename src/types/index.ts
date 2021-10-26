@@ -20,6 +20,12 @@ export type MultiEd25519PublicKey = string;
 export type MultiEd25519Signature = string;
 export type EventKey = string;
 export type HexString = string;
+
+export const accountType = {
+  SINGLE: 0,
+  MULTI: 1,
+}
+
 export interface StructTag {
   address: string;
   module: string;

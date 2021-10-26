@@ -4,6 +4,7 @@ import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import { hexlify } from '@ethersproject/bytes';
 import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier, bcsEncode } from "../encoding";
 import { MultiEd25519KeyShard } from "../lib/runtime/starcoin_types";
+import { accountType } from "../types";
 
 export function generatePrivateKey(): string {
   // 32-byte Uint8Array
@@ -46,9 +47,9 @@ export function showMultiEd25519Account(shard: MultiEd25519KeyShard): Record<str
 
   const publicKey = hexlify(multiEd25519PublicKey.into())
 
-  const authKey = publicKeyToAuthKey(publicKey, 1)
+  const authKey = publicKeyToAuthKey(publicKey, accountType.MULTI)
 
-  const address = publicKeyToAddress(publicKey, 1)
+  const address = publicKeyToAddress(publicKey, accountType.MULTI)
 
   // same with Rust, receiptIdentifier do not include authKey
   const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address))
