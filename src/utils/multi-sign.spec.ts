@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-bitwise */
 
-// import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { hexlify, arrayify } from '@ethersproject/bytes';
 import { addHexPrefix } from 'ethereumjs-util';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -19,41 +19,108 @@ import { dec2bin, bin2dec, setBit, isSetBit } from "./helper";
 import { showMultiEd25519Account } from "./account";
 import * as starcoin_types from "../lib/runtime/starcoin_types";
 
-// Implemention of multi sign in https://starcoin.org/zh/developer/cli/multisig_account/
-
-test('MultiEd25519KeyShard-tom', async () => {
-  // 2-3 multi-sig
-  const publicKeys = [
-    '0xc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8',
-    '0x547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bb',
-  ];
-  const privateKeys = ['0x7ea63107b0e214789fdb0d6c6e6b0d8f8b8c0be7398654ddd63f3617282be97b'];
+test('2-3 multi sign', async () => {
+  // Implemention of multi sign in https://starcoin.org/zh/developer/cli/multisig_account/
   const thresHold = 2;
-  const shard = await createMultiEd25519KeyShard(publicKeys, privateKeys, thresHold)
-  console.log({ shard })
+
+  const alice = {
+    'account': '0xd597bcfa4d3464b98bea990ce21aca06',
+    'public_key': '0x547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bb',
+    'private_key': '0xa9e47d270d2ce33b1475f500f3b9a773eb966f3f8ab5ceb738d52262bbe10cb2'
+  }
+
+  const bob = {
+    'account': '0xdcd7ae3232acb938c68ee088305b83f6',
+    'public_key': '0xe8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a0',
+    'private_key': '0x7ea63107b0e214789fdb0d6c6e6b0d8f8b8c0be7398654ddd63f3617282be97b'
+  }
+
+  const tom = {
+    'account': '0x14417edb1fe8c4591d739fee0a91ce42',
+    'public_key': '0xc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8',
+    'private_key': '0x359059828e89fe42dddd5f9571a0c623b071379fc6287c712649dcc8c77f5eb4'
+  }
+
+  // in alice's terminal
+  // account import-multisig --pubkey 0xe8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a0 --pubkey 0xc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8 --prikey 0xa9e47d270d2ce33b1475f500f3b9a773eb966f3f8ab5ceb738d52262bbe10cb2 -t 2
+  const publicKeys1 = [bob.public_key, tom.public_key];
+  const privateKeys1 = [alice.private_key];
+
+  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, thresHold)
+  console.log({ shardAlice })
+  const multiAccountAlice = showMultiEd25519Account(shardAlice)
+  console.log({ multiAccountAlice });
+  // multiAccountAlice: {
+  //   privateKey: '0x030201547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bbc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8e8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a0a9e47d270d2ce33b1475f500f3b9a773eb966f3f8ab5ceb738d52262bbe10cb2',
+  //   publicKey: '0x547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bbc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8e8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a002',
+  //   address: '0xb555d8b06fed69769821e189b5168870',
+  //   authKey: '0xe116cedcb2b7c21396a9efb07947ce78b555d8b06fed69769821e189b5168870',
+  //   receiptIdentifier: 'stc1pk42a3vr0a45hdxppuxym295gwq38kuqj'
+  // }
+
+  // in bob's terminal
+  // account import-multisig --pubkey 0x547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bb --pubkey 0xc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8 --prikey 0x7ea63107b0e214789fdb0d6c6e6b0d8f8b8c0be7398654ddd63f3617282be97b -t 2
+  const publicKeys2 = [alice.public_key, tom.public_key];
+  const privateKeys2 = [bob.private_key];
+
+  const shardBob = await createMultiEd25519KeyShard(publicKeys2, privateKeys2, thresHold)
+  console.log({ shardBob })
+  const multiAccountBob = showMultiEd25519Account(shardBob)
+  console.log({ multiAccountBob });
+  // multiAccountBob: {
+  //   privateKey: '0x030201547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bbc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8e8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a07ea63107b0e214789fdb0d6c6e6b0d8f8b8c0be7398654ddd63f3617282be97b',
+  //   publicKey: '0x547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bbc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8e8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a002',
+  //   address: '0xb555d8b06fed69769821e189b5168870',
+  //   authKey: '0xe116cedcb2b7c21396a9efb07947ce78b555d8b06fed69769821e189b5168870',
+  //   receiptIdentifier: 'stc1pk42a3vr0a45hdxppuxym295gwq38kuqj'
+  // }
+
+  // in tom's terminal
+  // account import-multisig --pubkey 0x547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bb --pubkey 0xe8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a0 --prikey 0x359059828e89fe42dddd5f9571a0c623b071379fc6287c712649dcc8c77f5eb4 -t 2
+  const publicKeys3 = [alice.public_key, bob.public_key];
+  const privateKeys3 = [tom.private_key];
+
+  const shardTom = await createMultiEd25519KeyShard(publicKeys3, privateKeys3, thresHold)
+  console.log({ shardTom })
+  const multiAccountTom = showMultiEd25519Account(shardTom)
+  console.log({ multiAccountTom });
+  // multiAccountTom: {
+  //   privateKey: '0x030201547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bbc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8e8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a0359059828e89fe42dddd5f9571a0c623b071379fc6287c712649dcc8c77f5eb4',
+  //   publicKey: '0x547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bbc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8e8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a002',
+  //   address: '0xb555d8b06fed69769821e189b5168870',
+  //   authKey: '0xe116cedcb2b7c21396a9efb07947ce78b555d8b06fed69769821e189b5168870',
+  //   receiptIdentifier: 'stc1pk42a3vr0a45hdxppuxym295gwq38kuqj'
+  // }
+
+  // 3 multiAccount's privateKey should be different, while the other properties ate the same:
+  expect(multiAccountAlice.address).toEqual(multiAccountBob.address);
+  expect(multiAccountAlice.address).toEqual(multiAccountTom.address);
+  expect(multiAccountAlice.privateKey).not.toEqual(multiAccountBob.privateKey);
+  expect(multiAccountAlice.privateKey).not.toEqual(multiAccountTom.privateKey);
+
   const hex = '0xbc317a9becacae3e6ddf3c8a9c2efd64000000000000000002000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000210d7f20befd34b9f1ab8aeae98b82a5a511080969800000000000000000000000000809698000000000001000000000000000d3078313a3a5354433a3a5354432e3c6f6100000000fb'
   const rtx = bcsDecode(starcoin_types.RawUserTransaction, hex)
   console.log({ rtx })
-  const signatures = await signMultiEd25519KeyShard(shard, rtx)
+  const signatures = await signMultiEd25519KeyShard(shardBob, rtx)
   console.log({ signatures })
-  const accountInfo = showMultiEd25519Account(shard)
-  console.log('accountInfo', accountInfo);
-  // try {
-  //   writeFileSync("binaryfile", accountInfo.privateKey);
-  //   const rbuf = readFileSync("binaryfile");
-  //   console.log({ rbuf });
-  //   console.log(hexlify(rbuf));
-  // } catch (error) {
-  //   console.log(error);
-  // }
+
+  // write Uint8Array into local binary file, and read form it
+  try {
+    writeFileSync("binaryfile", arrayify(multiAccountBob.privateKey));
+    const rbuf = readFileSync("binaryfile");
+    console.log({ rbuf });
+    console.log(hexlify(rbuf));
+  } catch (error) {
+    console.log(error);
+  }
 
   // 我们来发起一个多签交易：从多签账户往 bob 转账 1 个 STC。
   // 1. 在 tom 的 starcoin console 中执行
   // account sign-multisig-txn -s 0xb555d8b06fed69769821e189b5168870 --function 0x1::TransferScripts::peer_to_peer_v2 -t 0x1::STC::STC --arg 0xdcd7ae3232acb938c68ee088305b83f6 --arg 1000000000u128
   // 该命令会生成原始交易，并用多签账户(由tom的私钥生成)的私钥签名，生成的 txn 会以文件形式保存在当前目录下，文件名是 txn 的 short hash。
 
-  // const senderAddress = accountInfo.address
-  // const tomPrivateKey = '0x359059828e89fe42dddd5f9571a0c623b071379fc6287c712649dcc8c77f5eb4'
+  // const senderAddress = multiAccountBob.address
+  // const senderPrivateKey = multiAccountBob.privateKey
   // const receiverAddress = '0xdcd7ae3232acb938c68ee088305b83f6'
   // const amount = 1000000000
   // const functionId = '0x1::TransferScripts::peer_to_peer_v2'
@@ -97,7 +164,7 @@ test('MultiEd25519KeyShard-tom', async () => {
   // console.log({ rawUserTransactionHex })
 
   // const partial_signed_txn = await getSignedUserTransaction(
-  //   tomPrivateKey,
+  //   senderPrivateKey,
   //   rawUserTransaction
   // );
 
@@ -108,8 +175,6 @@ test('MultiEd25519KeyShard-tom', async () => {
   // account submit-multisig-txn ~/starcoin/work/starcoin-artifacts/4979854c.multisig-txn
   // 该命令会用多签账户(由alice的私钥生成)的私钥签名生成另一个交易文件，该交易同时包含有 tom 和 alice 的签名。 
   // 返回信息提示用户，该多签交易已经收集到足够多的签名，可以提交到链上执行了。
-  const accountNumbers = publicKeys.length + privateKeys.length
-  expect(accountNumbers).toBeGreaterThan(thresHold);
 })
 
 test('bit operator', () => {
