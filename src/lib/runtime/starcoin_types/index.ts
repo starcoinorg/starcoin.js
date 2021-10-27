@@ -527,8 +527,7 @@ export class MultiEd25519Signature {
     if (num_of_sigs === 0 || num_of_sigs > MAX_NUM_OF_KEYS) {
       throw new Error(CryptoMaterialError.ValidationError)
     }
-    const sorted_signatures = origin_signatures
-    sorted_signatures.sort((a, b) => {
+    const sorted_signatures = origin_signatures.sort((a, b) => {
       return a[1] > b[1] ? 1 : -1
     })
     const sigs = []
@@ -828,6 +827,16 @@ export class SignedUserTransaction {
   static deserialize(deserializer: Deserializer): SignedUserTransaction {
     const raw_txn = RawUserTransaction.deserialize(deserializer);
     const authenticator = TransactionAuthenticator.deserialize(deserializer);
+    return new SignedUserTransaction(raw_txn, authenticator);
+  }
+
+  static ed25519(raw_txn: RawUserTransaction, public_key: Ed25519PublicKey, signature: Ed25519Signature): SignedUserTransaction {
+    const authenticator = new TransactionAuthenticatorVariantEd25519(public_key, signature);
+    return new SignedUserTransaction(raw_txn, authenticator);
+  }
+
+  static multi_ed25519(raw_txn: RawUserTransaction, public_key: MultiEd25519PublicKey, signature: MultiEd25519Signature): SignedUserTransaction {
+    const authenticator = new TransactionAuthenticatorVariantMultiEd25519(public_key, signature);
     return new SignedUserTransaction(raw_txn, authenticator);
   }
 

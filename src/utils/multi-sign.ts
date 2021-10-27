@@ -76,7 +76,6 @@ export async function createMultiEd25519KeyShard(originPublicKeys: Array<string>
   return shard;
 }
 
-
 export async function signMultiEd25519KeyShard(multiEd25519KeyShard: MultiEd25519KeyShard, data?: any): Promise<MultiEd25519SignatureShard> {
   const signatures = await Promise.all(
     Object.keys(multiEd25519KeyShard.private_keys).map((k) => {
