@@ -102,12 +102,12 @@ test('2-3 multi sign', async () => {
   const hex = '0xbc317a9becacae3e6ddf3c8a9c2efd64000000000000000002000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000210d7f20befd34b9f1ab8aeae98b82a5a511080969800000000000000000000000000809698000000000001000000000000000d3078313a3a5354433a3a5354432e3c6f6100000000fb'
   const rtx = bcsDecode(starcoin_types.RawUserTransaction, hex)
   console.log({ rtx })
-  const signatures = await signMultiEd25519KeyShard(shardBob, rtx)
+  const signatures = await signMultiEd25519KeyShard(shardTom, rtx)
   console.log({ signatures })
 
   // write Uint8Array into local binary file, and read form it
   try {
-    writeFileSync("binaryfile", arrayify(multiAccountBob.privateKey));
+    writeFileSync("binaryfile", arrayify(multiAccountTom.privateKey));
     const rbuf = readFileSync("binaryfile");
     console.log({ rbuf });
     console.log(hexlify(rbuf));

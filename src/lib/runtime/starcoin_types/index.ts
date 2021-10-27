@@ -4,7 +4,7 @@ import { BcsDeserializer, BcsSerializer } from '../bcs';
 import { Serializer } from '../serde/serializer';
 import { Deserializer } from '../serde/deserializer';
 import { Optional, Seq, Tuple, ListTuple, unit, bool, int8, int16, int32, int64, int128, uint8, uint16, uint32, uint64, uint128, float32, float64, char, str, bytes } from '../serde/types';
-import { dec2bin, bin2dec, setBit, isSetBit } from "../../../utils/helper";
+import { dec2bin, bin2dec, setBit, isSetBit, dec2uint8array, uint8array2dec } from "../../../utils/helper";
 
 const CryptoMaterialError = {
   SerializationError: 'Struct to be signed does not serialize correctly',
@@ -551,7 +551,7 @@ export class MultiEd25519Signature {
     this.signatures.forEach((signature) => {
       signature.serialize(serializer)
     })
-    serializer.serializeU8(this.bitmap);
+    serializer.serializeBytes(dec2uint8array(this.bitmap));
   }
 
   static deserialize(deserializer: Deserializer): MultiEd25519Signature {
@@ -560,7 +560,7 @@ export class MultiEd25519Signature {
     for (let i = 0; i < length; i++) {
       signatures.push(Ed25519Signature.deserialize(deserializer));
     }
-    const bitmap = deserializer.deserializeU8();
+    const bitmap = uint8array2dec(deserializer.deserializeBytes());
     return new MultiEd25519Signature(signatures, bitmap);
   }
 

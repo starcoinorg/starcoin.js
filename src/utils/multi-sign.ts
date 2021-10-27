@@ -92,5 +92,5 @@ export async function signMultiEd25519KeyShard(multiEd25519KeyShard: MultiEd2551
   console.log({ signatures })
   const multiEd25519Signature = MultiEd25519Signature.build(signatures)
   console.log({ multiEd25519Signature })
-  return new MultiEd25519SignatureShard(multiEd25519Signature, this.threshold)
+  return new MultiEd25519SignatureShard(multiEd25519Signature, multiEd25519KeyShard.threshold)
 }
