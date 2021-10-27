@@ -21,6 +21,14 @@ export function dec2uint8array(n: number): Uint8Array {
   return bitmap
 }
 
+export function uint8array2dec(bitmap: Uint8Array): number {
+  const binArr = []
+  bitmap.forEach((n) => binArr.push(dec2bin(n).slice(-8)))
+  return bin2dec(binArr.join(''))
+}
+
+
+
 // index from left to right
 export function setBit(n: number, idx: number): number {
   if (idx > 31 || idx < 0) {

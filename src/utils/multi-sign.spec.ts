@@ -15,7 +15,7 @@ import {
   encodeScriptFunctionByResolve
 } from "./tx";
 import { createMultiEd25519KeyShard, signMultiEd25519KeyShard } from "./multi-sign";
-import { dec2bin, bin2dec, setBit, isSetBit, dec2uint8array } from "./helper";
+import { dec2bin, bin2dec, setBit, isSetBit, dec2uint8array, uint8array2dec } from "./helper";
 import { showMultiEd25519Account } from "./account";
 import * as starcoin_types from "../lib/runtime/starcoin_types";
 
@@ -186,6 +186,9 @@ test('bit operator', () => {
   console.log({ test })
   const bitmap = dec2uint8array(test)
   console.log({ bitmap })
+  const test2 = uint8array2dec(bitmap)
+  console.log({ test2 })
+  expect(test).toEqual(test2);
   const bin = dec2bin(test)
   console.log({ bin })
   const n = bin2dec(bin)
