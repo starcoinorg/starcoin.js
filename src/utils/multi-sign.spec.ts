@@ -160,11 +160,11 @@ test('2-3 multi sign', async () => {
   // console.log(bcsEncode(multiEd25519PublicKey as starcoin_types.MultiEd25519PublicKey))
   // expect(hex2).toEqual(bcsEncode(multiEd25519PublicKey as starcoin_types.MultiEd25519PublicKey));
 
-  const hex3 = '0x44de420c239c21c51c686a5e50b9783375fec7c07591edde3bc50cdd5a3e9104ac4d6673645e4fcd8c1a455a08f549da236cc6e474a0c8ae3a5ef0ad1d1da4400240000000'
-  const multiEd25519Signature = bcsDecode(starcoin_types.MultiEd25519Signature, hex3)
-  console.log({ multiEd25519Signature })
-  console.log(bcsEncode(multiEd25519Signature as starcoin_types.MultiEd25519Signature))
-  expect(hex3).toEqual(bcsEncode(multiEd25519Signature as starcoin_types.MultiEd25519Signature));
+  // const hex3 = '0x44de420c239c21c51c686a5e50b9783375fec7c07591edde3bc50cdd5a3e9104ac4d6673645e4fcd8c1a455a08f549da236cc6e474a0c8ae3a5ef0ad1d1da4400240000000'
+  // const multiEd25519Signature = bcsDecode(starcoin_types.MultiEd25519Signature, hex3)
+  // console.log({ multiEd25519Signature })
+  // console.log(bcsEncode(multiEd25519Signature as starcoin_types.MultiEd25519Signature))
+  // expect(hex3).toEqual(bcsEncode(multiEd25519Signature as starcoin_types.MultiEd25519Signature));
 
   const signatureAlice = await getSignatureHex(rawUserTransaction, alice.private_key)
   console.log({ signatureAlice })
@@ -190,8 +190,9 @@ test('2-3 multi sign', async () => {
   try {
     const partial_signed_txn_hex = bcsEncode(partial_signed_txn);
     console.log({ partial_signed_txn_hex })
-    // const signed_txn = bcsDecode(starcoin_types.SignedUserTransaction, partial_signed_txn_hex)
-    // console.log({ signed_txn })
+    const signed_txn = bcsDecode(starcoin_types.SignedUserTransaction, partial_signed_txn_hex)
+    console.log({ signed_txn })
+    expect(partial_signed_txn_hex).toEqual(bcsEncode(signed_txn as starcoin_types.SignedUserTransaction));
     const filename = (function () {
       const privateKeyBytes = ed25519Utils.randomPrivateKey();
       const name = Buffer.from(privateKeyBytes).toString('hex').slice(0, 8);
