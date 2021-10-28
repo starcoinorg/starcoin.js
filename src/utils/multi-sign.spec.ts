@@ -150,15 +150,21 @@ test('2-3 multi sign', async () => {
   const rawUserTransactionHex = bcsEncode(rawUserTransaction)
   console.log({ rawUserTransactionHex })
 
-  // const hex = '0xb555d8b06fed69769821e189b5168870000000000000000002000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000210dcd7ae3232acb938c68ee088305b83f61000ca9a3b000000000000000000000000809698000000000001000000000000000d3078313a3a5354433a3a535443bd0b000000000000fe'
-  // const rtx = bcsDecode(starcoin_types.RawUserTransaction, hex)
+  // const hex1 = '0xb555d8b06fed69769821e189b5168870000000000000000002000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000210dcd7ae3232acb938c68ee088305b83f61000ca9a3b000000000000000000000000809698000000000001000000000000000d3078313a3a5354433a3a535443bd0b000000000000fe'
+  // const rtx = bcsDecode(starcoin_types.RawUserTransaction, hex1)
   // console.log({ rtx })
 
-  const hex = '0x61547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bbc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8e8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a002'
-  const multiEd25519PublicKey = bcsDecode(starcoin_types.MultiEd25519PublicKey, hex)
-  console.log({ multiEd25519PublicKey })
-  console.log(bcsEncode(multiEd25519PublicKey as starcoin_types.MultiEd25519PublicKey))
-  expect(hex).toEqual(bcsEncode(multiEd25519PublicKey as starcoin_types.MultiEd25519PublicKey));
+  // const hex2 = '0x61547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bbc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8e8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a002'
+  // const multiEd25519PublicKey = bcsDecode(starcoin_types.MultiEd25519PublicKey, hex2)
+  // console.log({ multiEd25519PublicKey })
+  // console.log(bcsEncode(multiEd25519PublicKey as starcoin_types.MultiEd25519PublicKey))
+  // expect(hex2).toEqual(bcsEncode(multiEd25519PublicKey as starcoin_types.MultiEd25519PublicKey));
+
+  const hex3 = '0x44de420c239c21c51c686a5e50b9783375fec7c07591edde3bc50cdd5a3e9104ac4d6673645e4fcd8c1a455a08f549da236cc6e474a0c8ae3a5ef0ad1d1da4400240000000'
+  const multiEd25519Signature = bcsDecode(starcoin_types.MultiEd25519Signature, hex3)
+  console.log({ multiEd25519Signature })
+  console.log(bcsEncode(multiEd25519Signature as starcoin_types.MultiEd25519Signature))
+  expect(hex3).toEqual(bcsEncode(multiEd25519Signature as starcoin_types.MultiEd25519Signature));
 
   const signatureAlice = await getSignatureHex(rawUserTransaction, alice.private_key)
   console.log({ signatureAlice })
@@ -184,6 +190,8 @@ test('2-3 multi sign', async () => {
   try {
     const partial_signed_txn_hex = bcsEncode(partial_signed_txn);
     console.log({ partial_signed_txn_hex })
+    // const signed_txn = bcsDecode(starcoin_types.SignedUserTransaction, partial_signed_txn_hex)
+    // console.log({ signed_txn })
     const filename = (function () {
       const privateKeyBytes = ed25519Utils.randomPrivateKey();
       const name = Buffer.from(privateKeyBytes).toString('hex').slice(0, 8);

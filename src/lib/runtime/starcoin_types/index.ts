@@ -550,12 +550,15 @@ export class MultiEd25519Signature {
   }
 
   static deserialize(deserializer: Deserializer): MultiEd25519Signature {
-    const length = deserializer.deserializeLen();
+    const bytes = deserializer.deserializeBytes()
     const signatures: Seq<Ed25519Signature> = [];
-    for (let i = 0; i < length; i++) {
-      signatures.push(Ed25519Signature.deserialize(deserializer));
+    const count = (bytes.length - 4) / 64
+    for (let i = 0; i < count; i++) {
+      const start = i * 64;
+      const end = start + 64;
+      signatures.push(new Ed25519Signature(bytes.slice(start, end)));
     }
-    const bitmap = uint8array2dec(deserializer.deserializeBytes());
+    const bitmap = uint8array2dec(bytes.slice(-4));
     return new MultiEd25519Signature(signatures, bitmap);
   }
 
