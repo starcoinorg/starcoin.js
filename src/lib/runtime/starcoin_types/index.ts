@@ -486,11 +486,7 @@ export class MultiEd25519PublicKey {
   }
 
   public serialize(serializer: Serializer): void {
-    serializer.serializeLen(this.public_keys.length);
-    this.public_keys.forEach((pub) => {
-      pub.serialize(serializer)
-    })
-    serializer.serializeU8(this.threshold);
+    serializer.serializeBytes(this.value());
   }
 
   static deserialize(deserializer: Deserializer): MultiEd25519PublicKey {
