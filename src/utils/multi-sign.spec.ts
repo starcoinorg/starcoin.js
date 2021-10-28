@@ -154,6 +154,11 @@ test('2-3 multi sign', async () => {
   // const rtx = bcsDecode(starcoin_types.RawUserTransaction, hex)
   // console.log({ rtx })
 
+  const hex = '0x61547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bbc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8e8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a002'
+  const multiEd25519PublicKey = bcsDecode(starcoin_types.MultiEd25519PublicKey, hex)
+  console.log({ multiEd25519PublicKey })
+  console.log(bcsEncode(multiEd25519PublicKey as starcoin_types.MultiEd25519PublicKey))
+  expect(hex).toEqual(bcsEncode(multiEd25519PublicKey as starcoin_types.MultiEd25519PublicKey));
 
   const signatureAlice = await getSignatureHex(rawUserTransaction, alice.private_key)
   console.log({ signatureAlice })

@@ -490,12 +490,15 @@ export class MultiEd25519PublicKey {
   }
 
   static deserialize(deserializer: Deserializer): MultiEd25519PublicKey {
-    const length = deserializer.deserializeLen();
+    const bytes = deserializer.deserializeBytes()
     const public_keys: Seq<Ed25519PublicKey> = [];
-    for (let i = 0; i < length; i++) {
-      public_keys.push(Ed25519PublicKey.deserialize(deserializer));
+    const count = (bytes.length - 1) / 32
+    for (let i = 0; i < count; i++) {
+      const start = i * 32;
+      const end = start + 32;
+      public_keys.push(new Ed25519PublicKey(bytes.slice(start, end)));
     }
-    const threshold = deserializer.deserializeU8();
+    const threshold = new DataView(bytes.slice(-1).buffer, 0).getUint8(0);;
     return new MultiEd25519PublicKey(public_keys, threshold);
   }
 
