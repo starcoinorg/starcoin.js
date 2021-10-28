@@ -88,3 +88,5 @@ coverage/
 .idea
 
 .DS_Store
+
+*.multisig-txn

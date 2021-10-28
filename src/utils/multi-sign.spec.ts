@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { hexlify, arrayify } from '@ethersproject/bytes';
 import { addHexPrefix } from 'ethereumjs-util';
 import { BigNumber } from '@ethersproject/bignumber';
+import { utils as ed25519Utils } from '@starcoin/stc-ed25519';
 import { JsonRpcProvider } from '../providers';
 import { bcsEncode, bcsDecode } from '../encoding';
 import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
@@ -12,7 +13,8 @@ import { toHexString } from './hex';
 import {
   generateRawUserTransaction,
   getSignedUserTransaction,
-  encodeScriptFunctionByResolve
+  encodeScriptFunctionByResolve,
+  getSignatureHex,
 } from "./tx";
 import { createMultiEd25519KeyShard, signMultiEd25519KeyShard } from "./multi-sign";
 import { dec2bin, bin2dec, setBit, isSetBit, dec2uint8array, uint8array2dec } from "./helper";
@@ -99,78 +101,100 @@ test('2-3 multi sign', async () => {
   expect(multiAccountAlice.privateKey).not.toEqual(multiAccountBob.privateKey);
   expect(multiAccountAlice.privateKey).not.toEqual(multiAccountTom.privateKey);
 
-  const hex = '0xbc317a9becacae3e6ddf3c8a9c2efd64000000000000000002000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000210d7f20befd34b9f1ab8aeae98b82a5a511080969800000000000000000000000000809698000000000001000000000000000d3078313a3a5354433a3a5354432e3c6f6100000000fb'
-  const rtx = bcsDecode(starcoin_types.RawUserTransaction, hex)
-  console.log({ rtx })
-  const signatures = await signMultiEd25519KeyShard(shardTom, rtx)
-  console.log({ signatures })
-
-  // write Uint8Array into local binary file, and read form it
-  try {
-    writeFileSync("binaryfile", arrayify(multiAccountTom.privateKey));
-    const rbuf = readFileSync("binaryfile");
-    console.log({ rbuf });
-    console.log(hexlify(rbuf));
-  } catch (error) {
-    console.log(error);
-  }
 
   // step2: 我们来发起一个多签交易：从多签账户往 bob 转账 1 个 STC。
   // 2.1 在 tom 的 starcoin console 中执行
   // account sign-multisig-txn -s 0xb555d8b06fed69769821e189b5168870 --function 0x1::TransferScripts::peer_to_peer_v2 -t 0x1::STC::STC --arg 0xdcd7ae3232acb938c68ee088305b83f6 --arg 1000000000u128
   // 该命令会生成原始交易，并用多签账户(由tom的私钥生成)的私钥签名，生成的 txn 会以文件形式保存在当前目录下，文件名是 txn 的 short hash。
 
-  // const senderAddress = multiAccountTom.address
-  // const senderPrivateKey = multiAccountTom.privateKey
-  // const receiverAddress = bob.address
-  // const amount = 1000000000
-  // const functionId = '0x1::TransferScripts::peer_to_peer_v2'
-  // const typeArgs = ['0x1::STC::STC']
-  // const args = [
-  //   receiverAddress,
-  //   amount,
-  // ]
-  // const nodeUrl = 'http://localhost:9850'
-  // const chainId = 254
-  // const scriptFunction = await encodeScriptFunctionByResolve(functionId, typeArgs, args, nodeUrl);
+  const senderAddress = multiAccountTom.address
+  const senderPrivateKey = multiAccountTom.privateKey
+  const receiverAddress = bob.address
+  const amount = 1000000000
+  const functionId = '0x1::TransferScripts::peer_to_peer_v2'
+  const typeArgs = ['0x1::STC::STC']
+  const args = [
+    receiverAddress,
+    amount,
+  ]
+  const nodeUrl = 'http://localhost:9850'
+  const chainId = 254
+  const scriptFunction = await encodeScriptFunctionByResolve(functionId, typeArgs, args, nodeUrl);
 
-  // const se = new BcsSerializer();
-  // scriptFunction.serialize(se);
-  // const payloadInHex = toHexString(se.getBytes());
-  // console.log(payloadInHex)
+  const payloadInHex = bcsEncode(scriptFunction);
+  console.log(payloadInHex)
 
-  // const provider = new JsonRpcProvider(nodeUrl);
-  // const senderSequenceNumber = await provider.getSequenceNumber(
-  //   senderAddress
-  // );
-  // const maxGasAmount = 10000000n;
-  // const gasUnitPrice = 1;
-  // const nowSeconds = await provider.getNowSeconds();
-  // // expired after 12 hours since Unix Epoch
+  const provider = new JsonRpcProvider(nodeUrl);
+  const senderSequenceNumber = await provider.getSequenceNumber(
+    senderAddress
+  );
+  const maxGasAmount = 10000000n;
+  const gasUnitPrice = 1;
+  const nowSeconds = await provider.getNowSeconds();
+  // expired after 12 hours since Unix Epoch
   // const expiredSecs = 43200
   // const expirationTimestampSecs = nowSeconds + expiredSecs
+  const expirationTimestampSecs = 3005
 
-  // const rawUserTransaction = generateRawUserTransaction(
-  //   senderAddress,
-  //   scriptFunction,
-  //   maxGasAmount,
-  //   gasUnitPrice,
-  //   senderSequenceNumber,
-  //   expirationTimestampSecs,
-  //   chainId
-  // );
-  // console.log({ rawUserTransaction })
+  const rawUserTransaction = generateRawUserTransaction(
+    senderAddress,
+    scriptFunction,
+    maxGasAmount,
+    gasUnitPrice,
+    senderSequenceNumber,
+    expirationTimestampSecs,
+    chainId
+  );
+  console.log({ rawUserTransaction })
 
-  // const rawUserTransactionHex = bcsEncode(rawUserTransaction)
-  // console.log({ rawUserTransactionHex })
+  const rawUserTransactionHex = bcsEncode(rawUserTransaction)
+  console.log({ rawUserTransactionHex })
 
-  // const partial_signed_txn = await getSignedUserTransaction(
-  //   senderPrivateKey,
-  //   rawUserTransaction
-  // );
+  // const hex = '0xb555d8b06fed69769821e189b5168870000000000000000002000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000210dcd7ae3232acb938c68ee088305b83f61000ca9a3b000000000000000000000000809698000000000001000000000000000d3078313a3a5354433a3a535443bd0b000000000000fe'
+  // const rtx = bcsDecode(starcoin_types.RawUserTransaction, hex)
+  // console.log({ rtx })
 
-  // console.log({ partial_signed_txn })
-  // console.log(partial_signed_txn.authenticator)
+
+  const signatureAlice = await getSignatureHex(rawUserTransaction, alice.private_key)
+  console.log({ signatureAlice })
+
+  const signatureBob = await getSignatureHex(rawUserTransaction, bob.private_key)
+  console.log({ signatureBob })
+
+  const signatureTom = await getSignatureHex(rawUserTransaction, tom.private_key)
+  console.log({ signatureTom })
+
+  const signatureShard = await signMultiEd25519KeyShard(shardTom, rawUserTransaction)
+  console.log({ signatureShard })
+
+  const authenticator = new starcoin_types.TransactionAuthenticatorVariantMultiEd25519(shardTom.publicKey(), signatureShard.signature)
+
+  const partial_signed_txn = new starcoin_types.SignedUserTransaction(rawUserTransaction, authenticator)
+
+  console.log({ partial_signed_txn })
+  console.log(partial_signed_txn.authenticator)
+
+
+  // write Uint8Array into local binary file, and read form it
+  try {
+    const partial_signed_txn_hex = bcsEncode(partial_signed_txn);
+    console.log({ partial_signed_txn_hex })
+    const filename = (function () {
+      const privateKeyBytes = ed25519Utils.randomPrivateKey();
+      const name = Buffer.from(privateKeyBytes).toString('hex').slice(0, 8);
+      return `${ name }.multisig-txn`
+    })();
+    console.log({ filename })
+    writeFileSync(filename, arrayify(partial_signed_txn_hex));
+    const rbuf = readFileSync(filename);
+    console.log(hexlify(rbuf));
+
+    const rbuf2 = readFileSync("3d874c34.multisig-txn");
+    console.log(hexlify(rbuf2));
+    expect(hexlify(rbuf)).toEqual(hexlify(rbuf2));
+  } catch (error) {
+    console.log(error);
+  }
 
   // 2.2 alice 拿到上述的交易文件后，在自己的 starcoin cosole 中签名
   // account submit-multisig-txn ~/starcoin/work/starcoin-artifacts/4979854c.multisig-txn
@@ -182,10 +206,12 @@ test('bit operator', () => {
   const b1 = bin2dec('11111111')
   const b2 = 0b11111111
   console.log({ b1, b2 })
-  const test = 268435457
+  // const test = 268435457
+  const test = 1073741824
   console.log({ test })
   const bitmap = dec2uint8array(test)
   console.log({ bitmap })
+  console.log(hexlify(bitmap))
   const test2 = uint8array2dec(bitmap)
   console.log({ test2 })
   expect(test).toEqual(test2);

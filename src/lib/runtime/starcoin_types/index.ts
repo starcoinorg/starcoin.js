@@ -543,11 +543,7 @@ export class MultiEd25519Signature {
   }
 
   public serialize(serializer: Serializer): void {
-    serializer.serializeLen(this.signatures.length);
-    this.signatures.forEach((signature) => {
-      signature.serialize(serializer)
-    })
-    serializer.serializeBytes(dec2uint8array(this.bitmap));
+    serializer.serializeBytes(this.value());
   }
 
   static deserialize(deserializer: Deserializer): MultiEd25519Signature {
@@ -561,9 +557,15 @@ export class MultiEd25519Signature {
   }
 
   public value(): Uint8Array {
-    const se = new BcsSerializer();
-    this.serialize(se);
-    return se.getBytes();
+    const arrSignatures = []
+    this.signatures.forEach((signature) => {
+      arrSignatures.push(signature.value)
+    })
+
+    const arrBitmap = dec2uint8array(this.bitmap);
+
+    const bytes = concat([...arrSignatures, ...arrBitmap])
+    return bytes;
   }
 }
 
