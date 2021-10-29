@@ -139,9 +139,11 @@ test('first multi sign', async () => {
   const gasUnitPrice = 1;
   const nowSeconds = await provider.getNowSeconds();
   // expired after 12 hours since Unix Epoch
-  // const expiredSecs = 43200
-  // const expirationTimestampSecs = nowSeconds + expiredSecs
-  const expirationTimestampSecs = 3005
+  const expiredSecs = 43200
+  const expirationTimestampSecs = nowSeconds + expiredSecs
+
+  // hard coded in rust
+  // const expirationTimestampSecs = 3005
 
   const rawUserTransaction = generateRawUserTransaction(
     senderAddress,
@@ -198,6 +200,12 @@ test('first multi sign', async () => {
     return `${ name }.multisig-txn`
   })();
   console.log({ filename })
+  console.log(`mutlisig txn(address: 0xb555d8b06fed69769821e189b5168870, threshold: 2): 1 signatures collected
+still require 1 signatures
+{
+  "ok": "${ filename }"
+}
+`)
   // write Uint8Array into local binary file
   try {
     const partial_signed_txn_hex = bcsEncode(partial_signed_txn);
@@ -210,13 +218,15 @@ test('first multi sign', async () => {
     const rbuf = readFileSync(filename);
     console.log(hexlify(rbuf));
 
-    const rbuf2 = readFileSync("3d874c34.multisig-txn");
-    console.log(hexlify(rbuf2));
-    expect(hexlify(rbuf)).toEqual(hexlify(rbuf2));
+    // const rbuf2 = readFileSync("3d874c34.multisig-txn");
+    // console.log(hexlify(rbuf2));
+    // expect(hexlify(rbuf)).toEqual(hexlify(rbuf2));
   } catch (error) {
     console.log(error);
   }
+})
 
+test('second multi sign', async () => {
   // 2.2 alice 拿到上述的交易文件后，在自己的 starcoin cosole 中签名
   // starcoin% account sign-multisig-txn /Users/starcoin/projects/starcoinorg/starcoin/5e764f83.multisig-txn
   // mutlisig txn(address: 0xdec266f6749fa0b193f3a7f89d3cd9f2, threshold: 2): 2 signatures collected
@@ -226,17 +236,7 @@ test('first multi sign', async () => {
   // }
   // 该命令会用多签账户(由alice的私钥生成)的私钥签名生成另一个交易文件，该交易同时包含有 tom 和 alice 的签名。 
   // 返回信息提示用户，该多签交易已经收集到足够多的签名，可以提交到链上执行了。
-  const rbuf = readFileSync(filename);
-  console.log(hexlify(rbuf));
-  const txn: starcoin_types.SignedUserTransaction = bcsDecode(starcoin_types.SignedUserTransaction, hexlify(rbuf))
-  console.log({ txn });
-
-
-})
-
-test('second multi sign', async () => {
-  // const rbuf = readFileSync("/Users/wenke/Documents/starcoin/work/starcoin-artifacts/c22af117.multisig-txn");
-  const rbuf = readFileSync("9823493c.multisig-txn");
+  const rbuf = readFileSync("4d6e1867.multisig-txn");
   console.log(hexlify(rbuf));
   const txn: starcoin_types.SignedUserTransaction = bcsDecode(starcoin_types.SignedUserTransaction, hexlify(rbuf))
   console.log({ txn });
@@ -308,9 +308,9 @@ test('second multi sign', async () => {
     const rbuf2 = readFileSync(filename);
     console.log(hexlify(rbuf2));
 
-    const rbuf3 = readFileSync("/Users/wenke/Documents/starcoin/work/starcoin-artifacts/c22af117.multisig-txn");
-    console.log(hexlify(rbuf3));
-    expect(hexlify(rbuf3)).toEqual(hexlify(rbuf2));
+    // const rbuf3 = readFileSync("c22af117.multisig-txn");
+    // console.log(hexlify(rbuf3));
+    // expect(hexlify(rbuf3)).toEqual(hexlify(rbuf2));
   } catch (error) {
     console.log(error);
   }
@@ -318,20 +318,31 @@ test('second multi sign', async () => {
 
 test('bit operator', () => {
   console.log(dec2bin(-1073741824))
-  const a = 0b00000000000000000000000000000001
-  const b = 0b00010000000000000000000000000000
-  console.log({ a, b })
-  console.log(dec2bin(a | b))
+  const pos_a = 0b00000000000000000000000000000001
+  const pos_b = 0b00010000000000000000000000000000
+  console.log({ pos_a, pos_b })
+  const bitmap = pos_a | pos_b
+  console.log(bitmap, dec2bin(bitmap))
+  const arr = ['a', 'b']
+  let bitmap_index = 0
+  arr.forEach((v, idx) => {
+    while (!isSetBit(bitmap, bitmap_index)) {
+      bitmap_index += 1;
+    }
+    console.log({ idx, v, bitmap_index })
+    bitmap_index += 1
+  })
+
   const b1 = bin2dec('11111111')
   const b2 = 0b11111111
   console.log({ b1, b2 })
   // const test = 268435457
   const test = 1073741824
   console.log({ test })
-  const bitmap = dec2uint8array(test)
-  console.log({ bitmap })
-  console.log(hexlify(bitmap))
-  const test2 = uint8array2dec(bitmap)
+  const bitmap2 = dec2uint8array(test)
+  console.log({ bitmap2 })
+  console.log(hexlify(bitmap2))
+  const test2 = uint8array2dec(bitmap2)
   console.log({ test2 })
   expect(test).toEqual(test2);
   const bin = dec2bin(test)
@@ -351,8 +362,4 @@ test('bit operator', () => {
   console.log(isSetBit(n2, 3))
   console.log(isSetBit(n2, 31))
   console.log(isSetBit(n2, 30))
-  // let i
-  // for (i = 0; i < 32; i++) {
-  //   console.log(i, isSetBit(n2, i))
-  // }
 })

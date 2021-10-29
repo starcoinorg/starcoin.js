@@ -579,25 +579,34 @@ export class MultiEd25519SignatureShard {
   constructor(public signature: MultiEd25519Signature, public threshold: uint8) {
   }
 
+  public signatures(): [Ed25519Signature, uint8][] {
+    const signatures = this.signature.signatures;
+    const bitmap = this.signature.bitmap;
+    const result: [Ed25519Signature, uint8][] = []
+    let bitmap_index = 0
+    signatures.forEach((v, idx) => {
+      while (!isSetBit(bitmap, bitmap_index)) {
+        bitmap_index += 1;
+      }
+      result.push([v, bitmap_index])
+      bitmap_index += 1
+    })
+    return result
+  }
 
   static merge(shards: Seq<MultiEd25519SignatureShard>): MultiEd25519SignatureShard {
     if (shards.length === 0) {
       throw new Error('MultiEd25519SignatureShard shards is empty')
     }
     const threshold = shards[0].threshold
-    const signatures = []
-    let bitmap = 0
-    console.log({ shards })
+    const signatures: [Ed25519Signature, uint8][] = []
     shards.forEach((shard) => {
       if (shard.threshold !== threshold) {
         throw new Error('MultiEd25519SignatureShard shards threshold not same')
       }
-      console.log('foreach', 'signatures', shard.signature.signatures, 'bitmap', shard.signature.bitmap)
-      signatures.push(...shard.signature.signatures)
-      bitmap = bitmap | shard.signature.bitmap;
+      signatures.push(...shard.signatures())
     })
-    console.log('merged', { signatures, bitmap })
-    return new MultiEd25519SignatureShard(new MultiEd25519Signature(signatures, bitmap), threshold)
+    return new MultiEd25519SignatureShard(MultiEd25519Signature.build(signatures), threshold)
 
   }
 
