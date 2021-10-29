@@ -21,27 +21,29 @@ import { dec2bin, bin2dec, setBit, isSetBit, dec2uint8array, uint8array2dec } fr
 import { showMultiEd25519Account } from "./account";
 import * as starcoin_types from "../lib/runtime/starcoin_types";
 
-test('2-3 multi sign', async () => {
-  // Implemention of multi sign in https://starcoin.org/zh/developer/cli/multisig_account/
-  const thresHold = 2;
+// Implemention of multi sign in https://starcoin.org/zh/developer/cli/multisig_account/
+const thresHold = 2;
 
-  const alice = {
-    'address': '0xd597bcfa4d3464b98bea990ce21aca06',
-    'public_key': '0x547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bb',
-    'private_key': '0xa9e47d270d2ce33b1475f500f3b9a773eb966f3f8ab5ceb738d52262bbe10cb2'
-  }
+const alice = {
+  'address': '0xd597bcfa4d3464b98bea990ce21aca06',
+  'public_key': '0x547c6a1ef36e9e99865ce7ac028ee79aff404d279b568272bc7154802d4856bb',
+  'private_key': '0xa9e47d270d2ce33b1475f500f3b9a773eb966f3f8ab5ceb738d52262bbe10cb2'
+}
 
-  const bob = {
-    'address': '0xdcd7ae3232acb938c68ee088305b83f6',
-    'public_key': '0xe8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a0',
-    'private_key': '0x7ea63107b0e214789fdb0d6c6e6b0d8f8b8c0be7398654ddd63f3617282be97b'
-  }
+const bob = {
+  'address': '0xdcd7ae3232acb938c68ee088305b83f6',
+  'public_key': '0xe8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a0',
+  'private_key': '0x7ea63107b0e214789fdb0d6c6e6b0d8f8b8c0be7398654ddd63f3617282be97b'
+}
 
-  const tom = {
-    'address': '0x14417edb1fe8c4591d739fee0a91ce42',
-    'public_key': '0xc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8',
-    'private_key': '0x359059828e89fe42dddd5f9571a0c623b071379fc6287c712649dcc8c77f5eb4'
-  }
+const tom = {
+  'address': '0x14417edb1fe8c4591d739fee0a91ce42',
+  'public_key': '0xc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8',
+  'private_key': '0x359059828e89fe42dddd5f9571a0c623b071379fc6287c712649dcc8c77f5eb4'
+}
+
+test('first multi sign', async () => {
+
 
   // step 1: 准备3个多签账号
   // in alice's terminal
@@ -105,6 +107,11 @@ test('2-3 multi sign', async () => {
   // step2: 我们来发起一个多签交易：从多签账户往 bob 转账 1 个 STC。
   // 2.1 在 tom 的 starcoin console 中执行
   // account sign-multisig-txn -s 0xb555d8b06fed69769821e189b5168870 --function 0x1::TransferScripts::peer_to_peer_v2 -t 0x1::STC::STC --arg 0xdcd7ae3232acb938c68ee088305b83f6 --arg 1000000000u128
+  // mutlisig txn(address: 0xb555d8b06fed69769821e189b5168870, threshold: 2): 1 signatures collected
+  // still require 1 signatures
+  // {
+  //   "ok": "/Users/starcoin/projects/starcoinorg/starcoin/5e764f83.multisig-txn"
+  // }
   // 该命令会生成原始交易，并用多签账户(由tom的私钥生成)的私钥签名，生成的 txn 会以文件形式保存在当前目录下，文件名是 txn 的 short hash。
 
   const senderAddress = multiAccountTom.address
@@ -185,19 +192,19 @@ test('2-3 multi sign', async () => {
   console.log({ partial_signed_txn })
   console.log(partial_signed_txn.authenticator)
 
-
-  // write Uint8Array into local binary file, and read form it
+  const filename = (function () {
+    const privateKeyBytes = ed25519Utils.randomPrivateKey();
+    const name = Buffer.from(privateKeyBytes).toString('hex').slice(0, 8);
+    return `${ name }.multisig-txn`
+  })();
+  console.log({ filename })
+  // write Uint8Array into local binary file
   try {
     const partial_signed_txn_hex = bcsEncode(partial_signed_txn);
     console.log({ partial_signed_txn_hex })
     const signed_txn = bcsDecode(starcoin_types.SignedUserTransaction, partial_signed_txn_hex)
     console.log({ signed_txn })
     expect(partial_signed_txn_hex).toEqual(bcsEncode(signed_txn as starcoin_types.SignedUserTransaction));
-    const filename = (function () {
-      const privateKeyBytes = ed25519Utils.randomPrivateKey();
-      const name = Buffer.from(privateKeyBytes).toString('hex').slice(0, 8);
-      return `${ name }.multisig-txn`
-    })();
     console.log({ filename })
     writeFileSync(filename, arrayify(partial_signed_txn_hex));
     const rbuf = readFileSync(filename);
@@ -211,12 +218,110 @@ test('2-3 multi sign', async () => {
   }
 
   // 2.2 alice 拿到上述的交易文件后，在自己的 starcoin cosole 中签名
-  // account submit-multisig-txn ~/starcoin/work/starcoin-artifacts/4979854c.multisig-txn
+  // starcoin% account sign-multisig-txn /Users/starcoin/projects/starcoinorg/starcoin/5e764f83.multisig-txn
+  // mutlisig txn(address: 0xdec266f6749fa0b193f3a7f89d3cd9f2, threshold: 2): 2 signatures collected
+  // enough signatures collected for the multisig txn, txn can be submitted now
+  // {
+  //   "ok": "/Users/starcoin/projects/starcoinorg/starcoin/194d547f.multisig-txn"
+  // }
   // 该命令会用多签账户(由alice的私钥生成)的私钥签名生成另一个交易文件，该交易同时包含有 tom 和 alice 的签名。 
   // 返回信息提示用户，该多签交易已经收集到足够多的签名，可以提交到链上执行了。
+  const rbuf = readFileSync(filename);
+  console.log(hexlify(rbuf));
+  const txn: starcoin_types.SignedUserTransaction = bcsDecode(starcoin_types.SignedUserTransaction, hexlify(rbuf))
+  console.log({ txn });
+
+
+})
+
+test('second multi sign', async () => {
+  // const rbuf = readFileSync("/Users/wenke/Documents/starcoin/work/starcoin-artifacts/c22af117.multisig-txn");
+  const rbuf = readFileSync("9823493c.multisig-txn");
+  console.log(hexlify(rbuf));
+  const txn: starcoin_types.SignedUserTransaction = bcsDecode(starcoin_types.SignedUserTransaction, hexlify(rbuf))
+  console.log({ txn });
+
+  let existing_authenticator: starcoin_types.TransactionAuthenticatorVariantMultiEd25519
+  try {
+    existing_authenticator = txn.authenticator as starcoin_types.TransactionAuthenticatorVariantMultiEd25519
+  } catch (error) {
+    console.log(error);
+    throw error
+  }
+
+  console.log(existing_authenticator)
+  console.log(existing_authenticator.public_key)
+  console.log(existing_authenticator.signature)
+  console.log(existing_authenticator.signature.signatures)
+  expect(existing_authenticator.public_key.threshold).toEqual(2);
+  const { raw_txn } = txn
+  const existing_signatures = new starcoin_types.MultiEd25519SignatureShard(existing_authenticator.signature, existing_authenticator.public_key.threshold)
+
+  console.log({ raw_txn, existing_signatures })
+  const signatureAlice = await getSignatureHex(raw_txn, alice.private_key)
+  console.log({ signatureAlice })
+
+  const publicKeys1 = [bob.public_key, tom.public_key];
+  const privateKeys1 = [alice.private_key];
+
+  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, thresHold)
+  console.log({ shardAlice })
+  const multiAccountAlice = showMultiEd25519Account(shardAlice)
+  console.log({ multiAccountAlice });
+  const signatureShard = await signMultiEd25519KeyShard(shardAlice, raw_txn)
+  console.log({ signatureShard })
+
+  const my_signatures = new starcoin_types.MultiEd25519SignatureShard(signatureShard.signature, existing_authenticator.public_key.threshold)
+  const signatures = []
+  signatures.push(existing_signatures)
+  signatures.push(my_signatures)
+  console.log({ signatures })
+  const merged_signatures = starcoin_types.MultiEd25519SignatureShard.merge(signatures)
+  console.log({ merged_signatures })
+  if (!merged_signatures.is_enough()) {
+    console.log(`still require ${ merged_signatures.threshold - merged_signatures.signature.signatures.length } signatures`);
+  } else {
+    console.log('enough signatures collected for the multisig txn, txn can be submitted now')
+  }
+  const authenticator = new starcoin_types.TransactionAuthenticatorVariantMultiEd25519(shardAlice.publicKey(), merged_signatures.signature)
+
+  const partial_signed_txn = new starcoin_types.SignedUserTransaction(raw_txn, authenticator)
+
+  console.log({ partial_signed_txn })
+  console.log(partial_signed_txn.authenticator)
+
+  const filename = (function () {
+    const privateKeyBytes = ed25519Utils.randomPrivateKey();
+    const name = Buffer.from(privateKeyBytes).toString('hex').slice(0, 8);
+    return `${ name }.multisig-txn`
+  })();
+  console.log({ filename })
+  // write Uint8Array into local binary file
+  try {
+    const partial_signed_txn_hex = bcsEncode(partial_signed_txn);
+    console.log({ partial_signed_txn_hex })
+    const signed_txn = bcsDecode(starcoin_types.SignedUserTransaction, partial_signed_txn_hex)
+    console.log({ signed_txn })
+    expect(partial_signed_txn_hex).toEqual(bcsEncode(signed_txn as starcoin_types.SignedUserTransaction));
+    console.log({ filename })
+    writeFileSync(filename, arrayify(partial_signed_txn_hex));
+    const rbuf2 = readFileSync(filename);
+    console.log(hexlify(rbuf2));
+
+    const rbuf3 = readFileSync("/Users/wenke/Documents/starcoin/work/starcoin-artifacts/c22af117.multisig-txn");
+    console.log(hexlify(rbuf3));
+    expect(hexlify(rbuf3)).toEqual(hexlify(rbuf2));
+  } catch (error) {
+    console.log(error);
+  }
 })
 
 test('bit operator', () => {
+  console.log(dec2bin(-1073741824))
+  const a = 0b00000000000000000000000000000001
+  const b = 0b00010000000000000000000000000000
+  console.log({ a, b })
+  console.log(dec2bin(a | b))
   const b1 = bin2dec('11111111')
   const b2 = 0b11111111
   console.log({ b1, b2 })
