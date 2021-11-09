@@ -112,15 +112,23 @@ export async function getSignatureHex(
 }
 
 async function generateSignedUserTransaction(
-  senderPrivateKey: HexString,
+  senderPrivateKey: string,
   signatureHex: string,
   rawUserTransaction: starcoin_types.RawUserTransaction
 ): Promise<starcoin_types.SignedUserTransaction> {
-  // Step 3-1: generate authenticator
-  const senderPublicKeyMissingPrefix = await ed.getPublicKey(stripHexPrefix(senderPrivateKey))
+  const senderPublicKeyMissingPrefix = <string><unknown>await ed.getPublicKey(stripHexPrefix(senderPrivateKey))
+  const signedUserTransaction = signTxn(senderPublicKeyMissingPrefix, signatureHex, rawUserTransaction)
+  return Promise.resolve(signedUserTransaction)
+}
 
-  const public_key = new starcoin_types.Ed25519PublicKey(arrayify(senderPublicKeyMissingPrefix, { allowMissingPrefix: true }))
-  const signature = new starcoin_types.Ed25519Signature(arrayify(signatureHex))
+export function signTxn(
+  senderPublicKey: string,
+  signatureHex: string,
+  rawUserTransaction: starcoin_types.RawUserTransaction
+): starcoin_types.SignedUserTransaction {
+  // Step 3-1: generate authenticator
+  const public_key = new starcoin_types.Ed25519PublicKey(arrayify(addHexPrefix(senderPublicKey)))
+  const signature = new starcoin_types.Ed25519Signature(arrayify(addHexPrefix(signatureHex)))
   const transactionAuthenticatorVariantEd25519 = new starcoin_types.TransactionAuthenticatorVariantEd25519(public_key, signature)
 
   // Step 3-2: generate SignedUserTransaction
@@ -163,25 +171,6 @@ export async function signRawUserTransaction(
 
   return hex
 }
-
-
-// export async function signTxn(
-//   accountPrivateKey: MultiEd25519KeyShard,
-//   rawUserTransaction: starcoin_types.RawUserTransaction
-// ): Promise<string> {
-
-//   // TransactionAuthenticator::multi_ed25519(key.public_key(), key.sign(message).into())
-//   const multiEd25519SignatureShard = await accountPrivateKey.sign(rawUserTransaction)
-
-//   const transactionAuthenticatorVariantMultiEd25519 = new starcoin_types.TransactionAuthenticatorVariantMultiEd25519(accountPrivateKey.publicKey(), multiEd25519SignatureShard.signature)
-
-//   // Step 3-2: generate SignedUserTransaction
-//   const signedUserTransaction = new starcoin_types.SignedUserTransaction(rawUserTransaction, transactionAuthenticatorVariantMultiEd25519)
-
-//   // Step 4: get SignedUserTransaction Hex
-//   const hex = getSignedUserTransactionHex(signedUserTransaction)
-//   return hex
-// }
 
 function encodeStructTypeTag(
   str: string
