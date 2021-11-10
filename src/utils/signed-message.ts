@@ -9,7 +9,7 @@ import {
   SignedMessage, SigningMessage, AccountAddress, ChainId
 } from '../lib/runtime/starcoin_types';
 import { bytes, uint8 } from '../lib/runtime/serde/types';
-import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, addressToSCS, addressFromSCS } from "../encoding";
+import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, addressToSCS, addressFromSCS, bcsEncode } from "../encoding";
 
 export function encodeTransactionAuthenticatorEd25519(signatureBytes: bytes, publicKeyBytes: bytes): TransactionAuthenticatorVariantEd25519 {
   const ed25519PublicKey = new Ed25519PublicKey(publicKeyBytes)
@@ -40,37 +40,32 @@ function getEd25519SignMsgBytes(
   return msgBytes;
 }
 
-async function getSignatureBytes(
-  signingMessage: SigningMessage,
-  privateKeyHex: string,
-): Promise<bytes> {
-  const msgBytes = getEd25519SignMsgBytes(signingMessage)
-  const signatureBytes = await ed.sign(msgBytes, privateKeyHex)
-  return signatureBytes
+async function signMessage(signingMessageBytes: bytes, privateKeyHex: string): Promise<Record<string, string>> {
+  const publicKeyHex = await <string><unknown>ed.getPublicKey(stripHexPrefix(privateKeyHex));
+  const signatureBytes = await ed.sign(signingMessageBytes, stripHexPrefix(privateKeyHex))
+  const signatureHex = hexlify(signatureBytes)
+  return Promise.resolve({ publicKeyHex, signatureHex })
 }
 
-export async function generateSignedMessage(rawMsgBytes: bytes, privateKeyBytes: bytes, id: uint8): Promise<SignedMessage> {
-  const privateKeyHex = hexlify(privateKeyBytes)
-  const publicKeyHex = await ed.getPublicKey(stripHexPrefix(privateKeyHex));
+export async function generateSignedMessage(signingMessage: SigningMessage, id: uint8, publicKeyHex: string, signatureHex: string): Promise<string> {
   const publicKeyBytes = arrayify(addHexPrefix(publicKeyHex))
-  const addressHex = publicKeyToAddress(hexlify(publicKeyBytes))
+  const addressHex = publicKeyToAddress(publicKeyHex)
   const accountAddress = addressToSCS(addressHex)
-  const signingMessage = new SigningMessage(rawMsgBytes);
-  const signatureBytes = await getSignatureBytes(signingMessage, stripHexPrefix(privateKeyHex))
+  const signatureBytes = arrayify(addHexPrefix(signatureHex))
   const transactionAuthenticatorEd25519 = encodeTransactionAuthenticatorEd25519(signatureBytes, publicKeyBytes);
   const chainId = new ChainId(id);
   const signedMessage = new SignedMessage(accountAddress, signingMessage, transactionAuthenticatorEd25519, chainId)
-  return Promise.resolve(signedMessage);
+
+  const signedMessageBytes = bcsEncode(signedMessage);
+  const signedMessageHex = hexlify(signedMessageBytes);
+  return Promise.resolve(signedMessageHex);
 }
 
 export async function encodeSignedMessage(msgBytes: bytes, privateKeyBytes: bytes, chainId: uint8): Promise<string> {
-  const signedMessage = await generateSignedMessage(msgBytes, privateKeyBytes, chainId)
-  const scsData = (function () {
-    const se = new BcsSerializer();
-    signedMessage.serialize(se);
-    return se.getBytes();
-  })();
-  const signedMessageHex = hexlify(scsData);
+  const signingMessage = new SigningMessage(msgBytes);
+  const signingMessageBytes = getEd25519SignMsgBytes(signingMessage)
+  const { publicKeyHex, signatureHex } = await signMessage(signingMessageBytes, hexlify(privateKeyBytes))
+  const signedMessageHex = await generateSignedMessage(signingMessage, chainId, publicKeyHex, signatureHex)
   return Promise.resolve(signedMessageHex);
 }
 
