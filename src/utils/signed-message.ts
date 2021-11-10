@@ -40,6 +40,7 @@ function getEd25519SignMsgBytes(
   return msgBytes;
 }
 
+// simulate OneKeyConnect.starcoinSignMessage with the same response payload
 async function signMessage(signingMessageBytes: bytes, privateKeyHex: string): Promise<Record<string, string>> {
   const publicKeyHex = await <string><unknown>ed.getPublicKey(stripHexPrefix(privateKeyHex));
   const signatureBytes = await ed.sign(signingMessageBytes, stripHexPrefix(privateKeyHex))
