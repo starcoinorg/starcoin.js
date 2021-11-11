@@ -18,7 +18,7 @@ export function encodeTransactionAuthenticatorEd25519(signatureBytes: bytes, pub
   return authenticatorEd25519;
 }
 
-function getEd25519SignMsgBytes(
+export function getEd25519SignMsgBytes(
   signingMessage: SigningMessage,
 ): bytes {
   const hasher = createSigningMessageHasher();
@@ -41,11 +41,14 @@ function getEd25519SignMsgBytes(
 }
 
 // simulate OneKeyConnect.starcoinSignMessage with the same response payload
-async function signMessage(signingMessageBytes: bytes, privateKeyHex: string): Promise<Record<string, string>> {
+export async function signMessage(msg: string, privateKeyHex: string): Promise<Record<string, string>> {
+  const msgBytes = new Uint8Array(Buffer.from(msg, 'utf8'))
+  const signingMessage = new SigningMessage(msgBytes);
+  const signingMessageBytes = getEd25519SignMsgBytes(signingMessage)
   const publicKeyHex = await <string><unknown>ed.getPublicKey(stripHexPrefix(privateKeyHex));
   const signatureBytes = await ed.sign(signingMessageBytes, stripHexPrefix(privateKeyHex))
   const signatureHex = hexlify(signatureBytes)
-  return Promise.resolve({ publicKeyHex, signatureHex })
+  return Promise.resolve({ publicKey: publicKeyHex, signature: signatureHex })
 }
 
 export async function generateSignedMessage(signingMessage: SigningMessage, id: uint8, publicKeyHex: string, signatureHex: string): Promise<string> {
@@ -62,11 +65,12 @@ export async function generateSignedMessage(signingMessage: SigningMessage, id: 
   return Promise.resolve(signedMessageHex);
 }
 
-export async function encodeSignedMessage(msgBytes: bytes, privateKeyBytes: bytes, chainId: uint8): Promise<string> {
+export async function encodeSignedMessage(msg: string, privateKeyBytes: bytes, chainId: uint8): Promise<string> {
+  const msgBytes = new Uint8Array(Buffer.from(msg, 'utf8'))
   const signingMessage = new SigningMessage(msgBytes);
-  const signingMessageBytes = getEd25519SignMsgBytes(signingMessage)
-  const { publicKeyHex, signatureHex } = await signMessage(signingMessageBytes, hexlify(privateKeyBytes))
-  const signedMessageHex = await generateSignedMessage(signingMessage, chainId, publicKeyHex, signatureHex)
+  const { publicKey, signature } = await signMessage(msg, hexlify(privateKeyBytes))
+
+  const signedMessageHex = await generateSignedMessage(signingMessage, chainId, publicKey, signature)
   return Promise.resolve(signedMessageHex);
 }
 

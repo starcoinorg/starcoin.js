@@ -1,12 +1,14 @@
 import { arrayify } from '@ethersproject/bytes';
+import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import { encodeSignedMessage, recoverSignedMessageAddress } from "./signed-message";
 
 const chainId = 254
 const exampleMessage = 'Example `personal_sign` message 中文'
 // const exampleMessage = 'helloworld'
-const msgBytes = new Uint8Array(Buffer.from(exampleMessage, 'utf8'))
+// const msgBytes = new Uint8Array(Buffer.from(exampleMessage, 'utf8'))
 // const msgHex = Buffer.from(exampleMessage, 'utf8').toString('hex')
 // console.log({ msgHex })
+// console.log(Buffer.from(stripHexPrefix(msgHex), 'hex').toString('utf8'))
 
 test('encode SignedMessage: simple-keyring', async () => {
   // simple-keyring
@@ -14,7 +16,7 @@ test('encode SignedMessage: simple-keyring', async () => {
   const privateKey = '0x587737ebefb4961d377a3ab2f9ceb37b1fa96eb862dfaf954a4a1a99535dfec0'
   const address = '0xd7f20befd34b9f1ab8aeae98b82a5a51'
   const privateKeyBytes = arrayify(privateKey)
-  const signedMessageHex = await encodeSignedMessage(msgBytes, privateKeyBytes, chainId);
+  const signedMessageHex = await encodeSignedMessage(exampleMessage, privateKeyBytes, chainId);
   console.log({ chainId, exampleMessage, privateKey, publicKey, address, signedMessageHex })
 
   try {
@@ -33,7 +35,7 @@ test('encode SignedMessage: hd-keyring', async () => {
   const privateKey = '0xda82fa47266c40c84d76e20b0a278d1b27ae4a14c9c318e54457722d739371b0'
   const address = '0xfa0d5060eb2622e26b4dc307a481db0c'
   const privateKeyBytes = arrayify(privateKey)
-  const signedMessageHex = await encodeSignedMessage(msgBytes, privateKeyBytes, chainId);
+  const signedMessageHex = await encodeSignedMessage(exampleMessage, privateKeyBytes, chainId);
   console.log({ chainId, exampleMessage, privateKey, publicKey, address, signedMessageHex })
 
   try {
