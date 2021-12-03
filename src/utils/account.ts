@@ -1,9 +1,9 @@
 
 import { utils } from '@starcoin/stc-ed25519';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
-import { hexlify } from '@ethersproject/bytes';
+import { hexlify, arrayify } from '@ethersproject/bytes';
 import { privateKeyToPublicKey, publicKeyToAuthKey, publicKeyToAddress, encodeReceiptIdentifier, bcsEncode } from "../encoding";
-import { MultiEd25519KeyShard } from "../lib/runtime/starcoin_types";
+import { MultiEd25519KeyShard, Ed25519PublicKey, Ed25519PrivateKey } from "../lib/runtime/starcoin_types";
 import { accountType } from "../types";
 
 export function generatePrivateKey(): string {
@@ -40,19 +40,36 @@ export async function showAccount(privateKey: string): Promise<Record<string, st
   };
 }
 
-export function showMultiEd25519Account(shard: MultiEd25519KeyShard): Record<string, string> {
+export function getMultiEd25519AccountPrivateKey(shard: MultiEd25519KeyShard): string {
   const privateKey = hexlify(shard.privateKey())
+  return privateKey;
+}
 
+export function getMultiEd25519AccountPublicKey(shard: MultiEd25519KeyShard): string {
   const multiEd25519PublicKey = shard.publicKey()
-
   const publicKey = hexlify(multiEd25519PublicKey.value())
+  return publicKey;
+}
 
-  const authKey = publicKeyToAuthKey(publicKey, accountType.MULTI)
-
+export function getMultiEd25519AccountAddress(shard: MultiEd25519KeyShard): string {
+  const publicKey = getMultiEd25519AccountPublicKey(shard)
   const address = publicKeyToAddress(publicKey, accountType.MULTI)
+  return address;
+}
 
+export function getMultiEd25519AccountReceiptIdentifier(shard: MultiEd25519KeyShard): string {
+  const address = getMultiEd25519AccountAddress(shard)
   // same with Rust, receiptIdentifier do not include authKey
   const receiptIdentifier = encodeReceiptIdentifier(stripHexPrefix(address))
+  return receiptIdentifier;
+}
+
+export function showMultiEd25519Account(shard: MultiEd25519KeyShard): Record<string, string> {
+  const privateKey = getMultiEd25519AccountPrivateKey(shard)
+  const publicKey = getMultiEd25519AccountPublicKey(shard)
+  const address = getMultiEd25519AccountAddress(shard)
+  const receiptIdentifier = getMultiEd25519AccountReceiptIdentifier(shard)
+  const authKey = publicKeyToAuthKey(publicKey, accountType.MULTI)
 
   return {
     privateKey,
@@ -61,4 +78,38 @@ export function showMultiEd25519Account(shard: MultiEd25519KeyShard): Record<str
     authKey,
     receiptIdentifier
   };
+}
+
+export function generateMultiEd25519AccountFromPrivateKey(privateKey: string): MultiEd25519KeyShard {
+  const bytes = arrayify(privateKey)
+
+  const publicKeysLengthBytes = bytes.slice(0, 1);
+  const publicKeysLength = publicKeysLengthBytes[0];
+
+  const thresholdBytes = bytes.slice(1, 2);
+  const threshold = thresholdBytes[0];
+
+  const privateKeysLengthBytes = bytes.slice(2, 3);
+  const privateKeysLength = privateKeysLengthBytes[0];
+
+  const publicKeys = []
+  const privateKeys = []
+  let start = 3
+  const length = 32
+  let end
+
+  for (let i = 0; i < publicKeysLength; i += 1) {
+    end = start + length
+    const publicKeyBytes = bytes.slice(start, end);
+    publicKeys.push(new Ed25519PublicKey(publicKeyBytes))
+    start = end
+  }
+  for (let i = 0; i < privateKeysLength; i += 1) {
+    end = start + length
+    const privateKeyBytes = bytes.slice(start, end);
+    privateKeys.push(new Ed25519PrivateKey(privateKeyBytes))
+    start = end
+  }
+  const shard = new MultiEd25519KeyShard(publicKeys, threshold, privateKeys)
+  return shard;
 }

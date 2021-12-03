@@ -18,11 +18,11 @@ import {
 } from "./tx";
 import { createMultiEd25519KeyShard, signMultiEd25519KeyShard } from "./multi-sign";
 import { dec2bin, bin2dec, setBit, isSetBit, dec2uint8array, uint8array2dec } from "./helper";
-import { showMultiEd25519Account } from "./account";
+import { showMultiEd25519Account, generateMultiEd25519AccountFromPrivateKey } from "./account";
 import * as starcoin_types from "../lib/runtime/starcoin_types";
 
 // Implemention of multi sign in https://starcoin.org/zh/developer/cli/multisig_account/
-const thresHold = 2;
+const threshold = 2;
 
 const alice = {
   'address': '0xd597bcfa4d3464b98bea990ce21aca06',
@@ -42,6 +42,25 @@ const tom = {
   'private_key': '0x359059828e89fe42dddd5f9571a0c623b071379fc6287c712649dcc8c77f5eb4'
 }
 
+test('import from multiSign account privateKey', async () => {
+  const publicKeys1 = [bob.public_key, tom.public_key];
+  const privateKeys1 = [alice.private_key];
+
+  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, threshold)
+  const multiAccountAlice = showMultiEd25519Account(shardAlice)
+  console.log({ multiAccountAlice });
+
+  const shard = generateMultiEd25519AccountFromPrivateKey(multiAccountAlice.privateKey)
+  const multiAccount = showMultiEd25519Account(shard)
+  console.log({ multiAccount });
+
+  expect(multiAccount.privateKey).toEqual(multiAccountAlice.privateKey);
+  expect(multiAccount.publicKey).toEqual(multiAccountAlice.publicKey);
+  expect(multiAccount.address).toEqual(multiAccountAlice.address);
+  expect(multiAccount.authKey).toEqual(multiAccountAlice.authKey);
+  expect(multiAccount.receiptIdentifier).toEqual(multiAccountAlice.receiptIdentifier);
+})
+
 test('first multi sign', async () => {
 
 
@@ -51,7 +70,7 @@ test('first multi sign', async () => {
   const publicKeys1 = [bob.public_key, tom.public_key];
   const privateKeys1 = [alice.private_key];
 
-  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, thresHold)
+  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, threshold)
   console.log({ shardAlice })
   const multiAccountAlice = showMultiEd25519Account(shardAlice)
   console.log({ multiAccountAlice });
@@ -68,7 +87,7 @@ test('first multi sign', async () => {
   const publicKeys2 = [alice.public_key, tom.public_key];
   const privateKeys2 = [bob.private_key];
 
-  const shardBob = await createMultiEd25519KeyShard(publicKeys2, privateKeys2, thresHold)
+  const shardBob = await createMultiEd25519KeyShard(publicKeys2, privateKeys2, threshold)
   console.log({ shardBob })
   const multiAccountBob = showMultiEd25519Account(shardBob)
   console.log({ multiAccountBob });
@@ -85,7 +104,7 @@ test('first multi sign', async () => {
   const publicKeys3 = [alice.public_key, bob.public_key];
   const privateKeys3 = [tom.private_key];
 
-  const shardTom = await createMultiEd25519KeyShard(publicKeys3, privateKeys3, thresHold)
+  const shardTom = await createMultiEd25519KeyShard(publicKeys3, privateKeys3, threshold)
   console.log({ shardTom })
   const multiAccountTom = showMultiEd25519Account(shardTom)
   console.log({ multiAccountTom });
@@ -264,7 +283,7 @@ test('second multi sign', async () => {
   const publicKeys1 = [bob.public_key, tom.public_key];
   const privateKeys1 = [alice.private_key];
 
-  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, thresHold)
+  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, threshold)
   console.log({ shardAlice })
   const multiAccountAlice = showMultiEd25519Account(shardAlice)
   console.log({ multiAccountAlice });
