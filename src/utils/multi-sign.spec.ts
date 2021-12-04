@@ -18,7 +18,7 @@ import {
 } from "./tx";
 import { createMultiEd25519KeyShard, signMultiEd25519KeyShard } from "./multi-sign";
 import { dec2bin, bin2dec, setBit, isSetBit, dec2uint8array, uint8array2dec } from "./helper";
-import { showMultiEd25519Account, generateMultiEd25519AccountFromPrivateKey } from "./account";
+import { showMultiEd25519Account, decodeMultiEd25519AccountPrivateKey } from "./account";
 import * as starcoin_types from "../lib/runtime/starcoin_types";
 
 // Implemention of multi sign in https://starcoin.org/zh/developer/cli/multisig_account/
@@ -50,7 +50,12 @@ test('import from multiSign account privateKey', async () => {
   const multiAccountAlice = showMultiEd25519Account(shardAlice)
   console.log({ multiAccountAlice });
 
-  const shard = generateMultiEd25519AccountFromPrivateKey(multiAccountAlice.privateKey)
+  let shard
+  {
+    const { publicKeys, threshold, privateKeys } = decodeMultiEd25519AccountPrivateKey(multiAccountAlice.privateKey)
+    console.log('decodeMultiEd25519AccountPrivateKey', { publicKeys, threshold, privateKeys });
+    shard = await createMultiEd25519KeyShard(publicKeys, privateKeys, threshold)
+  }
   const multiAccount = showMultiEd25519Account(shard)
   console.log({ multiAccount });
 

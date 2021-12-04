@@ -80,9 +80,8 @@ export function showMultiEd25519Account(shard: MultiEd25519KeyShard): Record<str
   };
 }
 
-export function generateMultiEd25519AccountFromPrivateKey(privateKey: string): MultiEd25519KeyShard {
+export function decodeMultiEd25519AccountPrivateKey(privateKey: string): Record<string, any> {
   const bytes = arrayify(privateKey)
-
   const publicKeysLengthBytes = bytes.slice(0, 1);
   const publicKeysLength = publicKeysLengthBytes[0];
 
@@ -101,15 +100,15 @@ export function generateMultiEd25519AccountFromPrivateKey(privateKey: string): M
   for (let i = 0; i < publicKeysLength; i += 1) {
     end = start + length
     const publicKeyBytes = bytes.slice(start, end);
-    publicKeys.push(new Ed25519PublicKey(publicKeyBytes))
+    publicKeys.push(hexlify(publicKeyBytes))
     start = end
   }
   for (let i = 0; i < privateKeysLength; i += 1) {
     end = start + length
     const privateKeyBytes = bytes.slice(start, end);
-    privateKeys.push(new Ed25519PrivateKey(privateKeyBytes))
+    privateKeys.push(hexlify(privateKeyBytes))
     start = end
   }
-  const shard = new MultiEd25519KeyShard(publicKeys, threshold, privateKeys)
-  return shard;
+
+  return { privateKeys, publicKeys, threshold };
 }
