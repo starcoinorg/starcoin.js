@@ -137,6 +137,19 @@ export function signTxn(
   return signedUserTransaction
 }
 
+// export function signTransaction(
+//   authenticator: starcoin_types.TransactionAuthenticator,
+//   rawUserTransaction: starcoin_types.RawUserTransaction
+// ): starcoin_types.SignedUserTransaction {
+//   // Step 3-1: generate authenticator
+//   const transactionAuthenticatorVariantEd25519 = new starcoin_types.TransactionAuthenticatorVariantEd25519(public_key, signature)
+
+//   // Step 3-2: generate SignedUserTransaction
+//   const signedUserTransaction = new starcoin_types.SignedUserTransaction(rawUserTransaction, authenticator)
+
+//   return signedUserTransaction
+// }
+
 function getSignedUserTransactionHex(
   signedUserTransaction: starcoin_types.SignedUserTransaction
 ): string {

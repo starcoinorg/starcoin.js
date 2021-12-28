@@ -16,7 +16,7 @@ import {
   encodeScriptFunctionByResolve,
   getSignatureHex,
 } from "./tx";
-import { createMultiEd25519KeyShard, signMultiEd25519KeyShard } from "./multi-sign";
+import { generateMultiEd25519KeyShard, generateMultiEd25519Signature, generateMultiEd25519SignatureShard } from "./multi-sign";
 import { dec2bin, bin2dec, setBit, isSetBit, dec2uint8array, uint8array2dec } from "./helper";
 import { showMultiEd25519Account, decodeMultiEd25519AccountPrivateKey } from "./account";
 import * as starcoin_types from "../lib/runtime/starcoin_types";
@@ -46,7 +46,7 @@ test('import from multiSign account privateKey', async () => {
   const publicKeys1 = [bob.public_key, tom.public_key];
   const privateKeys1 = [alice.private_key];
 
-  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, threshold)
+  const shardAlice = await generateMultiEd25519KeyShard(publicKeys1, privateKeys1, threshold)
   const multiAccountAlice = showMultiEd25519Account(shardAlice)
   console.log({ multiAccountAlice });
 
@@ -54,7 +54,7 @@ test('import from multiSign account privateKey', async () => {
   {
     const { publicKeys, threshold, privateKeys } = decodeMultiEd25519AccountPrivateKey(multiAccountAlice.privateKey)
     console.log('decodeMultiEd25519AccountPrivateKey', { publicKeys, threshold, privateKeys });
-    shard = await createMultiEd25519KeyShard(publicKeys, privateKeys, threshold)
+    shard = await generateMultiEd25519KeyShard(publicKeys, privateKeys, threshold)
   }
   const multiAccount = showMultiEd25519Account(shard)
   console.log({ multiAccount });
@@ -66,16 +66,14 @@ test('import from multiSign account privateKey', async () => {
   expect(multiAccount.receiptIdentifier).toEqual(multiAccountAlice.receiptIdentifier);
 })
 
-test('first multi sign', async () => {
-
-
+test('prepare 3 multi sign accounts', async () => {
   // step 1: 准备3个多签账号
   // in alice's terminal
   // account import-multisig --pubkey 0xe8cdd5b17a37fe7e8fe446d067e7a9907cf7783aca204ccb623972176614c0a0 --pubkey 0xc95ddc2b2926d1a451ea68fa74274aa04af97d8e2aefccb297e6ef61992d42e8 --prikey 0xa9e47d270d2ce33b1475f500f3b9a773eb966f3f8ab5ceb738d52262bbe10cb2 -t 2
   const publicKeys1 = [bob.public_key, tom.public_key];
   const privateKeys1 = [alice.private_key];
 
-  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, threshold)
+  const shardAlice = await generateMultiEd25519KeyShard(publicKeys1, privateKeys1, threshold)
   console.log({ shardAlice })
   const multiAccountAlice = showMultiEd25519Account(shardAlice)
   console.log({ multiAccountAlice });
@@ -92,7 +90,7 @@ test('first multi sign', async () => {
   const publicKeys2 = [alice.public_key, tom.public_key];
   const privateKeys2 = [bob.private_key];
 
-  const shardBob = await createMultiEd25519KeyShard(publicKeys2, privateKeys2, threshold)
+  const shardBob = await generateMultiEd25519KeyShard(publicKeys2, privateKeys2, threshold)
   console.log({ shardBob })
   const multiAccountBob = showMultiEd25519Account(shardBob)
   console.log({ multiAccountBob });
@@ -109,7 +107,7 @@ test('first multi sign', async () => {
   const publicKeys3 = [alice.public_key, bob.public_key];
   const privateKeys3 = [tom.private_key];
 
-  const shardTom = await createMultiEd25519KeyShard(publicKeys3, privateKeys3, threshold)
+  const shardTom = await generateMultiEd25519KeyShard(publicKeys3, privateKeys3, threshold)
   console.log({ shardTom })
   const multiAccountTom = showMultiEd25519Account(shardTom)
   console.log({ multiAccountTom });
@@ -127,6 +125,20 @@ test('first multi sign', async () => {
   expect(multiAccountAlice.privateKey).not.toEqual(multiAccountBob.privateKey);
   expect(multiAccountAlice.privateKey).not.toEqual(multiAccountTom.privateKey);
 
+})
+
+test('first multi sign', async () => {
+  const publicKeys3 = [alice.public_key, bob.public_key];
+  const privateKeys3 = [tom.private_key];
+
+  const shardTom = await generateMultiEd25519KeyShard(publicKeys3, privateKeys3, threshold)
+  console.log({ shardTom })
+  const multiAccountTom = showMultiEd25519Account(shardTom)
+  console.log({ multiAccountTom });
+
+  // step1: 在任意一个 starcoin console 里面，给多签账户 充值 100 STC。
+  // starcoin% account default 0xb555d8b06fed69769821e189b5168870
+  // starcoin% dev get - coin - v 100STC
 
   // step2: 我们来发起一个多签交易：从多签账户往 bob 转账 1 个 STC。
   // 2.1 在 tom 的 starcoin console 中执行
@@ -139,7 +151,6 @@ test('first multi sign', async () => {
   // 该命令会生成原始交易，并用多签账户(由tom的私钥生成)的私钥签名，生成的 txn 会以文件形式保存在当前目录下，文件名是 txn 的 short hash。
 
   const senderAddress = multiAccountTom.address
-  const senderPrivateKey = multiAccountTom.privateKey
   const receiverAddress = bob.address
   const amount = 1000000000
   const functionId = '0x1::TransferScripts::peer_to_peer_v2'
@@ -199,17 +210,10 @@ test('first multi sign', async () => {
   // console.log(bcsEncode(multiEd25519Signature as starcoin_types.MultiEd25519Signature))
   // expect(hex3).toEqual(bcsEncode(multiEd25519Signature as starcoin_types.MultiEd25519Signature));
 
-  const signatureAlice = await getSignatureHex(rawUserTransaction, alice.private_key)
-  console.log({ signatureAlice })
-
-  const signatureBob = await getSignatureHex(rawUserTransaction, bob.private_key)
-  console.log({ signatureBob })
-
-  const signatureTom = await getSignatureHex(rawUserTransaction, tom.private_key)
-  console.log({ signatureTom })
-
-  const signatureShard = await signMultiEd25519KeyShard(shardTom, rawUserTransaction)
+  const signatureShard = await generateMultiEd25519SignatureShard(shardTom, rawUserTransaction)
   console.log({ signatureShard })
+  const count_signatures = signatureShard.signature.signatures.length
+  console.log('count_signatures', count_signatures, 'is_enough', signatureShard.is_enough())
 
   const authenticator = new starcoin_types.TransactionAuthenticatorVariantMultiEd25519(shardTom.publicKey(), signatureShard.signature)
 
@@ -224,8 +228,8 @@ test('first multi sign', async () => {
     return `${ name }.multisig-txn`
   })();
   console.log({ filename })
-  console.log(`mutlisig txn(address: 0xb555d8b06fed69769821e189b5168870, threshold: 2): 1 signatures collected
-still require 1 signatures
+  console.log(`mutlisig txn(address: ${ multiAccountTom.address }, threshold: ${ threshold }): ${ count_signatures } signatures collected
+still require ${ threshold - count_signatures } signatures
 {
   "ok": "${ filename }"
 }
@@ -265,49 +269,52 @@ test('second multi sign', async () => {
   const txn: starcoin_types.SignedUserTransaction = bcsDecode(starcoin_types.SignedUserTransaction, hexlify(rbuf))
   console.log({ txn });
 
-  let existing_authenticator: starcoin_types.TransactionAuthenticatorVariantMultiEd25519
-  try {
-    existing_authenticator = txn.authenticator as starcoin_types.TransactionAuthenticatorVariantMultiEd25519
-  } catch (error) {
-    console.log(error);
-    throw error
+  let existingAuthenticator: starcoin_types.TransactionAuthenticatorVariantMultiEd25519
+  if (txn.authenticator instanceof starcoin_types.TransactionAuthenticatorVariantMultiEd25519) {
+    existingAuthenticator = txn.authenticator as starcoin_types.TransactionAuthenticatorVariantMultiEd25519
   }
 
-  console.log(existing_authenticator)
-  console.log(existing_authenticator.public_key)
-  console.log(existing_authenticator.signature)
-  console.log(existing_authenticator.signature.signatures)
-  expect(existing_authenticator.public_key.threshold).toEqual(2);
-  const { raw_txn } = txn
-  const existing_signatures = new starcoin_types.MultiEd25519SignatureShard(existing_authenticator.signature, existing_authenticator.public_key.threshold)
+  console.log(existingAuthenticator)
+  console.log(existingAuthenticator.public_key)
+  console.log(existingAuthenticator.signature)
+  console.log(existingAuthenticator.signature.signatures)
+  const count_signatures = existingAuthenticator.signature.signatures.length
+  expect(existingAuthenticator.public_key.threshold).toEqual(2);
+  console.log(`is_enough: ${ count_signatures >= threshold }, 
+threshold= ${ threshold }
+${ count_signatures } signatures collected, still require ${ threshold - count_signatures } signatures
+`)
 
-  console.log({ raw_txn, existing_signatures })
-  const signatureAlice = await getSignatureHex(raw_txn, alice.private_key)
-  console.log({ signatureAlice })
+  const { raw_txn } = txn
+  const existingSignatureShards = new starcoin_types.MultiEd25519SignatureShard(existingAuthenticator.signature, existingAuthenticator.public_key.threshold)
+
+  console.log({ raw_txn, existingSignatureShards })
+  console.log('existingSignatureShards is_enough', existingSignatureShards.is_enough())
 
   const publicKeys1 = [bob.public_key, tom.public_key];
   const privateKeys1 = [alice.private_key];
 
-  const shardAlice = await createMultiEd25519KeyShard(publicKeys1, privateKeys1, threshold)
+  const shardAlice = await generateMultiEd25519KeyShard(publicKeys1, privateKeys1, threshold)
   console.log({ shardAlice })
   const multiAccountAlice = showMultiEd25519Account(shardAlice)
   console.log({ multiAccountAlice });
-  const signatureShard = await signMultiEd25519KeyShard(shardAlice, raw_txn)
+  const signatureShard = await generateMultiEd25519SignatureShard(shardAlice, raw_txn)
   console.log({ signatureShard })
 
-  const my_signatures = new starcoin_types.MultiEd25519SignatureShard(signatureShard.signature, existing_authenticator.public_key.threshold)
-  const signatures = []
-  signatures.push(existing_signatures)
-  signatures.push(my_signatures)
-  console.log({ signatures })
-  const merged_signatures = starcoin_types.MultiEd25519SignatureShard.merge(signatures)
-  console.log({ merged_signatures })
-  if (!merged_signatures.is_enough()) {
-    console.log(`still require ${ merged_signatures.threshold - merged_signatures.signature.signatures.length } signatures`);
+  const mySignatureShards = new starcoin_types.MultiEd25519SignatureShard(signatureShard.signature, existingAuthenticator.public_key.threshold)
+  const signatureShards = []
+  signatureShards.push(existingSignatureShards)
+  signatureShards.push(mySignatureShards)
+  console.log({ signatureShards })
+  const mergedSignatureShards = starcoin_types.MultiEd25519SignatureShard.merge(signatureShards)
+  console.log({ mergedSignatureShards })
+  console.log('mergedSignatureShards is_enough', mergedSignatureShards.is_enough())
+  if (!mergedSignatureShards.is_enough()) {
+    console.log(`still require ${ mergedSignatureShards.threshold - mergedSignatureShards.signature.signatures.length } signatures`);
   } else {
     console.log('enough signatures collected for the multisig txn, txn can be submitted now')
   }
-  const authenticator = new starcoin_types.TransactionAuthenticatorVariantMultiEd25519(shardAlice.publicKey(), merged_signatures.signature)
+  const authenticator = new starcoin_types.TransactionAuthenticatorVariantMultiEd25519(shardAlice.publicKey(), mergedSignatureShards.signature)
 
   const partial_signed_txn = new starcoin_types.SignedUserTransaction(raw_txn, authenticator)
 

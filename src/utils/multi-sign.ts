@@ -13,6 +13,7 @@ import {
   Ed25519Signature,
   Ed25519PublicKey,
   Ed25519PrivateKey,
+  RawUserTransaction,
 } from "../lib/runtime/starcoin_types";
 
 
@@ -25,7 +26,7 @@ import {
  * @param thresHold
  * @returns 
  */
-export async function createMultiEd25519KeyShard(originPublicKeys: Array<string>, originPrivateKeys: Array<string>, thresHold: number): Promise<MultiEd25519KeyShard> {
+export async function generateMultiEd25519KeyShard(originPublicKeys: Array<string>, originPrivateKeys: Array<string>, thresHold: number): Promise<MultiEd25519KeyShard> {
   if (originPrivateKeys.length === 0) {
     throw new Error('require at least one private key');
   }
@@ -73,14 +74,14 @@ export async function createMultiEd25519KeyShard(originPublicKeys: Array<string>
 
   const public_keys = uniquePublicKeys.map((pub) => new Ed25519PublicKey(arrayify(pub)))
   const shard = new MultiEd25519KeyShard(public_keys, thresHold, pos_verified_private_keys)
-  return shard;
+  return Promise.resolve(shard);
 }
 
-export async function signMultiEd25519KeyShard(multiEd25519KeyShard: MultiEd25519KeyShard, data?: any): Promise<MultiEd25519SignatureShard> {
+export async function generateMultiEd25519Signature(multiEd25519KeyShard: MultiEd25519KeyShard, rawUserTransaction: RawUserTransaction): Promise<MultiEd25519Signature> {
   const signatures = await Promise.all(
     Object.keys(multiEd25519KeyShard.private_keys).map((k) => {
       const privateKey = hexlify(multiEd25519KeyShard.private_keys[k].value)
-      return getSignatureHex(data, privateKey).then((signatureHex) => {
+      return getSignatureHex(rawUserTransaction, privateKey).then((signatureHex) => {
         const signature = new Ed25519Signature(arrayify(signatureHex))
         const pos = Number.parseInt(k, 10)
         return [signature, pos] as [Ed25519Signature, uint8]
@@ -92,5 +93,12 @@ export async function signMultiEd25519KeyShard(multiEd25519KeyShard: MultiEd2551
   console.log({ signatures })
   const multiEd25519Signature = MultiEd25519Signature.build(signatures)
   console.log({ multiEd25519Signature })
-  return new MultiEd25519SignatureShard(multiEd25519Signature, multiEd25519KeyShard.threshold)
+  return Promise.resolve(multiEd25519Signature)
+}
+
+export async function generateMultiEd25519SignatureShard(multiEd25519KeyShard: MultiEd25519KeyShard, rawUserTransaction: RawUserTransaction): Promise<MultiEd25519SignatureShard> {
+  const multiEd25519Signature = await generateMultiEd25519Signature(multiEd25519KeyShard, rawUserTransaction)
+  console.log({ multiEd25519Signature })
+  const multiEd25519SignatureShard = new MultiEd25519SignatureShard(multiEd25519Signature, multiEd25519KeyShard.threshold)
+  return Promise.resolve(multiEd25519SignatureShard)
 }
