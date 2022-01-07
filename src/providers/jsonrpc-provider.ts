@@ -235,7 +235,10 @@ export class JsonRpcSigner extends Signer {
         tx.from = sender;
       }
 
-      const hexTx = (<any>this.provider.constructor).hexlifyTransaction(tx, { from: true, expiredSecs: true });
+      const hexTx = (<any>this.provider.constructor).hexlifyTransaction(tx, { from: true, expiredSecs: true, addGasBufferMultiplier: true });
+      if (tx.addGasBufferMultiplier && typeof tx.addGasBufferMultiplier === 'number') {
+        hexTx.addGasBufferMultiplier = tx.addGasBufferMultiplier.toString();
+      }
       logger.debug(hexTx);
       return this.provider.send("stc_sendTransaction", [hexTx]).then((hash) => {
         return hash;

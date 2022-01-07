@@ -325,6 +325,7 @@ export interface TransactionRequest {
   data?: BytesLike,
   value?: BigNumberish,
   expiredSecs?: U64;
+  addGasBufferMultiplier?: U8;
 
   sender?: AccountAddress;
   sender_public_key?: HexString;
