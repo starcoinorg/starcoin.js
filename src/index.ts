@@ -7,3 +7,4 @@ export * as providers from './providers';
 export * as crypto_hash from './crypto_hash';
 export * as encoding from './encoding';
 export * as onchain_events from './onchain_events';
+export { version } from './version';
