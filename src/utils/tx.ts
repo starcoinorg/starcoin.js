@@ -199,7 +199,7 @@ function encodeStructTypeTag(
   const type_params: TypeTag[] = [];
   if (params.length > 0) {
     params.forEach((param: string) => {
-      type_params.push(encodeStructTypeTag(param));
+      type_params.push(encodeStructTypeTag(param.trim()));
     });
   }
 

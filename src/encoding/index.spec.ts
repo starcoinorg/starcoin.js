@@ -424,6 +424,29 @@ test("encode struct type args: vote", () => {
   expect(structTypeTags[1]['Struct'].type_params.length).toBe(1)
 });
 
+test("encode struct type args: lp", () => {
+  const strTypeArgs = ['0x4783d08fb16990bd35d83f3e23bf93b8::TokenSwap::LiquidityToken<0x00000000000000000000000000000001::STC::STC, 0xfe125d419811297dfab03c61efec0bc9::FAI::FAI>']
+  const structTypeTags = encodeStructTypeTags(strTypeArgs)
+  console.log(strTypeArgs)
+  console.log(JSON.stringify(structTypeTags, undefined, 2))
+
+  console.log(strTypeArgs)
+  const functionId = '0x1::Account::accept_token';
+  const args = [];
+  const scriptFunction = encodeScriptFunction(functionId, structTypeTags, args);
+  console.log(scriptFunction)
+
+  const payloadInHex = (function () {
+    const se = new BcsSerializer();
+    scriptFunction.serialize(se);
+    return hexlify(se.getBytes());
+  })();
+  console.log(payloadInHex)
+
+  expect(structTypeTags.length).toBe(1)
+  expect(structTypeTags[0]['Struct'].type_params.length).toBe(2)
+});
+
 test('decode string', () => {
   const imageHex = '0x53746172636f696e47656e657369734e4654'
   const imageBytes = arrayify(imageHex)
