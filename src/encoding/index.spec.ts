@@ -6,7 +6,7 @@ import path from "path";
 import {
   addressToSCS, decodeTransactionPayload, decodeSignedUserTransaction, privateKeyToPublicKey,
   publicKeyToAuthKey, publicKeyToAddress, publicKeyToReceiptIdentifier, encodeReceiptIdentifier,
-  decodeReceiptIdentifier, bytesToString, stringToBytes
+  decodeReceiptIdentifier, bytesToString, stringToBytes, bcsEncode
 } from '.';
 import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
 import { TransactionArgumentVariantU128 } from '../lib/runtime/starcoin_types';
@@ -15,6 +15,17 @@ import { JsonRpcProvider } from '../providers/jsonrpc-provider';
 import {
   encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags, encodeScriptFunctionByResolve
 } from "../utils/tx";
+
+test("encoding token", () => {
+  const token = '0x00000000000000000000000000000001::STC::STC'
+  console.log(token)
+  const tokenUint8Array = new Uint8Array(Buffer.from(token))
+  console.log(tokenUint8Array)
+  const se = new BcsSerializer();
+  se.serializeBytes(tokenUint8Array)
+  const tokenHex = toHexString(se.getBytes());
+  console.log(tokenHex)
+});
 
 test("encoding address", () => {
   expect(addressToSCS("0x1").value.length).toBe(16);
@@ -117,6 +128,165 @@ test("encodeScriptFunctionByResolve3", async () => {
 
   const hexExpected = "0x022c5bd5fb513108d4557107e09c51656c1053696d706c654e4654536372697074730f6d696e745f776974685f696d61676500030a096d79746573746e66743736697066733a3a2f2f516d5350637663586764744848695654414161727a546575626b3558336957796d50416f4b42666952466a504d5915146d79746573746e66746465736372697074696f6e";
   expect(payloadInHex).toBe(hexExpected);
+}, 10000);
+
+
+test("encodeScriptFunctionByResolve4", async () => {
+  const functionId = '0x18351d311d32201149a4df2a9fc2db8a::CrossChainScript::lock_with_stc_fee'
+  const tyArgs = []
+  // const args = [
+  //   '0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH',
+  //   2,
+  //   '0x2f318C334780961FB129D2a6c30D0763d9a5C970',
+  //   10000000,
+  //   50000000,
+  //   1
+  // ]
+  // const args = [
+  //   '0x00000000000000000000000000000001::STC::STC',
+  //   318,
+  //   '0x18351d311d32201149a4df2a9fc2db8a',
+  //   10000000,
+  //   50000000,
+  //   1
+  // ]
+  // const scriptFunction = await encodeScriptFunctionByResolve(functionId, tyArgs, args, nodeUrl);
+
+
+  const nodeUrl = 'https://barnard-seed.starcoin.org'
+
+  const provider = new JsonRpcProvider(nodeUrl);
+  const { args: argsType } = await provider.send(
+    'contract.resolve_function',
+    [functionId]
+  );
+  // Remove the first Signer type
+  if (argsType[0] && argsType[0].type_tag === 'Signer') {
+    argsType.shift();
+  }
+  console.log(JSON.stringify(argsType, null, 2))
+
+  // const fromAssetHash = "0x00000000000000000000000000000001::STC::STC"
+  // const toChainId = 318
+  // const toAddress = "0x18351d311d32201149a4df2a9fc2db8a"
+  // const amount = 10000000
+  // const fee = 5000000
+  // const id = 1
+
+  const fromAssetHash = "0x18351d311d32201149a4df2a9fc2db8a::XETH::XETH"
+  const toChainId = 2
+  const toAddress = "0x208d1ae5bb7fd323ce6386c443473ed660825d46"
+  const amount = 115555000000
+  const fee = 5000000
+  const id = 1
+
+  const fromAssetHashU8 = new Uint8Array(Buffer.from(fromAssetHash))
+  const fromAssetHashHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeStr(fromAssetHash);
+    console.log(se.getBytes())
+    // do not include vector's length
+    return hexlify(se.getBytes());
+  })();
+
+  console.log({ fromAssetHash, fromAssetHashU8, fromAssetHashHex })
+
+  const toChainIdHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeU64(toChainId);
+    return hexlify(se.getBytes());
+  })();
+
+  const toAddressHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeBytes(arrayify(toAddress));
+    return hexlify(se.getBytes());
+  })();
+
+  const amountHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeU128(amount);
+    return hexlify(se.getBytes());
+  })();
+
+  const feeHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeU128(fee);
+    return hexlify(se.getBytes());
+  })();
+
+  const idHex = (function () {
+    const se = new BcsSerializer();
+    se.serializeU128(id);
+    return hexlify(se.getBytes());
+  })();
+  const args = [
+    arrayify(fromAssetHashHex),
+    arrayify(toChainIdHex),
+    arrayify(toAddressHex),
+    arrayify(amountHex),
+    arrayify(feeHex),
+    arrayify(idHex),
+  ];
+  console.log({ fromAssetHashHex, args });
+  const scriptFunction = encodeScriptFunction(functionId, tyArgs, args);
+
+  console.log(JSON.stringify(scriptFunction, null, 2))
+  const se = new BcsSerializer();
+  scriptFunction.serialize(se);
+  const payloadInHex = toHexString(se.getBytes());
+  console.log(payloadInHex)
+
+  const senderPrivateKeyHex = 'ac4e1d2b8ef0503ce5a5156d075c3b014045f2db4892d2df9334957b8bfd8be7'
+
+  const senderAddressHex = '0xeb9a0d1628fddba79b932ced2623b1a4'
+
+  const senderSequenceNumber = await provider.getSequenceNumber(senderAddressHex)
+
+  // TODO: generate maxGasAmount from contract.dry_run -> gas_used
+  const maxGasAmount = 40000000
+  const gasUnitPrice = 1
+  const chainId = 251
+
+  // because the time system in dev network is relatively static, 
+  // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
+  const nowSeconds = await provider.getNowSeconds()
+  // expired after 12 hours since Unix Epoch
+  const expiredSecs = 43200
+  const expirationTimestampSecs = nowSeconds + expiredSecs
+
+  console.log({
+    senderAddressHex,
+    maxGasAmount,
+    gasUnitPrice,
+    senderSequenceNumber,
+    expirationTimestampSecs,
+    chainId
+  })
+  const rawUserTransaction = generateRawUserTransaction(
+    senderAddressHex,
+    scriptFunction,
+    maxGasAmount,
+    gasUnitPrice,
+    senderSequenceNumber,
+    expirationTimestampSecs,
+    chainId
+  );
+
+  const rawUserTransactionHex = bcsEncode(rawUserTransaction);
+  console.log({ rawUserTransactionHex })
+
+  const signRawUserTransactionHex = await signRawUserTransaction(
+    senderPrivateKeyHex,
+    rawUserTransaction
+  );
+
+  console.log({ signRawUserTransactionHex })
+
+  // const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
+
+  // const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074730f706565725f746f5f706565725f763201070000000000000000000000000000000103535443035354430002101df9157f14b0041eed18dcc56520d829100060d743dd500b000000000000000000";
+  // expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 
 test("decoding txn payload", () => {
