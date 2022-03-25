@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file, as of versi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2022-03-25
+
+- replace @starcoin/stc-ed25519 with @noble/ed25519, because the latest version of @noble/ed25519 already supports BigInt.
+- replace xxxn with BigInt(xxx)
+
 ## [1.8.0] - 2022-01-07
 
 - export version
