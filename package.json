@@ -41,7 +41,7 @@
     "@ethersproject/properties": "^5.0.4",
     "@ethersproject/sha2": "^5.0.4",
     "@ethersproject/web": "^5.0.9",
-    "@starcoin/stc-ed25519": "^0.1.0",
+    "@noble/ed25519": "^1.6.0",
     "bech32": "^2.0.0",
     "ethereumjs-util": "5.1.0",
     "fs": "^0.0.1-security",

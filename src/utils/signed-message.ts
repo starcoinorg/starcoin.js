@@ -1,4 +1,4 @@
-import * as ed from '@starcoin/stc-ed25519';
+import * as ed from '@noble/ed25519';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
 import { arrayify, hexlify, BytesLike } from '@ethersproject/bytes';
 import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
@@ -45,7 +45,8 @@ export async function signMessage(msg: string, privateKeyHex: string): Promise<R
   const msgBytes = new Uint8Array(Buffer.from(msg, 'utf8'))
   const signingMessage = new SigningMessage(msgBytes);
   const signingMessageBytes = getEd25519SignMsgBytes(signingMessage)
-  const publicKeyHex = await <string><unknown>ed.getPublicKey(stripHexPrefix(privateKeyHex));
+  const publicKeyBytes = await ed.getPublicKey(stripHexPrefix(privateKeyHex));
+  const publicKeyHex = hexlify(publicKeyBytes)
   const signatureBytes = await ed.sign(signingMessageBytes, stripHexPrefix(privateKeyHex))
   const signatureHex = hexlify(signatureBytes)
   return Promise.resolve({ publicKey: publicKeyHex, signature: signatureHex })

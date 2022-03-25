@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { hexlify, arrayify } from '@ethersproject/bytes';
 import { addHexPrefix } from 'ethereumjs-util';
 import { BigNumber } from '@ethersproject/bignumber';
-import { utils as ed25519Utils } from '@starcoin/stc-ed25519';
+import { utils as ed25519Utils } from '@noble/ed25519';
 import { JsonRpcProvider } from '../providers';
 import { bcsEncode, bcsDecode } from '../encoding';
 import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';

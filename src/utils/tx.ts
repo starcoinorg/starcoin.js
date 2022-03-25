@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as ed from '@starcoin/stc-ed25519';
+import * as ed from '@noble/ed25519';
 import { stripHexPrefix, addHexPrefix } from 'ethereumjs-util';
 import { arrayify, hexlify, isHexString } from '@ethersproject/bytes';
 import { bytes, Seq, uint8 } from '../lib/runtime/serde';

@@ -1,6 +1,6 @@
 import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
 import { addHexPrefix, stripHexPrefix } from 'ethereumjs-util';
-import * as ed from '@starcoin/stc-ed25519';
+import * as ed from '@noble/ed25519';
 import { sha3_256 } from 'js-sha3';
 import { createUserTransactionHasher } from "../crypto_hash";
 import { BcsDeserializer, BcsSerializer } from '../lib/runtime/bcs';
@@ -268,7 +268,7 @@ export function typeTagFromSCS(bcs_data: starcoin_types.TypeTag): TypeTag {
 
 export async function privateKeyToPublicKey(privateKey: string): Promise<string> {
   const publicKey = await ed.getPublicKey(stripHexPrefix(privateKey))
-  return addHexPrefix(publicKey)
+  return hexlify(publicKey)
 }
 
 // singleMulti: 0-single, 1-multi
