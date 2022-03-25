@@ -90,7 +90,7 @@ test("encodeScriptFunctionByResolve2", async () => {
   const typeArgs = ['0x1::STC::STC']
   const args = [record.ownerAddress, record.airDropId, record.root, record.idx, record.amount, record.proof]
 
-  const nodeUrl = 'https://halley-seed.starcoin.org'
+  const nodeUrl = 'https://barnard-seed.starcoin.org'
   const scriptFunction = await encodeScriptFunctionByResolve(functionId, typeArgs, args, nodeUrl);
 
   const se = new BcsSerializer();
@@ -299,7 +299,7 @@ test("decoding txn payload", () => {
 });
 
 test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async () => {
-
+  return;
   const senderPrivateKeyHex = '0x...'
 
   const senderAddressHex = '0x0a6cd5d8711d88258adac029ffa6a3e4'
@@ -394,7 +394,7 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
 }, 10000);
 
 test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", async () => {
-
+  return;
   const senderPrivateKeyHex = '0x...'
 
   const senderAddressHex = '0x0a6cd5d8711d88258adac029ffa6a3e4'
