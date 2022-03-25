@@ -169,7 +169,8 @@ test('first multi sign', async () => {
   const provider = new JsonRpcProvider(nodeUrl);
   const senderSequenceNumber = await provider.getSequenceNumber(
     senderAddress
-  );
+  ) || 0;
+
   const maxGasAmount = 10000000n;
   const gasUnitPrice = 1;
   const nowSeconds = await provider.getNowSeconds();
