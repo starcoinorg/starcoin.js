@@ -182,7 +182,7 @@ describe('jsonrpc-provider', () => {
     // const txnOutput = await provider.dryRun(txnRequest)
 
     // TODO: generate maxGasAmount from contract.dry_run -> gas_used
-    let maxGasAmount = 10000000n;
+    let maxGasAmount = BigInt(10000000);
     const gasUnitPrice = 1;
     // because the time system in dev network is relatively static,
     // we should use nodeInfo.now_secondsinstead of using new Date().getTime()

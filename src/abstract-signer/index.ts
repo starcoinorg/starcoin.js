@@ -85,7 +85,7 @@ export abstract class Signer {
     if (typeof txnOutput.gas_used === 'number') {
       return 3 * txnOutput.gas_used;
     }
-    return 3n * txnOutput.gas_used.valueOf();
+    return BigInt(3) * txnOutput.gas_used.valueOf();
   }
 
   // calls with the transaction
@@ -130,7 +130,7 @@ export abstract class Signer {
     // eslint-disable-next-line no-restricted-syntax
     for (const key of Object.keys(transaction)) {
       if (!allowedTransactionKeys.has(key)) {
-        logger.throwArgumentError(`invalid transaction key: ${key}`, 'transaction', transaction);
+        logger.throwArgumentError(`invalid transaction key: ${ key }`, 'transaction', transaction);
       }
     }
 
@@ -186,7 +186,7 @@ export abstract class Signer {
         if (forwardErrors.has(error.code)) {
           throw error;
         }
-        console.log(`err: ${error}`);
+        console.log(`err: ${ error }`);
         return logger.throwError('cannot estimate gas; transaction may fail or may require manual gas limit', Logger.errors.UNPREDICTABLE_GAS_LIMIT, {
           error,
           tx
