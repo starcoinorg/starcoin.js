@@ -257,10 +257,7 @@ function serializeWithType(
   const se = new BcsSerializer();
 
   if (type && type.Vector === 'U8') {
-    if (!value) {
-      return Buffer.from('')
-    }
-    const valueBytes = isHexString(addHexPrefix(value)) ? fromHexString(value) : new Uint8Array(Buffer.from(value))
+    const valueBytes = value ? (isHexString(addHexPrefix(value)) ? fromHexString(value) : new Uint8Array(Buffer.from(value))) : new Uint8Array()
     const { length } = valueBytes;
     const list: Seq<uint8> = [];
     for (let i = 0; i < length; i++) {
@@ -322,7 +319,7 @@ export async function encodeScriptFunctionByResolve(
     argsType.shift();
   }
 
-  const argsBytes = encodeScriptFunctionArgs(argsType, args)
+  const argsBytes = encodeScriptFunctionArgs(argsType, args);
 
   return encodeScriptFunction(functionId, tyArgs, argsBytes);
 }

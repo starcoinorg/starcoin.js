@@ -289,14 +289,31 @@ test("encodeScriptFunctionByResolve4", async () => {
   // expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 
+test("encodeScriptFunctionByResolve5", async () => {
+  const nft = {
+    name: 'mytestnft',
+    image: 'ipfs:://QmSPcvcXgdtHHiVTAAarzTeubk5X3iWymPAoKBfiRFjPMY',
+    description: '',
+  }
+  const functionId = '0x2c5bd5fb513108d4557107e09c51656c::SimpleNFTScripts::mint_with_image'
+  const tyArgs = []
+  const args = [nft.name, nft.image, nft.description]
+
+  const nodeUrl = 'https://barnard-seed.starcoin.org'
+
+  const scriptFunction = await encodeScriptFunctionByResolve(functionId, tyArgs, args, nodeUrl)
+  expect(args[2]).toBe('');
+  expect(scriptFunction.value.args[2].length).toBe(1);
+  expect(scriptFunction.value.args[2][0]).toBe(0);
+}, 10000);
 
 test("encodeScriptFunctionByResolve6", async () => {
   const STC_SCALLING_FACTOR = 1000000000
-  const addressArray =  ["0x22a19240709CB17ec9523252AA17B997"];
+  const addressArray = ["0x22a19240709CB17ec9523252AA17B997"];
   const amountArray = [11 * STC_SCALLING_FACTOR];
   const functionId = '0x1::TransferScripts::batch_peer_to_peer_v2'
   const typeArgs = ['0x1::STC::STC']
-  const args = [addressArray,amountArray]
+  const args = [addressArray, amountArray]
 
   const nodeUrl = 'https://barnard-seed.starcoin.org'
   const scriptFunction = await encodeScriptFunctionByResolve(functionId, typeArgs, args, nodeUrl);
@@ -304,7 +321,7 @@ test("encodeScriptFunctionByResolve6", async () => {
   const se = new BcsSerializer();
   scriptFunction.serialize(se);
   const payloadInHex = toHexString(se.getBytes());
-  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074731562617463685f706565725f746f5f706565725f763201070000000000000000000000000000000103535443035354430002110122a19240709cb17ec9523252aa17b997110100aea68f020000000000000000000000";
+  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074731562617463685f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000212011022a19240709cb17ec9523252aa17b997110100aea68f020000000000000000000000";
   expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 
