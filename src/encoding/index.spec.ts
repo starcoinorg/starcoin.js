@@ -291,8 +291,8 @@ test("encodeScriptFunctionByResolve4", async () => {
 
 
 test("encodeScriptFunctionByResolve5", async () => {
-  const addressArray =  ["0x22a19240709CB17ec9523252AA17B997", "0x68d69DC32Ae00470C8c96793A5C9b560"];
-  const amountArray =  [11, 11];
+  const addressArray =  ["0x22a19240709CB17ec9523252AA17B997"];
+  const amountArray =  [11];
   const functionId = '0x1::TransferScripts::batch_peer_to_peer_v2'
   const typeArgs = ['0x1::STC::STC']
   const args = [addressArray,amountArray]
@@ -303,8 +303,7 @@ test("encodeScriptFunctionByResolve5", async () => {
   const se = new BcsSerializer();
   scriptFunction.serialize(se);
   const payloadInHex = toHexString(se.getBytes());
-  // console.log({ payloadInHex })
-  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074731562617463685f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000223021022a19240709cb17ec9523252aa17b9971068d69dc32ae00470c8c96793a5c9b56021020b0000000000000000000000000000000b000000000000000000000000000000";
+  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074731562617463685f706565725f746f5f706565725f763201070000000000000000000000000000000103535443035354430002110122a19240709cb17ec9523252aa17b99711010b000000000000000000000000000000";
   expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 
