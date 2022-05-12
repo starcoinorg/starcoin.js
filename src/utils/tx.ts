@@ -277,6 +277,8 @@ function serializeWithType(
       // array of string: vector<vector<u8>>
       if (type.Vector.Vector === 'U8') {
         se.serializeBytes(fromHexString(sub))
+      } else if (type.Vector === 'Address'){
+        se.serializeBytes(arrayify(sub))
       } else if (type.Vector) {
         // array of other types: vector<u8>
         se[`serialize${ type.Vector }`](sub);

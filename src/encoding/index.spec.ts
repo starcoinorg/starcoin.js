@@ -248,7 +248,7 @@ test("encodeScriptFunctionByResolve4", async () => {
   const gasUnitPrice = 1
   const chainId = 251
 
-  // because the time system in dev network is relatively static, 
+  // because the time system in dev network is relatively static,
   // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
   const nowSeconds = await provider.getNowSeconds()
   // expired after 12 hours since Unix Epoch
@@ -289,6 +289,25 @@ test("encodeScriptFunctionByResolve4", async () => {
   // expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 
+
+test("encodeScriptFunctionByResolve6", async () => {
+  const STC_SCALLING_FACTOR = 1000000000
+  const addressArray =  ["0x22a19240709CB17ec9523252AA17B997"];
+  const amountArray = [11 * STC_SCALLING_FACTOR];
+  const functionId = '0x1::TransferScripts::batch_peer_to_peer_v2'
+  const typeArgs = ['0x1::STC::STC']
+  const args = [addressArray,amountArray]
+
+  const nodeUrl = 'https://barnard-seed.starcoin.org'
+  const scriptFunction = await encodeScriptFunctionByResolve(functionId, typeArgs, args, nodeUrl);
+
+  const se = new BcsSerializer();
+  scriptFunction.serialize(se);
+  const payloadInHex = toHexString(se.getBytes());
+  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074731562617463685f706565725f746f5f706565725f763201070000000000000000000000000000000103535443035354430002110122a19240709cb17ec9523252aa17b997110100aea68f020000000000000000000000";
+  expect(payloadInHex).toBe(hexExpected);
+}, 10000);
+
 test("decoding txn payload", () => {
   const payloadInHex = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
   const txnPayload = decodeTransactionPayload(payloadInHex);
@@ -315,7 +334,7 @@ test("encoding SignedUserTransaction hex, 0x1::DaoVoteScripts::cast_vote", async
   const gasUnitPrice = 1
   const chainId = 1
 
-  // because the time system in dev network is relatively static, 
+  // because the time system in dev network is relatively static,
   // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
   const nowSeconds = await provider.getNowSeconds()
   // expired after 12 hours since Unix Epoch
@@ -411,7 +430,7 @@ test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", a
 
   const chainId = 1
 
-  // because the time system in dev network is relatively static, 
+  // because the time system in dev network is relatively static,
   // we should use nodeInfo.now_secondsinstead of using new Date().getTime()
   const nowSeconds = await provider.getNowSeconds()
   // expired after 12 hours since Unix Epoch
