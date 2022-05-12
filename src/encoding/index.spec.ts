@@ -290,9 +290,10 @@ test("encodeScriptFunctionByResolve4", async () => {
 }, 10000);
 
 
-test("encodeScriptFunctionByResolve5", async () => {
+test("encodeScriptFunctionByResolve6", async () => {
+  const STC_SCALLING_FACTOR = 1000000000
   const addressArray =  ["0x22a19240709CB17ec9523252AA17B997"];
-  const amountArray =  [11];
+  const amountArray = [11 * STC_SCALLING_FACTOR];
   const functionId = '0x1::TransferScripts::batch_peer_to_peer_v2'
   const typeArgs = ['0x1::STC::STC']
   const args = [addressArray,amountArray]
@@ -303,7 +304,7 @@ test("encodeScriptFunctionByResolve5", async () => {
   const se = new BcsSerializer();
   scriptFunction.serialize(se);
   const payloadInHex = toHexString(se.getBytes());
-  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074731562617463685f706565725f746f5f706565725f763201070000000000000000000000000000000103535443035354430002110122a19240709cb17ec9523252aa17b99711010b000000000000000000000000000000";
+  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074731562617463685f706565725f746f5f706565725f763201070000000000000000000000000000000103535443035354430002110122a19240709cb17ec9523252aa17b997110100aea68f020000000000000000000000";
   expect(payloadInHex).toBe(hexExpected);
 }, 10000);
 
