@@ -1,4 +1,3 @@
-import { readBigUInt64LE } from "read-bigint";
 import { arrayify, BytesLike } from '@ethersproject/bytes';
 import {
   AccountAddress,
@@ -149,13 +148,11 @@ export function decodeEventKey(
   const bytes = arrayify(eventKey);
   if (bytes.byteLength !== EVENT_KEY_LENGTH) {
     throw new Error(
-      `invalid eventkey data, expect byte length to be ${EVENT_KEY_LENGTH}, actual: ${bytes.byteLength}`
+      `invalid eventkey data, expect byte length to be ${ EVENT_KEY_LENGTH }, actual: ${ bytes.byteLength }`
     );
   }
   const saltBytes = bytes.slice(0, EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
-  const buff = Buffer.from(saltBytes);
-  // const salt = buff.readBigUInt64LE();
-  const salt = readBigUInt64LE(buff);
+  const salt = Buffer.from(saltBytes).readBigUInt64LE();
   const addressBytes = bytes.slice(EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
   const address = toHexString(addressBytes);
   return { address, salt };

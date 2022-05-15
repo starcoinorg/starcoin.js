@@ -54,7 +54,6 @@
     "js-sha3": "^0.8.0",
     "jssha": "^3.2.0",
     "lodash": "^4.17.21",
-    "read-bigint": "^0.1.6",
     "ws": "7.2.3"
   },
   "devDependencies": {
