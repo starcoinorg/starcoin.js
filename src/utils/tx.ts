@@ -46,13 +46,14 @@ export function encodePackage(
   const modules = moduleCodes.map((m) => new starcoin_types.Module(arrayify(m)));
   let scriptFunction = null;
   if (!!initScriptFunction) {
-    const funcId = parseFunctionId(initScriptFunction.functionId);
-    scriptFunction = new starcoin_types.ScriptFunction(
-      new starcoin_types.ModuleId(addressToSCS(funcId.address), new starcoin_types.Identifier(funcId.module)),
-      new starcoin_types.Identifier(funcId.functionName),
-      initScriptFunction.tyArgs.map((t) => typeTagToSCS(t)),
-      initScriptFunction.args
-    );
+    scriptFunction = encodeScriptFunction(initScriptFunction.functionId, initScriptFunction.tyArgs, initScriptFunction.args);
+    // const funcId = parseFunctionId(initScriptFunction.functionId);
+    // scriptFunction = new starcoin_types.ScriptFunction(
+    //   new starcoin_types.ModuleId(addressToSCS(funcId.address), new starcoin_types.Identifier(funcId.module)),
+    //   new starcoin_types.Identifier(funcId.functionName),
+    //   initScriptFunction.tyArgs.map((t) => typeTagToSCS(t)),
+    //   initScriptFunction.args
+    // );
   }
   const packageData = new starcoin_types.Package(
     addressToSCS(moduleAddress),
@@ -280,7 +281,7 @@ function serializeWithType(
       // array of string: vector<vector<u8>>
       if (type.Vector.Vector === 'U8') {
         se.serializeBytes(fromHexString(sub))
-      } else if (type.Vector === 'Address'){
+      } else if (type.Vector === 'Address') {
         se.serializeBytes(arrayify(sub))
       } else if (type.Vector) {
         // array of other types: vector<u8>
