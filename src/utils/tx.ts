@@ -25,9 +25,11 @@ export function encodeTransactionScript(
   return new starcoin_types.TransactionPayloadVariantScript(script);
 }
 
-export function encodeScriptFunction(functionId: FunctionId,
+export function encodeStarcoinTypesScriptFunction(
+  functionId: FunctionId,
   tyArgs: TypeTag[],
-  args: bytes[]): starcoin_types.TransactionPayloadVariantScriptFunction {
+  args: bytes[]
+): starcoin_types.ScriptFunction {
   const funcId = parseFunctionId(functionId);
   const scriptFunction = new starcoin_types.ScriptFunction(
     new starcoin_types.ModuleId(addressToSCS(funcId.address), new starcoin_types.Identifier(funcId.module)),
@@ -35,7 +37,34 @@ export function encodeScriptFunction(functionId: FunctionId,
     tyArgs.map((t) => typeTagToSCS(t)),
     args
   );
+  return scriptFunction;
+}
+
+export function encodeScriptFunction(
+  functionId: FunctionId,
+  tyArgs: TypeTag[],
+  args: bytes[]
+): starcoin_types.TransactionPayloadVariantScriptFunction {
+  const scriptFunction = encodeStarcoinTypesScriptFunction(functionId, tyArgs, args)
   return new starcoin_types.TransactionPayloadVariantScriptFunction(scriptFunction);
+}
+
+export function encodeStarcoinTypesPackage(
+  moduleAddress: string,
+  moduleCodes: HexString[],
+  initScriptFunction?: { functionId: FunctionId; tyArgs: TypeTag[]; args: bytes[] }
+): starcoin_types.Package {
+  const modules = moduleCodes.map((m) => new starcoin_types.Module(arrayify(m)));
+  let scriptFunction = null;
+  if (!!initScriptFunction) {
+    scriptFunction = encodeStarcoinTypesScriptFunction(initScriptFunction.functionId, initScriptFunction.tyArgs, initScriptFunction.args);
+  }
+  const packageData = new starcoin_types.Package(
+    addressToSCS(moduleAddress),
+    modules,
+    scriptFunction
+  );
+  return packageData
 }
 
 export function encodePackage(
@@ -43,26 +72,8 @@ export function encodePackage(
   moduleCodes: HexString[],
   initScriptFunction?: { functionId: FunctionId; tyArgs: TypeTag[]; args: bytes[] }
 ): starcoin_types.TransactionPayloadVariantPackage {
-  const modules = moduleCodes.map((m) => new starcoin_types.Module(arrayify(m)));
-  let scriptFunction = null;
-  if (!!initScriptFunction) {
-    scriptFunction = encodeScriptFunction(initScriptFunction.functionId, initScriptFunction.tyArgs, initScriptFunction.args);
-    // const funcId = parseFunctionId(initScriptFunction.functionId);
-    // scriptFunction = new starcoin_types.ScriptFunction(
-    //   new starcoin_types.ModuleId(addressToSCS(funcId.address), new starcoin_types.Identifier(funcId.module)),
-    //   new starcoin_types.Identifier(funcId.functionName),
-    //   initScriptFunction.tyArgs.map((t) => typeTagToSCS(t)),
-    //   initScriptFunction.args
-    // );
-  }
-  const packageData = new starcoin_types.Package(
-    addressToSCS(moduleAddress),
-    modules,
-    scriptFunction
-  );
-  return new starcoin_types.TransactionPayloadVariantPackage(
-    packageData
-  );
+  const packageData = encodeStarcoinTypesPackage(moduleAddress, moduleCodes, initScriptFunction)
+  return new starcoin_types.TransactionPayloadVariantPackage(packageData);
 }
 
 // Step 1: generate RawUserTransaction

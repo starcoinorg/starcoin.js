@@ -9,11 +9,11 @@ import {
   decodeReceiptIdentifier, bytesToString, stringToBytes, bcsEncode
 } from '.';
 import { BcsSerializer, BcsDeserializer } from '../lib/runtime/bcs';
-import { TransactionArgumentVariantU128 } from '../lib/runtime/starcoin_types';
+import * as starcoin_types from '../lib/runtime/starcoin_types';
 import { toHexString } from '../utils/hex';
 import { JsonRpcProvider } from '../providers/jsonrpc-provider';
 import {
-  encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags, encodeScriptFunctionByResolve
+  encodePackage, encodeScriptFunction, generateRawUserTransaction, signRawUserTransaction, encodeStructTypeTags, encodeScriptFunctionByResolve
 } from "../utils/tx";
 
 test("encoding token", () => {
@@ -513,7 +513,7 @@ test("encoding SignedUserTransaction hex, 0x1::TransferScripts::peer_to_peer", a
   const signedUserTransactionDecoded = decodeSignedUserTransaction(hex);
 
   expect(signedUserTransactionDecoded.raw_txn.sender).toBe(senderAddressHex);
-});
+}, 10000);
 
 test("decoding SignedUserTransaction hex", () => {
   const hex = "0x49624992dd72da077ee19d0be210406a100000000000000002000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f706565720107000000000000000000000000000000010353544303535443000310621500bf2b4aad17a690cb24f9a225c601001000ca9a3b0000000000000000000000001fe501000000000001000000000000000d3078313a3a5354433a3a535443e8ab000000000000fe002020e2c9a32b0ce41c3a5f4a5f010909741f12e265debcb681c9f9d58c2e69e65c4040288d5662f0f0e72d181073c00bd4f6a15fcfaf4911f6ac35827e09c5e6e02d0df0f2d1bb81c90617911362a39801b88cf6ae405ef226c2e6645a1e5c946e09";
@@ -686,3 +686,78 @@ test('encode/decode data:image/png;base64', () => {
   expect(imageHex).toBe(imageHexExpected)
   expect(Buffer.from(imageBytes).toString()).toBe(imageData)
 });
+
+test('encodePackage', async () => {
+  const address = '0xedb4a7199ae49f76991614CF4C39c585'
+  const privateKey = '0a4a0fe4985df2590ac59c208775f36438a47193ce6eeb197964d8a8f8a6a1f9'
+
+  // There are two ways to generate TransactionPayloadVariantPackage from *.move
+
+  // Option 1:
+  // First, in Terminal,execute following commands:
+  // ➜ ~/work/my-token $mpm sandbox publish
+  // ➜ ~/work/my-token$ cp storage/0x0xedb4a7199ae49f76991614cf4c39c585/modules/TestToken.mv ../starcoin.js/src/encoding/data/
+  const buffer = fs.readFileSync(
+    path.join(__dirname, "data", "TestToken.mv")
+  );
+  const fileBytes = new Uint8Array(buffer)
+  const fileHex = hexlify(fileBytes)
+  const transactionPayload = encodePackage(
+    address,
+    [fileHex],
+    {
+      functionId: `${ address }::TestToken::init`,
+      tyArgs: encodeStructTypeTags([]),
+      args: [],
+    },
+  );
+
+
+  // Option 2:
+  // First, in Terminal,execute following commands:
+  // ➜ ~/work/my-token $mpm release --function 0xedb4a7199ae49f76991614CF4C39c585::TestToken::init
+  // Packaging Modules:
+  //   0xedb4a7199ae49f76991614cf4c39c585::TestToken
+  // Release done: release/my_token.v0.0.1.blob, package hash: 0x1ad1d9f2a97964f722fae2e157ef6c316625c269998c6127e0f9c3871b3e1438
+  // ➜ ~/work/my-token $hexdump -v -e '1/1 "%02x"' release/my_token.v0.0.1.blob
+  // edb4a7199ae49f76991614cf4c39c58501aa01a11ceb0b040000000901000402040403080b04130205150a071f340853200a73050c780d000001010002070000030001000105030101040102010c0001080002060c020954657374546f6b656e05546f6b656e0355534404696e69740b64756d6d795f6669656c640e72656769737465725f746f6b656eedb4a7199ae49f76991614cf4c39c5850000000000000000000000000000000100020104010002000001040e0031093800020001edb4a7199ae49f76991614cf4c39c5850954657374546f6b656e04696e69740000
+  // Then, copy and past the output hex string as the parameter moduleHex's value().
+
+  // const moduleHex = 'edb4a7199ae49f76991614cf4c39c58501aa01a11ceb0b040000000901000402040403080b04130205150a071f340853200a73050c780d000001010002070000030001000105030101040102010c0001080002060c020954657374546f6b656e05546f6b656e0355534404696e69740b64756d6d795f6669656c640e72656769737465725f746f6b656eedb4a7199ae49f76991614cf4c39c5850000000000000000000000000000000100020104010002000001040e0031093800020001edb4a7199ae49f76991614cf4c39c5850954657374546f6b656e04696e69740000'
+  // const de = new BcsDeserializer(arrayify(addHexPrefix(moduleHex)))
+  // const packageData = starcoin_types.Package.deserialize(de)
+  // const transactionPayload = new starcoin_types.TransactionPayloadVariantPackage(packageData);
+
+  const nodeUrl = 'https://barnard-seed.starcoin.org'
+  const provider = new JsonRpcProvider(nodeUrl);
+  const senderSequenceNumber = await provider.getSequenceNumber(address)
+  const chainId = 251;
+  const nowSeconds = await provider.getNowSeconds();
+  // console.log({ senderSequenceNumber, nowSeconds })
+  const rawUserTransaction = generateRawUserTransaction(
+    address,
+    transactionPayload,
+    10000000,   //maxGasAmount
+    1,          // gasUnitPrice
+    senderSequenceNumber,
+    nowSeconds + 43200,
+    chainId,
+  );
+
+  const rawUserTransactionHex = bcsEncode(rawUserTransaction)
+  // console.log({ rawUserTransactionHex })
+
+  const signedUserTransactionHex = await signRawUserTransaction(
+    privateKey,
+    rawUserTransaction,
+  );
+
+  const txn = await provider.sendTransaction(signedUserTransactionHex);
+
+  const txnInfo = await txn.wait(1);
+
+  // console.log(txnInfo);
+
+  expect(txnInfo.status).toBe('Executed');
+}, 60000);
+
