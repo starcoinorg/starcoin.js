@@ -293,7 +293,8 @@ function serializeWithType(
       if (type.Vector.Vector === 'U8') {
         se.serializeBytes(fromHexString(sub))
       } else if (type.Vector === 'Address') {
-        se.serializeBytes(arrayify(sub))
+        const accountAddress = addressToSCS(sub)
+        accountAddress.serialize(se)
       } else if (type.Vector) {
         // array of other types: vector<u8>
         se[`serialize${ type.Vector }`](sub);

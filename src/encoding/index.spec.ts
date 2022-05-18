@@ -308,9 +308,17 @@ test("encodeScriptFunctionByResolve5", async () => {
 }, 10000);
 
 test("encodeScriptFunctionByResolve6", async () => {
+  const address = '0xedb4a7199ae49f76991614CF4C39c585'
+  const privateKey = '0a4a0fe4985df2590ac59c208775f36438a47193ce6eeb197964d8a8f8a6a1f9'
   const STC_SCALLING_FACTOR = 1000000000
-  const addressArray = ["0x22a19240709CB17ec9523252AA17B997"];
-  const amountArray = [11 * STC_SCALLING_FACTOR];
+  const addressArray = [
+    '0xFB400ab8753213Cb40c286E740534Ab9',
+  ];
+  const amountArray = [];
+  addressArray.forEach(() => {
+    amountArray.push(0.1 * STC_SCALLING_FACTOR)
+  });
+  // console.log({ addressArray, amountArray })
   const functionId = '0x1::TransferScripts::batch_peer_to_peer_v2'
   const typeArgs = ['0x1::STC::STC']
   const args = [addressArray, amountArray]
@@ -320,10 +328,39 @@ test("encodeScriptFunctionByResolve6", async () => {
 
   const se = new BcsSerializer();
   scriptFunction.serialize(se);
-  const payloadInHex = toHexString(se.getBytes());
-  const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074731562617463685f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000212011022a19240709cb17ec9523252aa17b997110100aea68f020000000000000000000000";
-  expect(payloadInHex).toBe(hexExpected);
-}, 10000);
+  // const payloadInHex = toHexString(se.getBytes());
+  // const hexExpected = "0x02000000000000000000000000000000010f5472616e73666572536372697074731562617463685f706565725f746f5f706565725f76320107000000000000000000000000000000010353544303535443000212011022a19240709cb17ec9523252aa17b997110100aea68f020000000000000000000000";
+  // expect(payloadInHex).toBe(hexExpected);
+  const provider = new JsonRpcProvider(nodeUrl);
+  const senderSequenceNumber = await provider.getSequenceNumber(address)
+  const chainId = 251;
+  const nowSeconds = await provider.getNowSeconds();
+  // console.log({ senderSequenceNumber, nowSeconds })
+  const rawUserTransaction = generateRawUserTransaction(
+    address,
+    scriptFunction,
+    10000000,   //maxGasAmount
+    1,          // gasUnitPrice
+    senderSequenceNumber,
+    nowSeconds + 43200,
+    chainId,
+  );
+
+  const rawUserTransactionHex = bcsEncode(rawUserTransaction)
+  // console.log({ rawUserTransactionHex })
+
+  const signedUserTransactionHex = await signRawUserTransaction(
+    privateKey,
+    rawUserTransaction,
+  );
+
+  const txn = await provider.sendTransaction(signedUserTransactionHex);
+  console.log(txn);
+  const txnInfo = await txn.wait(1);
+  // console.log(txnInfo);
+
+  expect(txnInfo.status).toBe('Executed');
+}, 60000);
 
 test("decoding txn payload", () => {
   const payloadInHex = "0x02000000000000000000000000000000010f5472616e73666572536372697074730c706565725f746f5f7065657201070000000000000000000000000000000103535443035354430003101df9157f14b0041eed18dcc56520d82900100060d743dd500b000000000000000000";
