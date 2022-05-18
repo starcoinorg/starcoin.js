@@ -90,15 +90,12 @@ export async function generateMultiEd25519Signature(multiEd25519KeyShard: MultiE
       })
     })
   )
-  console.log({ signatures })
   const multiEd25519Signature = MultiEd25519Signature.build(signatures)
-  console.log({ multiEd25519Signature })
   return Promise.resolve(multiEd25519Signature)
 }
 
 export async function generateMultiEd25519SignatureShard(multiEd25519KeyShard: MultiEd25519KeyShard, rawUserTransaction: RawUserTransaction): Promise<MultiEd25519SignatureShard> {
   const multiEd25519Signature = await generateMultiEd25519Signature(multiEd25519KeyShard, rawUserTransaction)
-  console.log({ multiEd25519Signature })
   const multiEd25519SignatureShard = new MultiEd25519SignatureShard(multiEd25519Signature, multiEd25519KeyShard.threshold)
   return Promise.resolve(multiEd25519SignatureShard)
 }
