@@ -139,6 +139,28 @@ onchain_events.DepositEvent.prototype.toJS = function (): DepositEvent {
   };
 };
 
+// Uint8Array is a general-purpose byte-array that’s available in both nodejs and browsers. 
+// Buffer is a subclass of Uint8Array that’s only available in nodejs
+// So we must use Uint8Array, instead of Buffer
+// https://github.com/oBusk/read-bigint/blob/main/src/read-bigint-64-le.ts
+function readBigInt64LE(data: Uint8Array, offset = 0): bigint {
+  const first = data[offset] as number | undefined;
+  const last = data[offset + 7] as number | undefined;
+  const val =
+    data[offset + 4] +
+    data[offset + 5] * 2 ** 8 +
+    data[offset + 6] * 2 ** 16 +
+    (last << 24); // Overflow
+  return (
+    (BigInt(val) << BigInt(32)) +
+    BigInt(
+      first +
+      data[++offset] * 2 ** 8 +
+      data[++offset] * 2 ** 16 +
+      data[++offset] * 2 ** 24,
+    )
+  );
+}
 
 /// Decode a hex view or raw bytes of event key into parts.
 /// EventKey is constructed by `Salt+AccountAddress`.
@@ -152,7 +174,8 @@ export function decodeEventKey(
     );
   }
   const saltBytes = bytes.slice(0, EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
-  const salt = Buffer.from(saltBytes).readBigUInt64LE();
+  const data = new Uint8Array(Buffer.from(saltBytes));
+  const salt = readBigInt64LE(data);
   const addressBytes = bytes.slice(EVENT_KEY_LENGTH - ACCOUNT_ADDRESS_LENGTH);
   const address = toHexString(addressBytes);
   return { address, salt };
