@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file, as of versi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.6] - 2022-06-07
+
+- Fix: TypeError: Buffer.from(...).readBigUInt64LE is not a function in browsers, [https://github.com/starcoinorg/starcoin.js/issues/54](https://github.com/starcoinorg/starcoin.js/issues/54)
+
 ## [2.1.5] - 2022-05-18
 
 - Fix: encodeScriptFunctionByResolve support arg type of { Vector: 'Address' }, example: 0x1::TransferScripts::batch_peer_to_peer_v2
