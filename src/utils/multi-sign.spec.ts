@@ -256,7 +256,7 @@ still require ${ threshold - count_signatures } signatures
 })
 
 test('second multi sign', async () => {
-  // 2.2 alice 拿到上述的交易文件后，在自己的 starcoin cosole 中签名
+  // 2.2 alice 拿到上述的交易文件后，在自己的 starcoin console 中签名
   // starcoin% account sign-multisig-txn /Users/starcoin/projects/starcoinorg/starcoin/5e764f83.multisig-txn
   // mutlisig txn(address: 0xdec266f6749fa0b193f3a7f89d3cd9f2, threshold: 2): 2 signatures collected
   // enough signatures collected for the multisig txn, txn can be submitted now
