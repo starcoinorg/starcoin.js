@@ -1,3 +1,4 @@
+import { AccountAddress } from '../starcoin_types';
 import { Deserializer } from './deserializer';
 
 export abstract class BinaryDeserializer implements Deserializer {
@@ -126,5 +127,9 @@ export abstract class BinaryDeserializer implements Deserializer {
 
   public deserializeF64(): number {
     return new DataView(this.read(8)).getFloat64(0, true);
+  }
+
+  public deserializeAccountAddress(): AccountAddress {
+    return AccountAddress.deserialize(this);
   }
 }

@@ -1,3 +1,5 @@
+import { AccountAddress } from '../starcoin_types';
+
 export interface Deserializer {
   deserializeStr(): string;
 
@@ -34,6 +36,8 @@ export interface Deserializer {
   deserializeI128(): BigInt;
 
   deserializeLen(): number;
+
+  deserializeAccountAddress(): AccountAddress;
 
   deserializeVariantIndex(): number;
 

@@ -59,6 +59,14 @@ export class AccountAddress {
     return new AccountAddress(value);
   }
 
+  public toHexString(): string {
+    return Buffer.from(this.value.map((item) => item[0])).toString("hex");
+  }
+
+  public toString(): string {
+    return this.toHexString();
+  }
+
 }
 export class AccountResource {
 
