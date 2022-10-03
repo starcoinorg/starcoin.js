@@ -46,7 +46,7 @@ const STANDARD_NETWORKS: { [name: string]: Network } = {
     name: 'barnard',
   },
   halley: {
-    chainId: 3,
+    chainId: 253,
     name: 'halley',
   },
   proxima: {
