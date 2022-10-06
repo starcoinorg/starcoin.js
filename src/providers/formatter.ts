@@ -98,7 +98,7 @@ export function formatMoveValue(v: AnnotatedMoveValue): MoveValue {
       {}
     );
   }
-  throw new Error(`invalid annotated move value, ${JSON.stringify(v)}`);
+  throw new Error(`invalid annotated move value, ${ JSON.stringify(v) }`);
 
 }
 
@@ -309,7 +309,7 @@ export class Formatter {
         return value as TransactionVMStatus;
       }
 
-      throw new Error(`invalid txn vm_status: ${value}`);
+      throw new Error(`invalid txn vm_status: ${ value }`);
     } else if (typeof value === 'object') {
       if (value.MoveAbort) {
         return {
@@ -329,9 +329,9 @@ export class Formatter {
           }
         };
       }
-      throw new Error(`invalid txn vm_status: ${JSON.stringify(value)}`);
+      throw new Error(`invalid txn vm_status: ${ JSON.stringify(value) }`);
     } else {
-      throw new TypeError(`invalid txn vm_status type ${value}`);
+      throw new TypeError(`invalid txn vm_status type ${ value }`);
     }
   }
 
@@ -350,7 +350,7 @@ export class Formatter {
     } if (typeof value === 'number') {
       return value;
     }
-    throw new Error(`invalid u8: ${value}`);
+    throw new Error(`invalid u8: ${ value }`);
   }
 
   u64(number: any): U64 {
@@ -368,7 +368,7 @@ export class Formatter {
     if (typeof number === 'number') {
       return number.toString();
     }
-    throw new Error(`invalid bigint: ${number}`);
+    throw new Error(`invalid bigint: ${ number }`);
   }
 
   static bigint(number: any): number | bigint {
@@ -384,7 +384,7 @@ export class Formatter {
     if (typeof number === 'number') {
       return number;
     }
-    throw new TypeError(`invalid bigint: ${number}`);
+    throw new TypeError(`invalid bigint: ${ number }`);
   }
 
   // Strict! Used on input.
@@ -406,13 +406,13 @@ export class Formatter {
         return false;
       }
     }
-    throw new Error(`invalid boolean - ${value}`);
+    throw new Error(`invalid boolean - ${ value }`);
   }
 
   hex(value: any, strict?: boolean): string {
     if (typeof value === 'string') {
       if (!strict && value.slice(0, 2) !== '0x') {
-        value = `0x${value}`;
+        value = `0x${ value }`;
       }
       if (isHexString(value)) {
         return value.toLowerCase();
@@ -424,7 +424,7 @@ export class Formatter {
   data(value: any, strict?: boolean): string {
     const result = this.hex(value, strict);
     if (result.length % 2 !== 0) {
-      throw new Error(`invalid data; odd-length - ${value}`);
+      throw new Error(`invalid data; odd-length - ${ value }`);
     }
     return result;
   }
@@ -436,7 +436,8 @@ export class Formatter {
       logger.throwArgumentError('invalid address', 'address', value);
     }
     const result = this.hex(value, true);
-    if (hexDataLength(result) !== 16) {
+    const length = hexDataLength(result)
+    if (length !== 16 && length !== 32) {
       return logger.throwArgumentError('invalid address', 'value', value);
     }
     return addHexPrefix(value);

@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file, as of versi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2022-10-06
+
+- Support Aptos which address length is 64, while starcoin address length is 32
+- Fix: Replace halley chainId from 3 to 253
+
 ## [2.1.6] - 2022-06-07
 
 - Fix: TypeError: Buffer.from(...).readBigUInt64LE is not a function in browsers, [https://github.com/starcoinorg/starcoin.js/issues/54](https://github.com/starcoinorg/starcoin.js/issues/54)
