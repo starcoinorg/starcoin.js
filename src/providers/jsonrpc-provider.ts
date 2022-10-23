@@ -438,7 +438,8 @@ export class JsonRpcProvider extends BaseProvider {
 
     if (chainId != null) {
       try {
-        return getNetwork(BigNumber.from(chainId).toNumber());
+        const isAptos = this.isAptos()
+        return getNetwork(BigNumber.from(chainId).toNumber(), isAptos);
       } catch (error) {
         return logger.throwError(
           'could not detect network',
@@ -474,7 +475,68 @@ export class JsonRpcProvider extends BaseProvider {
     return nodeInfo.now_seconds;
   }
 
+  isAptos(): boolean {
+    return /aptoslabs\.com/.test(this.connection.url)
+  }
+
   send(method: string, params: Array<any>): Promise<any> {
+    console.log('jsonRpcProvider send', { url: this.connection, method, params })
+    const isAptos = this.isAptos()
+    console.log({ isAptos })
+    // most aptos Rest APIs used in Dapp's injected window.starcoin is GET
+    if (isAptos) {
+      const request = null
+      let fetchUrl = this.connection.url   // default for chain.id, chain.info
+      if (method === 'state.list_resource' || method === 'getAccountResources') {
+        fetchUrl = `${ fetchUrl }accounts/${ params[0] }/resources`
+      }
+      if (method === 'getAccount') {
+        fetchUrl = `${ fetchUrl }accounts/${ params[0] }`
+      }
+      if (method === 'getAccountResource') {
+        fetchUrl = `${ fetchUrl }accounts/${ params[0] }/resource/${ encodeURI(params[1]) }`
+      }
+      if (method === 'chain.get_transaction_info') {
+        fetchUrl = `${ fetchUrl }transactions/by_hash/${ params[0] }`
+      }
+      console.log({ fetchUrl, request })
+      return fetchJson(fetchUrl).then(
+        (data) => {
+          console.log({ data })
+          this.emit('debug', {
+            action: 'response',
+            request,
+            response: data,
+            provider: this,
+          });
+          let result: any
+          switch (method) {
+            case 'chain.id':
+              const network = this.connection.url.split('.')[1]
+              result = { id: data.chain_id, name: network }
+              break;
+            case 'chain.info':
+              result = { head: { number: Number(data.block_height) } }
+              break;
+            default:
+              result = data
+          }
+          return result;
+
+        },
+        (error) => {
+          this.emit('debug', {
+            action: 'response',
+            error,
+            request,
+            provider: this,
+          });
+
+          throw error;
+        }
+      );
+    }
+    // starcoin
     const request = {
       method,
       params,

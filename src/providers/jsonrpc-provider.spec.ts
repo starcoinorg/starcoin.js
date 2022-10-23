@@ -14,6 +14,7 @@ describe('jsonrpc-provider', () => {
   // const nodeUrl = 'https://barnard-seed.starcoin.org';
   // const chainId = 251;
   const nodeUrl = 'https://main-seed.starcoin.org';
+  // const nodeUrl = 'https://fullnode.mainnet.aptoslabs.com/v1/';
   const chainId = 1;
 
 
@@ -21,7 +22,7 @@ describe('jsonrpc-provider', () => {
   test('detectNetwork', async () => {
     const net = await provider.getNetwork();
     expect(net.chainId).toBe(chainId);
-  });
+  }, 10000);
   test('getBlockNumber', async () => {
     const blockNumber = await provider.getBlockNumber();
     expect(provider.blockNumber).toBe(blockNumber);

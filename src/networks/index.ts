@@ -58,13 +58,30 @@ const STANDARD_NETWORKS: { [name: string]: Network } = {
     name: 'main',
   },
 };
-export function getNetwork(network: Networkish): Network {
+
+const APTOS_NETWORKS: { [name: string]: Network } = {
+  test: {
+    chainId: 2,
+    name: 'testnet',
+  },
+  dev: {
+    chainId: 34,
+    name: 'devnet',
+  },
+  main: {
+    chainId: 1,
+    name: 'mainnet',
+  },
+};
+
+export function getNetwork(network: Networkish, isAptos = false): Network {
   if (network == null) {
     return null;
   }
+  const NETWORKS = isAptos ? APTOS_NETWORKS : STANDARD_NETWORKS
   if (typeof network === 'number') {
-    for (const name in STANDARD_NETWORKS) {
-      const standard = STANDARD_NETWORKS[name];
+    for (const name in NETWORKS) {
+      const standard = NETWORKS[name];
       if (standard.chainId == network) {
         return {
           name: standard.name,
@@ -78,7 +95,7 @@ export function getNetwork(network: Networkish): Network {
       name: 'unknown',
     };
   } else if (typeof network === 'string') {
-    const standard = STANDARD_NETWORKS[network];
+    const standard = NETWORKS[network];
     if (standard == null) {
       return null;
     }
@@ -88,7 +105,7 @@ export function getNetwork(network: Networkish): Network {
       _defaultProvider: standard._defaultProvider || null,
     };
   } else {
-    const standard = STANDARD_NETWORKS[network.name];
+    const standard = NETWORKS[network.name];
     if (!standard) {
       if (typeof network.chainId !== 'number') {
         logger.throwArgumentError(
