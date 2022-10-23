@@ -418,7 +418,7 @@ export class JsonRpcProvider extends BaseProvider {
   }
 
   static defaultUrl(): string {
-    return 'http://localhost:9850';
+    return 'https://main-seed.starcoin.org';
   }
 
   async detectNetwork(): Promise<Network> {
