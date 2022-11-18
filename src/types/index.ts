@@ -327,6 +327,13 @@ export interface TransactionRequest {
   expiredSecs?: U64;
   addGasBufferMultiplier?: U8;
 
+  entryFunctionPayload?: {
+    type?: string,
+    function: string,
+    type_arguments: Array<string>,
+    arguments: Array<any>,
+  };
+
   sender?: AccountAddress;
   sender_public_key?: HexString;
   sequence_number?: U64;
