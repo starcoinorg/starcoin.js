@@ -368,7 +368,7 @@ export class JsonRpcSigner extends Signer {
 const allowedTransactionKeys: { [key: string]: boolean } = {
   chainId: true,
   data: true,
-  entryFunctionPayload: true,
+  functionAptos: true,
   gasLimit: true,
   gasPrice: true,
   nonce: true,
@@ -801,7 +801,7 @@ export class JsonRpcProvider extends BaseProvider {
       result[key] = hexlify((<any>transaction)[key]);
     });
 
-    ["entryFunctionPayload"].forEach(function (key) {
+    ["functionAptos"].forEach(function (key) {
       if ((<any>transaction)[key] == null) { return; }
       result[key] = (<any>transaction)[key];
     });

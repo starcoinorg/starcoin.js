@@ -327,7 +327,7 @@ export interface TransactionRequest {
   expiredSecs?: U64;
   addGasBufferMultiplier?: U8;
 
-  entryFunctionPayload?: {
+  functionAptos?: {
     type?: string,
     function: string,
     type_arguments: Array<string>,
