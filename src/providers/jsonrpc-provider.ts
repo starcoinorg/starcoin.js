@@ -487,9 +487,7 @@ export class JsonRpcProvider extends BaseProvider {
   }
 
   send(method: string, params: Array<any>): Promise<any> {
-    console.log('jsonRpcProvider send', { url: this.connection, method, params })
     const isAptos = this.isAptos()
-    console.log({ isAptos })
     // most aptos Rest APIs used in Dapp's injected window.starcoin is GET
     if (isAptos) {
       const request = null
@@ -506,7 +504,6 @@ export class JsonRpcProvider extends BaseProvider {
       if (method === 'chain.get_transaction_info') {
         fetchUrl = `${ fetchUrl }transactions/by_hash/${ params[0] }`
       }
-      console.log({ fetchUrl, request })
       return fetchJson(fetchUrl).then(
         (data) => {
           console.log({ data })
