@@ -93,7 +93,7 @@ export async function recoverSignedMessageAddress(signedMessageHex: string): Pro
   // const rawMessageHex = hexlify(rawMessageBytes)
   // const rawMessage = Buffer.from(stripHexPrefix(rawMessageHex), 'hex').toString('utf8')
 
-  let address
+  let address: string
 
   if (signedMessage.authenticator instanceof TransactionAuthenticatorVariantEd25519) {
     const signatureBytes = signedMessage.authenticator.signature.value;
