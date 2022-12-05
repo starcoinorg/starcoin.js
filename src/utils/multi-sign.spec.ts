@@ -159,7 +159,7 @@ test('first multi sign', async () => {
     receiverAddress,
     amount,
   ]
-  const nodeUrl = 'http://localhost:9850'
+  const nodeUrl = JsonRpcProvider.defaultUrl()
   const chainId = 254
   const scriptFunction = await encodeScriptFunctionByResolve(functionId, typeArgs, args, nodeUrl);
 
@@ -256,14 +256,14 @@ still require ${ threshold - count_signatures } signatures
 })
 
 test('second multi sign', async () => {
-  // 2.2 alice 拿到上述的交易文件后，在自己的 starcoin cosole 中签名
+  // 2.2 alice 拿到上述的交易文件后，在自己的 starcoin console 中签名
   // starcoin% account sign-multisig-txn /Users/starcoin/projects/starcoinorg/starcoin/5e764f83.multisig-txn
   // mutlisig txn(address: 0xdec266f6749fa0b193f3a7f89d3cd9f2, threshold: 2): 2 signatures collected
   // enough signatures collected for the multisig txn, txn can be submitted now
   // {
   //   "ok": "/Users/starcoin/projects/starcoinorg/starcoin/194d547f.multisig-txn"
   // }
-  // 该命令会用多签账户(由alice的私钥生成)的私钥签名生成另一个交易文件，该交易同时包含有 tom 和 alice 的签名。 
+  // 该命令会用多签账户(由alice的私钥生成)的私钥签名生成另一个交易文件，该交易同时包含有 tom 和 alice 的签名。
   // 返回信息提示用户，该多签交易已经收集到足够多的签名，可以提交到链上执行了。
   const rbuf = readFileSync("4d6e1867.multisig-txn");
   console.log(hexlify(rbuf));
@@ -281,7 +281,7 @@ test('second multi sign', async () => {
   console.log(existingAuthenticator.signature.signatures)
   const count_signatures = existingAuthenticator.signature.signatures.length
   expect(existingAuthenticator.public_key.threshold).toEqual(2);
-  console.log(`is_enough: ${ count_signatures >= threshold }, 
+  console.log(`is_enough: ${ count_signatures >= threshold },
 threshold= ${ threshold }
 ${ count_signatures } signatures collected, still require ${ threshold - count_signatures } signatures
 `)
