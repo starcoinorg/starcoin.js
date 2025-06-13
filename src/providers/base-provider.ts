@@ -248,9 +248,9 @@ export abstract class BaseProvider extends Provider {
 
   _pollingInterval: number;
 
-  _poller: NodeJS.Timer;
+  _poller: ReturnType<typeof setInterval>;
 
-  _bootstrapPoll: NodeJS.Timer;
+  _bootstrapPoll: ReturnType<typeof setTimeout>;
 
   _lastBlockNumber: number;
 
@@ -764,7 +764,7 @@ export abstract class BaseProvider extends Provider {
 
     // Poll until the receipt is good...
     return new Promise((resolve, reject) => {
-      let timer: NodeJS.Timer = null;
+      let timer: ReturnType<typeof setTimeout> = null;
       let done = false;
 
       const handler = (transactionInfo: TransactionInfoView) => {
