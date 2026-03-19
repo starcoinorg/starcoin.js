@@ -110,7 +110,8 @@ interface Package {
 export type TransactionPayload =
   | { Script: Script }
   | { Package: Package }
-  | { ScriptFunction: ScriptFunction };
+  | { ScriptFunction: ScriptFunction }
+  | { EntryFunction: ScriptFunction };
 
 export type SignatureType = 'Ed25519' | 'MultiEd25519';
 

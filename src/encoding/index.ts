@@ -120,6 +120,8 @@ export function decodeTransactionPayload(
       },
     };
   }
+  // NOTE: VM2 EntryFunction is BCS-compatible with ScriptFunction (same variant index 2).
+  // Use decodeTransactionPayloadVM2() if you need the result keyed as 'EntryFunction'.
 
   if (
     bcsTxnPayload instanceof starcoin_types.TransactionPayloadVariantPackage
@@ -410,4 +412,19 @@ export function bytesToString(arr: BytesLike): string {
     }
   }
   return str;
+}
+
+/**
+ * Decode a VM2 transaction payload.
+ * Returns 'EntryFunction' key instead of 'ScriptFunction' for variant index 2.
+ * BCS format is identical — only the key name differs.
+ */
+export function decodeTransactionPayloadVM2(
+  payload: BytesLike
+): TransactionPayload {
+  const result = decodeTransactionPayload(payload);
+  if ('ScriptFunction' in result) {
+    return { EntryFunction: result.ScriptFunction };
+  }
+  return result;
 }
