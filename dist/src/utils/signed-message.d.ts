@@ -1,0 +1,10 @@
+import { BytesLike } from '@ethersproject/bytes';
+import { TransactionAuthenticatorVariantEd25519, SignedMessage, SigningMessage } from '../lib/runtime/starcoin_types';
+import { bytes, uint8 } from '../lib/runtime/serde/types';
+export declare function encodeTransactionAuthenticatorEd25519(signatureBytes: bytes, publicKeyBytes: bytes): TransactionAuthenticatorVariantEd25519;
+export declare function getEd25519SignMsgBytes(signingMessage: SigningMessage): bytes;
+export declare function signMessage(msg: string, privateKeyHex: string): Promise<Record<string, string>>;
+export declare function generateSignedMessage(signingMessage: SigningMessage, id: uint8, publicKeyHex: string, signatureHex: string): Promise<string>;
+export declare function encodeSignedMessage(msg: string, privateKeyBytes: bytes, chainId: uint8): Promise<string>;
+export declare function decodeSignedMessage(data: BytesLike): SignedMessage;
+export declare function recoverSignedMessageAddress(signedMessageHex: string): Promise<string>;

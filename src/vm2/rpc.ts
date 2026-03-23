@@ -1,11 +1,14 @@
 /**
  * VM2 RPC method mappings.
  *
- * VM2 uses separate RPC namespaces with "2" suffix:
- * - txpool.submit_transaction2 (instead of txpool.submit_hex_transaction)
- * - contract2.dry_run_raw (instead of contract.dry_run_raw)
- * - state2.get_resource (instead of contract.get_resource)
- * - chain2.get_transaction_info (instead of chain.get_transaction_info)
+ * VM2 RPC naming follows TWO patterns (verified from starcoin Rust source):
+ *   Prefix pattern: state2.*, contract2.*, account2.* (defined in vm2/rpc/api/)
+ *   Suffix pattern: chain.method2, txpool.method2 (defined in rpc/api/)
+ * Examples:
+ * - txpool.submit_hex_transaction2 (suffix)
+ * - contract2.dry_run_raw (prefix)
+ * - state2.get_resource (prefix)
+ * - chain.get_transaction_info2 (suffix, NOT chain2.get_transaction_info)
  */
 
 /**
@@ -28,11 +31,19 @@ export const VM2_RPC_METHODS: Record<string, string> = {
 
   // State
   'state.get_account_state_set': 'state2.get_account_state_set',
+  'state.list_resource': 'state2.list_resource',
+  'state.get_resource': 'state2.get_resource',
 
-  // Chain queries (transaction info uses same method but response has vm_type tag)
-  'chain.get_transaction': 'chain.get_transaction',
-  'chain.get_transaction_info': 'chain.get_transaction_info',
-  'chain.get_events_by_txn_hash': 'chain.get_events_by_txn_hash',
+  // Chain queries (suffix pattern: chain.method2)
+  'chain.get_transaction': 'chain.get_transaction2',
+  'chain.get_transaction_info': 'chain.get_transaction_info2',
+  'chain.get_events_by_txn_hash': 'chain.get_events_by_txn_hash2',
+  'chain.get_block_txn_infos': 'chain.get_block_txn_infos2',
+  'chain.get_block_info_by_number': 'chain.get_block_info_by_number2',
+  'chain.get_transaction_infos': 'chain.get_transaction_infos2',
+
+  // Account
+  'account.get_sequence_number': 'account2.get_sequence_number',
 };
 
 /**

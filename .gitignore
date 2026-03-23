@@ -81,7 +81,7 @@ test_results
 src/**/*.js
 
 # Compiled JavaScript files
-dist/
+# dist/ — included in feature branch for git dependency support
 coverage/
 
 # IDEs
