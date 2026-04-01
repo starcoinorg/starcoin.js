@@ -219,6 +219,16 @@ export const RPC_ACTION = {
   getGasPrice: 'getGasPrice',
   dryRun: 'dryRun',
   dryRunRaw: 'dryRunRaw',
+  // VM2 specific actions
+  sendTransactionV2: 'sendTransactionV2',
+  dryRunV2: 'dryRunV2',
+  dryRunRawV2: 'dryRunRawV2',
+  getResourceV2: 'getResourceV2',
+  getCodeV2: 'getCodeV2',
+  callV2VM2: 'callV2VM2',
+  getAccountStateV2: 'getAccountStateV2',
+  resolveFunction: 'resolveFunction',
+  resolveFunctionV2: 'resolveFunctionV2',
 };
 
 let defaultFormatter: Formatter;
@@ -1092,6 +1102,52 @@ export abstract class BaseProvider extends Provider {
     const params = { rawUserTransactionHex, publicKeyHex }
     const resp = await this.perform(RPC_ACTION.dryRunRaw, params);
     return this.formatter.transactionOutput(resp);
+  }
+
+  // VM2 variants
+
+  async sendRawTransactionV2(signedTransactionHex: string): Promise<string> {
+    await this.getNetwork();
+    const params = { signedTransaction: signedTransactionHex };
+    return this.perform(RPC_ACTION.sendTransactionV2, params);
+  }
+
+  async dryRunRawV2(
+    rawUserTransactionHex: string,
+    publicKeyHex: string
+  ): Promise<TransactionOutput> {
+    await this.getNetwork();
+    const params = { rawUserTransactionHex, publicKeyHex };
+    const resp = await this.perform(RPC_ACTION.dryRunRawV2, params);
+    return this.formatter.transactionOutput(resp);
+  }
+
+  async getResourceV2(
+    address: AccountAddress | Promise<AccountAddress>,
+    resource_struct_tag: string | Promise<string>,
+  ): Promise<MoveStruct | undefined> {
+    await this.getNetwork();
+    const params = await resolveProperties({
+      address,
+      structTag: resource_struct_tag,
+    });
+    const value = await this.perform(RPC_ACTION.getResourceV2, params);
+    if (value) {
+      return this.formatter.moveStruct(value);
+    }
+  }
+
+  async getCodeV2(
+    moduleId: ModuleId | Promise<ModuleId>,
+  ): Promise<string | undefined> {
+    await this.getNetwork();
+    const params = await resolveProperties({
+      moduleId: BaseProvider.getModuleId(await moduleId),
+    });
+    const code = await this.perform(RPC_ACTION.getCodeV2, params);
+    if (code) {
+      return hexlify(code);
+    }
   }
 
   private async _getBlock(

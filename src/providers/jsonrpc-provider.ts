@@ -652,6 +652,27 @@ export class JsonRpcProvider extends BaseProvider {
       // }
       case RPC_ACTION.getEvents:
         return ['chain.get_events', [params.filter]];
+
+      // VM2 specific RPC methods
+      case RPC_ACTION.sendTransactionV2:
+        return ['txpool.submit_hex_transaction2', [params.signedTransaction]];
+      case RPC_ACTION.dryRunV2:
+        return ['contract2.dry_run', [params.transaction]];
+      case RPC_ACTION.dryRunRawV2:
+        return ['contract2.dry_run_raw', [params.rawUserTransactionHex, params.publicKeyHex]];
+      case RPC_ACTION.getResourceV2:
+        return ['state2.get_resource', [params.address, params.structTag]];
+      case RPC_ACTION.getCodeV2:
+        return ['contract2.get_code', [params.moduleId]];
+      case RPC_ACTION.callV2VM2:
+        return ['contract2.call_v2', [params.request]];
+      case RPC_ACTION.getAccountStateV2:
+        return ['state2.get_account_state_set', [params.address]];
+      case RPC_ACTION.resolveFunction:
+        return ['contract.resolve_function', [params.functionId]];
+      case RPC_ACTION.resolveFunctionV2:
+        return ['contract2.resolve_function', [params.functionId]];
+
       default:
         break;
       // if (params instanceof Array) {
